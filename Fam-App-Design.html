@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fam App Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:#E9EEF9;font-family:'Manrope',system-ui,sans-serif}
+a{color:inherit;text-decoration:none}
+input::placeholder{color:#7A89AD}
+.bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#061538;color:#ffffff}
+.bar b{font-family:'Playfair Display',Georgia,serif;font-size:22px}
+.bar span{font-size:13px;color:#BFD4FF;font-weight:600}
+.bar button{height:44px;padding:0 20px;border:0;border-radius:12px;background:#ffffff;color:#0A2260;font:800 15px 'Manrope',sans-serif;cursor:pointer}
+.wrap{display:flex;flex-wrap:wrap;gap:36px;justify-content:center;align-items:flex-start;padding:28px 16px 48px}
+.page{display:flex;flex-direction:column;gap:10px}
+.cap{font:800 14px 'Manrope',sans-serif;color:#3D4E78}
+.frame{border-radius:40px;overflow:hidden;box-shadow:0 24px 60px rgba(10,34,96,0.2);background:#ffffff;flex:none}
+.board .frame{border-radius:24px}
+@page phone{size:390px 844px;margin:0}
+@page board{size:1200px 700px;margin:0}
+@media print{
+.bar,.cap{display:none}
+body{background:#ffffff}
+.wrap{display:block;padding:0}
+.page{gap:0;break-after:page}
+.page:last-child{break-after:auto}
+.phone{page:phone}
+.board{page:board}
+.frame{border-radius:0;box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="bar"><div><b>Fam</b><br><span>All screens in one file</span></div><button type="button" onclick="window.print()">Save as PDF</button></div>
+<div class="wrap">
+<section class="page board" id="s-Main"><div class="cap">Brand and app icon</div><div class="frame" data-w="1200" style="width:1200px;height:700px">
+
+<div style="width: 1200px; height: 700px; display: flex; overflow: hidden; background: #ffffff; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+<defs>
+<linearGradient id="ib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F68EE"/><stop offset="0.5" stop-color="#123A9C"/><stop offset="1" stop-color="#061538"/></linearGradient>
+<radialGradient id="ig" cx="0.25" cy="0.15" r="0.75"><stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+<linearGradient id="im" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#BFD4FF"/></linearGradient>
+<symbol id="famIcon" viewBox="0 0 512 512">
+<rect width="512" height="512" rx="118" fill="url(#ib)"/>
+<rect width="512" height="512" rx="118" fill="url(#ig)"/>
+<rect x="8" y="8" width="496" height="496" rx="110" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="3"/>
+<g transform="translate(16 -9)">
+<path fill="url(#im)" d="M166 118h170a16 16 0 0 1 16 16v38a16 16 0 0 1-16 16H236v42h72a16 16 0 0 1 16 16v26a16 16 0 0 1-16 16h-72v110h-70z"/>
+<g fill="#1D4ED8" fill-opacity="0.38">
+<rect x="180" y="210" width="16" height="22" rx="3"/><rect x="206" y="210" width="16" height="22" rx="3"/>
+<rect x="180" y="258" width="16" height="22" rx="3"/><rect x="206" y="258" width="16" height="22" rx="3"/>
+<rect x="180" y="306" width="16" height="22" rx="3"/><rect x="206" y="306" width="16" height="22" rx="3"/>
+</g>
+<rect x="188" y="350" width="26" height="48" rx="4" fill="#0A2260" fill-opacity="0.9"/>
+<rect x="134" y="398" width="244" height="12" rx="6" fill="#ffffff"/>
+</g>
+</symbol>
+</defs>
+</svg>
+
+<div style="width: 520px; flex: none; background: linear-gradient(160deg, #0A2260 0%, #061538 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; position: relative; overflow: hidden">
+<div style="position: absolute; width: 760px; height: 760px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.12); left: -120px; top: -30px"></div>
+<div style="position: absolute; width: 560px; height: 560px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.14); left: -20px; top: 70px"></div>
+<svg width="300" height="300" viewBox="0 0 512 512" role="img" aria-label="Fam app icon" style="position: relative; filter: drop-shadow(0 36px 44px rgba(0,0,0,0.5))"><use href="#famIcon"/></svg>
+<div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<div style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 68px; line-height: 1; color: #ffffff; letter-spacing: 0.02em">Fam</div>
+<div style="font-size: 13px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; color: #BFD4FF">Property &amp; rental control</div>
+</div>
+</div>
+
+<div style="flex: 1; min-width: 0; padding: 52px 56px; display: flex; flex-direction: column; gap: 30px; background: #ffffff">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 12px; font-weight: 800; letter-spacing: 0.18em; color: #4A5B82">APP ICON SIZES</div>
+<div style="display: flex; align-items: flex-end; gap: 28px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px"><svg width="120" height="120" viewBox="0 0 512 512" role="img" aria-label="Icon at App Store size"><use href="#famIcon"/></svg><span style="font-size: 12px; color: #4A5B82; font-weight: 600">App Store</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px"><svg width="84" height="84" viewBox="0 0 512 512" role="img" aria-label="Icon at home screen size"><use href="#famIcon"/></svg><span style="font-size: 12px; color: #4A5B82; font-weight: 600">Home screen</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px"><svg width="58" height="58" viewBox="0 0 512 512" role="img" aria-label="Icon at spotlight size"><use href="#famIcon"/></svg><span style="font-size: 12px; color: #4A5B82; font-weight: 600">Spotlight</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px"><svg width="36" height="36" viewBox="0 0 512 512" role="img" aria-label="Icon at settings size"><use href="#famIcon"/></svg><span style="font-size: 12px; color: #4A5B82; font-weight: 600">Settings</span></div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 12px; font-weight: 800; letter-spacing: 0.18em; color: #4A5B82">LOCKUPS</div>
+<div style="display: flex; gap: 16px">
+<div style="flex: 1; height: 92px; border-radius: 20px; background: #F4F7FE; border: 1px solid #DDE5F5; display: flex; align-items: center; justify-content: center; gap: 14px"><svg width="50" height="50" viewBox="0 0 512 512" aria-hidden="true"><use href="#famIcon"/></svg><span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 36px; color: #0A2260">Fam</span></div>
+<div style="flex: 1; height: 92px; border-radius: 20px; background: #0A2260; display: flex; align-items: center; justify-content: center; gap: 14px"><svg width="50" height="50" viewBox="0 0 512 512" aria-hidden="true"><use href="#famIcon"/></svg><span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 36px; color: #ffffff">Fam</span></div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 12px; font-weight: 800; letter-spacing: 0.18em; color: #4A5B82">PALETTE</div>
+<div style="display: flex; gap: 14px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px"><div style="height: 58px; border-radius: 14px; background: #061538"></div><div><div style="font-size: 13px; font-weight: 700">Midnight</div><div style="font-size: 12px; color: #4A5B82">#061538</div></div></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px"><div style="height: 58px; border-radius: 14px; background: #0A2260"></div><div><div style="font-size: 13px; font-weight: 700">Navy</div><div style="font-size: 12px; color: #4A5B82">#0A2260</div></div></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px"><div style="height: 58px; border-radius: 14px; background: #1D4ED8"></div><div><div style="font-size: 13px; font-weight: 700">Royal</div><div style="font-size: 12px; color: #4A5B82">#1D4ED8</div></div></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px"><div style="height: 58px; border-radius: 14px; background: #BFD4FF"></div><div><div style="font-size: 13px; font-weight: 700">Ice</div><div style="font-size: 12px; color: #4A5B82">#BFD4FF</div></div></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px"><div style="height: 58px; border-radius: 14px; background: #ffffff; border: 1px solid #DDE5F5"></div><div><div style="font-size: 13px; font-weight: 700">White</div><div style="font-size: 12px; color: #4A5B82">#FFFFFF</div></div></div>
+</div>
+</div>
+
+<div style="font-size: 13px; color: #4A5B82; line-height: 1.5">Type: <b style="color: #0B1B3F">Playfair Display</b> for the wordmark, <b style="color: #0B1B3F">Manrope</b> for the interface. The mark is an F built as a tower on a base line.</div>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Splash"><div class="cap">1 Splash</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: linear-gradient(170deg, #0F2F85 0%, #0A2260 38%, #061538 100%); font-family: 'Manrope', system-ui, sans-serif; color: #ffffff">
+<div style="position: absolute; width: 620px; height: 620px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.14); left: -115px; top: 40px"></div>
+<div style="position: absolute; width: 440px; height: 440px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.16); left: -25px; top: 130px"></div>
+<div style="position: absolute; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(47,104,238,0.45), rgba(47,104,238,0)); left: 65px; top: 150px"></div>
+
+<div style="position: absolute; left: 0; right: 0; top: 190px; display: flex; flex-direction: column; align-items: center; gap: 26px">
+<svg width="138" height="138" viewBox="0 0 512 512" role="img" aria-label="Fam app icon" style="filter: drop-shadow(0 24px 30px rgba(0,0,0,0.5))">
+<defs>
+<linearGradient id="ib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F68EE"/><stop offset="0.5" stop-color="#123A9C"/><stop offset="1" stop-color="#061538"/></linearGradient>
+<radialGradient id="ig" cx="0.25" cy="0.15" r="0.75"><stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+<linearGradient id="im" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#BFD4FF"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="118" fill="url(#ib)"/>
+<rect width="512" height="512" rx="118" fill="url(#ig)"/>
+<rect x="8" y="8" width="496" height="496" rx="110" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="3"/>
+<g transform="translate(16 -9)">
+<path fill="url(#im)" d="M166 118h170a16 16 0 0 1 16 16v38a16 16 0 0 1-16 16H236v42h72a16 16 0 0 1 16 16v26a16 16 0 0 1-16 16h-72v110h-70z"/>
+<g fill="#1D4ED8" fill-opacity="0.38"><rect x="180" y="210" width="16" height="22" rx="3"/><rect x="206" y="210" width="16" height="22" rx="3"/><rect x="180" y="258" width="16" height="22" rx="3"/><rect x="206" y="258" width="16" height="22" rx="3"/><rect x="180" y="306" width="16" height="22" rx="3"/><rect x="206" y="306" width="16" height="22" rx="3"/></g>
+<rect x="188" y="350" width="26" height="48" rx="4" fill="#0A2260" fill-opacity="0.9"/>
+<rect x="134" y="398" width="244" height="12" rx="6" fill="#ffffff"/>
+</g>
+</svg>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 52px; line-height: 1; letter-spacing: 0.02em">Fam</div>
+<div style="font-size: 12px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; color: #BFD4FF">Property &amp; rental control</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 28px; right: 28px; bottom: 56px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 14px"><span style="width: 22px; height: 6px; border-radius: 3px; background: #ffffff"></span><span style="width: 6px; height: 6px; border-radius: 3px; background: rgba(191,212,255,0.45)"></span><span style="width: 6px; height: 6px; border-radius: 3px; background: rgba(191,212,255,0.45)"></span></div>
+<div style="text-align: center; font-size: 15px; line-height: 1.5; color: #D6E3FF; margin-bottom: 10px">Properties, shops, tenants, stock and rent.<br>One calm place to run them all.</div>
+<a href="#s-Signup" style="height: 54px; border-radius: 16px; background: #ffffff; color: #0A2260; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px rgba(0,0,0,0.3)">Get started</a>
+<a href="#s-Login" style="height: 54px; border-radius: 16px; border: 1.5px solid rgba(191,212,255,0.55); color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">I already have an account</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Login"><div class="cap">2 Login</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 300px; background: linear-gradient(170deg, #0F2F85 0%, #0A2260 50%, #061538 100%); overflow: hidden">
+<div style="position: absolute; width: 420px; height: 420px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.15); right: -170px; top: -120px"></div>
+<div style="position: absolute; width: 260px; height: 260px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.18); right: -90px; top: -60px"></div>
+</div>
+<div style="position: absolute; left: 28px; top: 48px; right: 28px; color: #ffffff; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="46" height="46" viewBox="0 0 512 512" role="img" aria-label="Fam icon">
+<defs><linearGradient id="ib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F68EE"/><stop offset="0.5" stop-color="#123A9C"/><stop offset="1" stop-color="#061538"/></linearGradient><linearGradient id="im" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#BFD4FF"/></linearGradient></defs>
+<rect width="512" height="512" rx="118" fill="url(#ib)"/><rect x="8" y="8" width="496" height="496" rx="110" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="3"/>
+<g transform="translate(16 -9)"><path fill="url(#im)" d="M166 118h170a16 16 0 0 1 16 16v38a16 16 0 0 1-16 16H236v42h72a16 16 0 0 1 16 16v26a16 16 0 0 1-16 16h-72v110h-70z"/><g fill="#1D4ED8" fill-opacity="0.38"><rect x="180" y="210" width="16" height="22" rx="3"/><rect x="206" y="210" width="16" height="22" rx="3"/><rect x="180" y="258" width="16" height="22" rx="3"/><rect x="206" y="258" width="16" height="22" rx="3"/><rect x="180" y="306" width="16" height="22" rx="3"/><rect x="206" y="306" width="16" height="22" rx="3"/></g><rect x="188" y="350" width="26" height="48" rx="4" fill="#0A2260" fill-opacity="0.9"/><rect x="134" y="398" width="244" height="12" rx="6" fill="#ffffff"/></g>
+</svg>
+<span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 30px">Fam</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 18px">
+<div style="font-size: 30px; font-weight: 800; line-height: 1.1">Welcome back</div>
+<div style="font-size: 15px; color: #D6E3FF">Sign in to manage your portfolio.</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 20px; right: 20px; top: 232px; background: #ffffff; border-radius: 28px; padding: 22px 20px 20px; box-shadow: 0 24px 60px rgba(10,34,96,0.16); display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; background: #EEF3FD; border-radius: 14px; padding: 4px">
+<span style="flex: 1; text-align: center; padding: 9px 0; border-radius: 11px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 700">Owner</span>
+<span style="flex: 1; text-align: center; padding: 9px 0; font-size: 13px; font-weight: 700; color: #3D4E78">Manager</span>
+<span style="flex: 1; text-align: center; padding: 9px 0; font-size: 13px; font-weight: 700; color: #3D4E78">Staff</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="em" style="font-size: 13px; font-weight: 700; color: #3D4E78">Email or phone</label>
+<div style="height: 50px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: #3D4E78">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 8l9 6 9-6"/></svg>
+<input id="em" type="text" placeholder="you@example.com" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F">
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="pw" style="font-size: 13px; font-weight: 700; color: #3D4E78">Password</label>
+<div style="height: 50px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; color: #3D4E78">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+<input id="pw" type="password" placeholder="Enter your password" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F">
+<button aria-label="Show password" style="width: 44px; height: 44px; border: 0; background: transparent; color: #3D4E78; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+</div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #3D4E78"><span style="width: 20px; height: 20px; border-radius: 6px; background: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>Keep me signed in</span>
+<a href="#s-Login" style="font-size: 13px; font-weight: 700; color: #1D4ED8; padding: 10px 0">Forgot password?</a>
+</div>
+<a href="#s-Dashboard" style="height: 54px; border-radius: 16px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px rgba(29,78,216,0.32)">Sign in</a>
+<div style="display: flex; align-items: center; gap: 12px; color: #4A5B82; font-size: 12px; font-weight: 600"><span style="flex: 1; height: 1px; background: #DDE5F5"></span>or continue with<span style="flex: 1; height: 1px; background: #DDE5F5"></span></div>
+<div style="display: flex; gap: 12px">
+<a href="#s-Dashboard" style="flex: 1; height: 50px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 700; color: #0A2260"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4H5a1 1 0 0 0-1 1v2M17 4h2a1 1 0 0 1 1 1v2M7 20H5a1 1 0 0 1-1-1v-2M17 20h2a1 1 0 0 0 1-1v-2M9 10v1M15 10v1M12 10v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/></svg>Face ID</a>
+<a href="#s-Dashboard" style="flex: 1; height: 50px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 700; color: #0A2260"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11v4a6 6 0 0 1-1 3M8 10a4 4 0 0 1 8 0v2M5 12a7 7 0 0 1 14 0v2a9 9 0 0 1-1.5 5M8.5 15c0 2-.4 3.5-1 5"/></svg>Fingerprint</a>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-size: 14px; color: #3D4E78; font-weight: 600">New to Fam? <a href="#s-Signup" style="color: #1D4ED8; font-weight: 800; padding: 12px 4px">Create an account</a></div>
+</div>
+</div></section>
+<section class="page phone" id="s-Signup"><div class="cap">3 Sign up</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #ffffff; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F; padding: 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="#s-Splash" aria-label="Back" style="width: 44px; height: 44px; border-radius: 14px; background: #F4F7FE; display: flex; align-items: center; justify-content: center; color: #0A2260"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+<span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 24px; color: #0A2260">Fam</span>
+<span style="width: 44px"></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px">
+<div style="font-size: 28px; font-weight: 800; line-height: 1.12; color: #0A2260">Create your account</div>
+<div style="font-size: 14px; color: #3D4E78; line-height: 1.45">Set up your portfolio in a few minutes.</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; gap: 6px"><span style="flex: 1; height: 6px; border-radius: 3px; background: #1D4ED8"></span><span style="flex: 1; height: 6px; border-radius: 3px; background: #DDE5F5"></span><span style="flex: 1; height: 6px; border-radius: 3px; background: #DDE5F5"></span></div>
+<div style="font-size: 12px; font-weight: 700; color: #3D4E78">Step 1 of 3 · Your details</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="nm" style="font-size: 13px; font-weight: 700; color: #3D4E78">Full name</label>
+<div style="height: 48px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg><input id="nm" type="text" placeholder="Your full name" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="em" style="font-size: 13px; font-weight: 700; color: #3D4E78">Email</label>
+<div style="height: 48px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 8l9 6 9-6"/></svg><input id="em" type="email" placeholder="you@example.com" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="ph" style="font-size: 13px; font-weight: 700; color: #3D4E78">Phone number</label>
+<div style="height: 48px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><input id="ph" type="tel" placeholder="+251 9XX XXX XXX" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="pw" style="font-size: 13px; font-weight: 700; color: #3D4E78">Password</label>
+<div style="height: 48px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><input id="pw" type="password" placeholder="At least 8 characters" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"><button aria-label="Show password" style="width: 44px; height: 44px; border: 0; background: transparent; color: #3D4E78; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; font-weight: 700; color: #3D4E78">I am a</div>
+<div style="display: flex; gap: 8px">
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 700">Property owner</span>
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 700">Manager</span>
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 700">Staff</span>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3D4E78; font-weight: 600; line-height: 1.4"><span style="width: 22px; height: 22px; flex: none; border-radius: 7px; background: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><span>I agree to the <b style="color: #1D4ED8">Terms</b> and <b style="color: #1D4ED8">Privacy Policy</b></span></div>
+
+<a href="#s-Dashboard" style="height: 54px; border-radius: 16px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px rgba(29,78,216,0.3)">Create account</a>
+<div style="text-align: center; font-size: 14px; color: #3D4E78; font-weight: 600">Already a member? <a href="#s-Login" style="color: #1D4ED8; font-weight: 800; padding: 12px 4px">Sign in</a></div>
+</div>
+</div></section>
+<section class="page phone" id="s-Dashboard"><div class="cap">4 Dashboard</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="44" height="44" viewBox="0 0 512 512" role="img" aria-label="Fam icon">
+<defs><linearGradient id="ib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F68EE"/><stop offset="0.5" stop-color="#123A9C"/><stop offset="1" stop-color="#061538"/></linearGradient><linearGradient id="im" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#BFD4FF"/></linearGradient></defs>
+<rect width="512" height="512" rx="118" fill="url(#ib)"/>
+<g transform="translate(16 -9)"><path fill="url(#im)" d="M166 118h170a16 16 0 0 1 16 16v38a16 16 0 0 1-16 16H236v42h72a16 16 0 0 1 16 16v26a16 16 0 0 1-16 16h-72v110h-70z"/><g fill="#1D4ED8" fill-opacity="0.38"><rect x="180" y="210" width="16" height="22" rx="3"/><rect x="206" y="210" width="16" height="22" rx="3"/><rect x="180" y="258" width="16" height="22" rx="3"/><rect x="206" y="258" width="16" height="22" rx="3"/><rect x="180" y="306" width="16" height="22" rx="3"/><rect x="206" y="306" width="16" height="22" rx="3"/></g><rect x="188" y="350" width="26" height="48" rx="4" fill="#0A2260" fill-opacity="0.9"/><rect x="134" y="398" width="244" height="12" rx="6" fill="#ffffff"/></g>
+</svg>
+<div style="flex: 1; min-width: 0">
+<div style="font-size: 12px; font-weight: 600; color: #4A5B82">Good evening</div>
+<div style="font-size: 19px; font-weight: 800; color: #0A2260">Portfolio overview</div>
+</div>
+<button aria-label="Search" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+<button aria-label="Notifications, 4 new" style="position: relative; width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4"/></svg><span style="position: absolute; top: 7px; right: 8px; min-width: 16px; height: 16px; border-radius: 8px; background: #1D4ED8; color: #ffffff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-sizing: content-box; padding: 0 1px">4</span></button>
+</div>
+
+<div style="position: relative; overflow: hidden; border-radius: 24px; padding: 18px 20px; background: linear-gradient(150deg, #1A47C4 0%, #0A2260 55%, #061538 100%); color: #ffffff; box-shadow: 0 18px 36px rgba(10,34,96,0.28); display: flex; flex-direction: column; gap: 8px; height: 146px; box-sizing: border-box">
+<div style="position: absolute; width: 220px; height: 220px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.2); right: -70px; top: -90px"></div>
+<div style="position: absolute; width: 130px; height: 130px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.22); right: -30px; top: -50px"></div>
+<div style="display: flex; justify-content: space-between; align-items: center; position: relative"><span style="font-size: 13px; font-weight: 600; color: #D6E3FF">Collected this month</span><span style="font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.16); padding: 5px 10px; border-radius: 999px">+8.4% vs Sep</span></div>
+<div style="font-size: 34px; font-weight: 800; letter-spacing: -0.01em; position: relative; line-height: 1.1"><span style="font-size: 16px; font-weight: 700; color: #BFD4FF; margin-right: 6px">ETB</span>1,284,500</div>
+<div style="position: relative; display: flex; flex-direction: column; gap: 6px"><div style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.18)"><div style="width: 84%; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #BFD4FF, #ffffff)"></div></div><div style="font-size: 12px; font-weight: 600; color: #D6E3FF">84% of ETB 1,520,000 expected</div></div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<a href="#s-Properties" style="height: 74px; box-sizing: border-box; background: #ffffff; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><span style="width: 42px; height: 42px; border-radius: 13px; background: #E6EEFF; color: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span><span><span style="display: block; font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">12</span><span style="display: block; font-size: 12px; font-weight: 600; color: #4A5B82">Properties</span></span></a>
+<a href="#s-Shops" style="height: 74px; box-sizing: border-box; background: #ffffff; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><span style="width: 42px; height: 42px; border-radius: 13px; background: #E6EEFF; color: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9c0 1.7 1.3 2.5 2.7 2.5S9.3 10.7 9.3 9c0 1.7 1.3 2.5 2.7 2.5s2.7-.8 2.7-2.5c0 1.7 1.3 2.5 2.7 2.5S20 10.7 20 9M10 20v-5h4v5"/></svg></span><span><span style="display: block; font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">48</span><span style="display: block; font-size: 12px; font-weight: 600; color: #4A5B82">Shops · 41 rented</span></span></a>
+<a href="#s-Tenants" style="height: 74px; box-sizing: border-box; background: #ffffff; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><span style="width: 42px; height: 42px; border-radius: 13px; background: #E6EEFF; color: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span><span><span style="display: block; font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">63</span><span style="display: block; font-size: 12px; font-weight: 600; color: #4A5B82">Active tenants</span></span></a>
+<a href="#s-Rent" style="height: 74px; box-sizing: border-box; background: #ffffff; border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><span style="width: 42px; height: 42px; border-radius: 13px; background: #FDECEC; color: #B42318; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span><span style="display: block; font-size: 22px; font-weight: 800; color: #B42318; line-height: 1.1">7</span><span style="display: block; font-size: 12px; font-weight: 600; color: #4A5B82">Overdue · ETB 96,200</span></span></a>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 800; color: #0A2260">Quick actions</div>
+<div style="display: flex; gap: 8px">
+<a href="#s-AddProperty" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #0A2260"><span style="width: 100%; height: 50px; border-radius: 16px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M2 21h20M18 5v6M15 8h6"/></svg></span>Property</a>
+<a href="#s-AddShop" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #0A2260"><span style="width: 100%; height: 50px; border-radius: 16px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M10 20v-5h4v5"/></svg></span>Shop</a>
+<a href="#s-AddTenant" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #0A2260"><span style="width: 100%; height: 50px; border-radius: 16px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M19 8v6M16 11h6"/></svg></span>Tenant</a>
+<a href="#s-Stock" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #0A2260"><span style="width: 100%; height: 50px; border-radius: 16px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5zM3 7.5l9 4.5 9-4.5M12 12v9"/></svg></span>Stock</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #0A2260"><span style="width: 100%; height: 50px; border-radius: 16px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Payment</a>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 15px; font-weight: 800; color: #0A2260">Due this week</span><a href="#s-Rent" style="font-size: 13px; font-weight: 700; color: #1D4ED8; padding: 6px 0">See all</a></div>
+<div style="background: #ffffff; border-radius: 18px; padding: 8px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><span style="width: 40px; height: 40px; border-radius: 50%; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">HB</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Hana Bekele</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Shop B-04 · ETB 18,500 · due Oct 12</span></span><a href="#s-Rent" style="height: 40px; padding: 0 14px; border-radius: 12px; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center">Remind</a></div>
+<div style="background: #ffffff; border-radius: 18px; padding: 8px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><span style="width: 40px; height: 40px; border-radius: 50%; background: #FDECEC; color: #B42318; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">SG</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Samuel Girma</span><span style="display: block; font-size: 12px; color: #B42318; font-weight: 700">Unit 3A · ETB 24,000 · 3 days late</span></span><a href="#s-Rent" style="height: 40px; padding: 0 14px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 800; display: flex; align-items: center">Remind</a></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Properties"><div class="cap">5 Properties</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="flex: 1; font-size: 26px; font-weight: 800; color: #0A2260">Properties</div>
+<button aria-label="Search" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+<button aria-label="Filter" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+</div>
+
+<div style="display: flex; background: #E6EEFF; border-radius: 16px; padding: 4px">
+<a href="#s-Properties" style="flex: 1; height: 40px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">Properties</a>
+<a href="#s-Shops" style="flex: 1; height: 40px; border-radius: 12px; color: #123A9C; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">Shops</a>
+<a href="#s-Stock" style="flex: 1; height: 40px; border-radius: 12px; color: #123A9C; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">Stock</a>
+</div>
+
+<div style="display: flex; gap: 8px; overflow: hidden">
+<span style="padding: 8px 14px; border-radius: 999px; background: #1D4ED8; color: #ffffff; font-size: 13px; font-weight: 800; white-space: nowrap">All 12</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Residential</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Commercial</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Mixed-use</span>
+</div>
+
+<div style="background: #ffffff; border-radius: 22px; padding: 12px; box-shadow: 0 6px 18px rgba(10,34,96,0.07); display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 12px">
+<svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="Sunrise Tower illustration" style="flex: none"><rect width="84" height="84" rx="18" fill="#123A9C"/><path d="M20 66V26h24v40M44 66V40h20v26" fill="#ffffff" fill-opacity="0.92"/><path d="M26 34h12M26 42h12M26 50h12M26 58h12M50 48h8M50 56h8" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round"/><rect x="14" y="66" width="56" height="3" rx="1.5" fill="#BFD4FF"/></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 16px; font-weight: 800; color: #0A2260">Sunrise Tower</span><span style="font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 4px 9px; border-radius: 999px">Residential</span></div>
+<div style="font-size: 12px; color: #4A5B82; font-weight: 600">Bole, Addis Ababa</div>
+<div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-top: 4px"><span>34 of 36 units</span><span style="color: #123A9C">94%</span></div>
+<div style="height: 7px; border-radius: 4px; background: #E6EEFF"><div style="width: 94%; height: 7px; border-radius: 4px; background: #1D4ED8"></div></div>
+<div style="font-size: 13px; font-weight: 800; color: #0A2260">ETB 412,000<span style="font-weight: 600; color: #4A5B82"> / month</span></div>
+</div>
+</div>
+<div style="display: flex; gap: 8px; border-top: 1px solid #EEF3FD; padding-top: 8px">
+<a href="#s-Shops" style="flex: 1; height: 40px; border-radius: 12px; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>View units</a>
+<a href="#s-AddProperty" style="flex: 1; height: 40px; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/></svg>Edit</a>
+<button aria-label="More options" style="width: 44px; height: 40px; border-radius: 12px; border: 1.5px solid #DDE5F5; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+</div>
+</div>
+
+<div style="background: #ffffff; border-radius: 22px; padding: 12px; box-shadow: 0 6px 18px rgba(10,34,96,0.07); display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 12px">
+<svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="Bole Plaza illustration" style="flex: none"><rect width="84" height="84" rx="18" fill="#1D4ED8"/><path d="M16 66V36h20v30M36 66V24h22v42M58 66V44h12v22" fill="#ffffff" fill-opacity="0.92"/><path d="M22 44h8M22 52h8M42 32h10M42 40h10M42 48h10M42 56h10" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round"/><rect x="12" y="66" width="60" height="3" rx="1.5" fill="#BFD4FF"/></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 16px; font-weight: 800; color: #0A2260">Bole Plaza</span><span style="font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 4px 9px; border-radius: 999px">Commercial</span></div>
+<div style="font-size: 12px; color: #4A5B82; font-weight: 600">Bole Road, Addis Ababa</div>
+<div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-top: 4px"><span>41 of 48 shops</span><span style="color: #123A9C">85%</span></div>
+<div style="height: 7px; border-radius: 4px; background: #E6EEFF"><div style="width: 85%; height: 7px; border-radius: 4px; background: #1D4ED8"></div></div>
+<div style="font-size: 13px; font-weight: 800; color: #0A2260">ETB 689,000<span style="font-weight: 600; color: #4A5B82"> / month</span></div>
+</div>
+</div>
+<div style="display: flex; gap: 8px; border-top: 1px solid #EEF3FD; padding-top: 8px">
+<a href="#s-Shops" style="flex: 1; height: 40px; border-radius: 12px; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>View units</a>
+<a href="#s-AddProperty" style="flex: 1; height: 40px; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/></svg>Edit</a>
+<button aria-label="More options" style="width: 44px; height: 40px; border-radius: 12px; border: 1.5px solid #DDE5F5; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+</div>
+</div>
+
+<div style="background: #ffffff; border-radius: 22px; padding: 12px; box-shadow: 0 6px 18px rgba(10,34,96,0.07); display: flex; gap: 12px">
+<svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="Meskel Court illustration" style="flex: none"><rect width="84" height="84" rx="18" fill="#0A2260"/><path d="M18 66V34h18v32M36 66V46h30v20" fill="#ffffff" fill-opacity="0.92"/><path d="M24 42h6M24 50h6M24 58h6M42 54h6M54 54h6" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round"/><rect x="12" y="66" width="60" height="3" rx="1.5" fill="#BFD4FF"/></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 16px; font-weight: 800; color: #0A2260">Meskel Court</span><span style="font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 4px 9px; border-radius: 999px">Mixed-use</span></div>
+<div style="font-size: 12px; color: #4A5B82; font-weight: 600">Kazanchis, Addis Ababa</div>
+<div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-top: 4px"><span>22 of 28 units</span><span style="color: #123A9C">79%</span></div>
+<div style="height: 7px; border-radius: 4px; background: #E6EEFF"><div style="width: 79%; height: 7px; border-radius: 4px; background: #1D4ED8"></div></div>
+</div>
+</div>
+</div>
+
+<a href="#s-AddProperty" style="position: absolute; right: 20px; bottom: 92px; height: 54px; padding: 0 22px 0 18px; border-radius: 27px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 14px 28px rgba(10,34,96,0.38)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add property</a>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-AddProperty"><div class="cap">6 Add property</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #ffffff; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="#s-Properties" aria-label="Back" style="width: 44px; height: 44px; border-radius: 14px; background: #F4F7FE; display: flex; align-items: center; justify-content: center; color: #0A2260"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+<div style="flex: 1; font-size: 22px; font-weight: 800; color: #0A2260">Add property</div>
+<a href="#s-Properties" aria-label="Close" style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #4A5B82"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+</div>
+
+<div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700">
+<span style="display: flex; align-items: center; gap: 6px; color: #0A2260"><span style="width: 24px; height: 24px; border-radius: 50%; background: #1D4ED8; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">1</span>Details</span>
+<span style="flex: 1; height: 2px; background: #DDE5F5"></span>
+<span style="display: flex; align-items: center; gap: 6px; color: #4A5B82"><span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #BFCBE6; display: flex; align-items: center; justify-content: center; font-size: 12px">2</span>Units</span>
+<span style="flex: 1; height: 2px; background: #DDE5F5"></span>
+<span style="display: flex; align-items: center; gap: 6px; color: #4A5B82"><span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #BFCBE6; display: flex; align-items: center; justify-content: center; font-size: 12px">3</span>Photos</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="pn" style="font-size: 13px; font-weight: 700; color: #3D4E78">Property name</label>
+<input id="pn" type="text" placeholder="e.g. Sunrise Tower" style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; font-weight: 700; color: #3D4E78">Property type</div>
+<div style="display: flex; gap: 8px">
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 700">Residential</span>
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 700">Commercial</span>
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 700">Mixed-use</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="ad" style="font-size: 13px; font-weight: 700; color: #3D4E78">Address</label>
+<div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="ad" type="text" placeholder="Street, sub-city, city" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"><button style="height: 34px; padding: 0 12px; border: 0; border-radius: 10px; background: #E6EEFF; color: #123A9C; font: 800 12px 'Manrope', sans-serif">Pin on map</button></div>
+</div>
+
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="fl" style="font-size: 13px; font-weight: 700; color: #3D4E78">Floors</label><input id="fl" type="number" placeholder="6" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="un" style="font-size: 13px; font-weight: 700; color: #3D4E78">Units or shops</label><input id="un" type="number" placeholder="36" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="rt" style="font-size: 13px; font-weight: 700; color: #3D4E78">Average monthly rent per unit</label>
+<div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px"><span style="font-size: 14px; font-weight: 800; color: #123A9C">ETB</span><input id="rt" type="text" placeholder="0.00" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+
+<div style="height: 96px; box-sizing: border-box; border: 1.5px dashed #9DB5EC; border-radius: 18px; background: #F4F7FE; display: flex; align-items: center; justify-content: center; gap: 12px; color: #123A9C"><span style="width: 44px; height: 44px; border-radius: 14px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M4 19h16"/></svg></span><span><span style="display: block; font-size: 14px; font-weight: 800">Upload cover photo</span><span style="display: block; font-size: 12px; font-weight: 600; color: #4A5B82">JPG or PNG, up to 10 MB</span></span></div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 26px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; gap: 12px">
+<a href="#s-Properties" style="flex: 1; height: 54px; border-radius: 16px; border: 1.5px solid #BFCBE6; color: #0A2260; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center">Save draft</a>
+<a href="#s-Properties" style="flex: 1.4; height: 54px; border-radius: 16px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 12px 24px rgba(29,78,216,0.3)">Continue to units<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Shops"><div class="cap">7 Shops</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="flex: 1; font-size: 26px; font-weight: 800; color: #0A2260">Shops</div>
+<button aria-label="Search shops" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+<button aria-label="Export list" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button>
+</div>
+
+<div style="display: flex; background: #E6EEFF; border-radius: 16px; padding: 4px">
+<a href="#s-Properties" style="flex: 1; height: 40px; border-radius: 12px; color: #123A9C; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">Properties</a>
+<a href="#s-Shops" style="flex: 1; height: 40px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">Shops</a>
+<a href="#s-Stock" style="flex: 1; height: 40px; border-radius: 12px; color: #123A9C; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">Stock</a>
+</div>
+
+<button style="height: 46px; border: 1.5px solid #DDE5F5; border-radius: 14px; background: #ffffff; display: flex; align-items: center; gap: 10px; padding: 0 14px; font: 800 14px 'Manrope', sans-serif; color: #0A2260; text-align: left"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20"/></svg><span style="flex: 1">Bole Plaza</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+
+<div style="display: flex; gap: 10px">
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">48</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Total shops</div></div>
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #1D4ED8; line-height: 1.1">41</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Rented</div></div>
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">7</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Vacant</div></div>
+</div>
+
+<div style="display: flex; gap: 8px; overflow: hidden">
+<span style="padding: 8px 14px; border-radius: 999px; background: #1D4ED8; color: #ffffff; font-size: 13px; font-weight: 800; white-space: nowrap">All</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Rented</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Vacant</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Rent overdue</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 52px; height: 52px; border-radius: 15px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">B-04</span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Hana Bekele</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Ground floor · 32 m²</span></span>
+<span style="text-align: right"><span style="display: block; font-size: 14px; font-weight: 800; color: #0A2260">18,500</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 3px 9px; border-radius: 999px">Rented</span></span>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 52px; height: 52px; border-radius: 15px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">B-05</span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Dawit Alemu</span><span style="display: block; font-size: 12px; color: #B42318; font-weight: 700">Ground floor · 28 m² · 5 days late</span></span>
+<span style="text-align: right"><span style="display: block; font-size: 14px; font-weight: 800; color: #0A2260">16,000</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #B42318; background: #FDECEC; padding: 3px 9px; border-radius: 999px">Overdue</span></span>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 52px; height: 52px; border-radius: 15px; background: #E6EEFF; color: #123A9C; border: 1.5px dashed #9DB5EC; box-sizing: border-box; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">B-06</span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Vacant</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Ground floor · 40 m² · asking 22,000</span></span>
+<a href="#s-AddTenant" style="height: 40px; padding: 0 14px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 800; display: flex; align-items: center">Assign</a>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 52px; height: 52px; border-radius: 15px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">C-12</span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Meron Tadesse</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">First floor · 45 m²</span></span>
+<span style="text-align: right"><span style="display: block; font-size: 14px; font-weight: 800; color: #0A2260">27,500</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 3px 9px; border-radius: 999px">Rented</span></span>
+</div>
+</div>
+</div>
+
+<a href="#s-AddShop" style="position: absolute; right: 20px; bottom: 92px; height: 54px; padding: 0 22px 0 18px; border-radius: 27px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 14px 28px rgba(10,34,96,0.38)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add shop</a>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-AddShop"><div class="cap">8 Add shop</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 26px; font-weight: 800; color: #0A2260">Shops</div>
+<div style="height: 40px; border-radius: 12px; background: #E6EEFF"></div>
+<div style="height: 76px; border-radius: 18px; background: #ffffff"></div>
+<div style="height: 76px; border-radius: 18px; background: #ffffff"></div>
+</div>
+<div style="position: absolute; inset: 0; background: rgba(6,21,56,0.62)"></div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; top: 118px; background: #ffffff; border-radius: 30px 30px 0 0; padding: 10px 20px 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -20px 50px rgba(6,21,56,0.3)">
+<div style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #C9D5EE"></div>
+<div style="display: flex; align-items: center">
+<div style="flex: 1; font-size: 22px; font-weight: 800; color: #0A2260">Add shop</div>
+<a href="#s-Shops" aria-label="Close" style="width: 44px; height: 44px; border-radius: 14px; background: #F4F7FE; display: flex; align-items: center; justify-content: center; color: #0A2260"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<div style="font-size: 13px; font-weight: 700; color: #3D4E78">Property</div>
+<div style="height: 48px; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 15px; font-weight: 700; color: #0A2260"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20"/></svg><span style="flex: 1">Bole Plaza</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A5B82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+</div>
+
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="sn" style="font-size: 13px; font-weight: 700; color: #3D4E78">Shop number</label><input id="sn" type="text" placeholder="B-07" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="fl" style="font-size: 13px; font-weight: 700; color: #3D4E78">Floor</label><input id="fl" type="text" placeholder="Ground" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="sz" style="font-size: 13px; font-weight: 700; color: #3D4E78">Size (m²)</label><input id="sz" type="number" placeholder="30" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+<div style="flex: 1.3; display: flex; flex-direction: column; gap: 5px"><label for="rn" style="font-size: 13px; font-weight: 700; color: #3D4E78">Monthly rent</label><div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span style="font-size: 13px; font-weight: 800; color: #123A9C">ETB</span><input id="rn" type="text" placeholder="0.00" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; font-weight: 700; color: #3D4E78">Status</div>
+<div style="display: flex; gap: 8px">
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 700">Vacant</span>
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 700">Rented</span>
+<span style="flex: 1; text-align: center; padding: 11px 0; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; font-size: 13px; font-weight: 700">Maintenance</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="height: 44px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; color: #0A2260">Separate water and power meter<span style="width: 46px; height: 28px; border-radius: 14px; background: #1D4ED8; position: relative"><span style="position: absolute; right: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #ffffff"></span></span></div>
+<div style="height: 44px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; color: #0A2260">Storage room included<span style="width: 46px; height: 28px; border-radius: 14px; background: #C9D5EE; position: relative"><span style="position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #ffffff"></span></span></div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 26px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; gap: 12px">
+<a href="#s-Shops" style="flex: 1; height: 54px; border-radius: 16px; border: 1.5px solid #BFCBE6; color: #0A2260; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center">Cancel</a>
+<a href="#s-Shops" style="flex: 1.5; height: 54px; border-radius: 16px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px rgba(29,78,216,0.3)">Save shop</a>
+</div>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Tenants"><div class="cap">9 Tenants</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="flex: 1; font-size: 26px; font-weight: 800; color: #0A2260">Tenants</div>
+<button aria-label="Search tenants" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+<button aria-label="Filter tenants" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+</div>
+
+<div style="display: flex; gap: 8px; overflow: hidden">
+<span style="padding: 8px 14px; border-radius: 999px; background: #1D4ED8; color: #ffffff; font-size: 13px; font-weight: 800; white-space: nowrap">All 63</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Active</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Overdue 7</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Expiring 5</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+
+<div style="background: #ffffff; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; background: #E6EEFF; color: #123A9C; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">HB</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 800">Hana Bekele</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Shop B-04 · Bole Plaza</span></span><span style="font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 4px 10px; border-radius: 999px">Active</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><span style="flex: 1; font-size: 12px; color: #3D4E78; font-weight: 600">ETB 18,500 / month · lease to Mar 2027</span>
+<button aria-label="Call Hana" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button>
+<button aria-label="Message Hana" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></button></div>
+</div>
+
+<div style="background: #ffffff; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; background: #FDECEC; color: #B42318; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">DA</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 800">Dawit Alemu</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Shop B-05 · Bole Plaza</span></span><span style="font-size: 11px; font-weight: 800; color: #B42318; background: #FDECEC; padding: 4px 10px; border-radius: 999px">Overdue 5d</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><span style="flex: 1; font-size: 12px; color: #3D4E78; font-weight: 600">ETB 16,000 / month · lease to Jan 2027</span>
+<button aria-label="Call Dawit" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button>
+<button aria-label="Message Dawit" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></button></div>
+</div>
+
+<div style="background: #ffffff; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; background: #E6EEFF; color: #123A9C; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">MT</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 800">Meron Tadesse</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Shop C-12 · Bole Plaza</span></span><span style="font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 4px 10px; border-radius: 999px">Active</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><span style="flex: 1; font-size: 12px; color: #3D4E78; font-weight: 600">ETB 27,500 / month · lease to Aug 2027</span>
+<button aria-label="Call Meron" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button>
+<button aria-label="Message Meron" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></button></div>
+</div>
+
+<div style="background: #ffffff; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; background: #EEF1F8; color: #3D4E78; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">LF</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 800">Liya Fikru</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Unit 5C · Sunrise Tower</span></span><span style="font-size: 11px; font-weight: 800; color: #3D4E78; background: #EEF1F8; padding: 4px 10px; border-radius: 999px">Lease ends in 38d</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><span style="flex: 1; font-size: 12px; color: #3D4E78; font-weight: 600">ETB 21,000 / month · renewal needed</span>
+<button aria-label="Call Liya" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button>
+<button aria-label="Message Liya" style="width: 44px; height: 40px; border: 0; border-radius: 12px; background: #E6EEFF; color: #123A9C; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></button></div>
+</div>
+
+</div>
+</div>
+
+<a href="#s-AddTenant" style="position: absolute; right: 20px; bottom: 92px; height: 54px; padding: 0 22px 0 18px; border-radius: 27px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 14px 28px rgba(10,34,96,0.38)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add tenant</a>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-AddTenant"><div class="cap">10 Add tenant</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #ffffff; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="#s-Tenants" aria-label="Back" style="width: 44px; height: 44px; border-radius: 14px; background: #F4F7FE; display: flex; align-items: center; justify-content: center; color: #0A2260"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+<div style="flex: 1; font-size: 22px; font-weight: 800; color: #0A2260">Add tenant</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="tn" style="font-size: 13px; font-weight: 700; color: #3D4E78">Full name</label>
+<div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg><input id="tn" type="text" placeholder="Tenant or business name" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<label for="tp" style="font-size: 13px; font-weight: 700; color: #3D4E78">Phone number</label>
+<div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: #3D4E78"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><input id="tp" type="tel" placeholder="+251 9XX XXX XXX" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<div style="font-size: 13px; font-weight: 700; color: #3D4E78">Assign to shop or unit</div>
+<div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 15px; font-weight: 700; color: #0A2260"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M10 20v-5h4v5"/></svg><span style="flex: 1">Bole Plaza · Shop B-06</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A5B82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+</div>
+
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="ls" style="font-size: 13px; font-weight: 700; color: #3D4E78">Lease starts</label><input id="ls" type="text" placeholder="DD / MM / YYYY" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="le" style="font-size: 13px; font-weight: 700; color: #3D4E78">Lease ends</label><input id="le" type="text" placeholder="DD / MM / YYYY" style="height: 48px; box-sizing: border-box; width: 100%; border: 1.5px solid #DDE5F5; border-radius: 14px; padding: 0 14px; outline: 0; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div>
+</div>
+
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="mr" style="font-size: 13px; font-weight: 700; color: #3D4E78">Monthly rent</label><div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span style="font-size: 13px; font-weight: 800; color: #123A9C">ETB</span><input id="mr" type="text" placeholder="0.00" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px"><label for="dp" style="font-size: 13px; font-weight: 700; color: #3D4E78">Deposit</label><div style="height: 48px; box-sizing: border-box; border: 1.5px solid #DDE5F5; border-radius: 14px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span style="font-size: 13px; font-weight: 800; color: #123A9C">ETB</span><input id="dp" type="text" placeholder="0.00" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 600 15px 'Manrope', sans-serif; color: #0B1B3F"></div></div>
+</div>
+
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; height: 76px; box-sizing: border-box; border: 1.5px dashed #9DB5EC; border-radius: 16px; background: #F4F7FE; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #123A9C; font-size: 13px; font-weight: 800"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16c.5-1.5 1.5-2 3-2s2.5.5 3 2"/></svg>Upload ID</div>
+<div style="flex: 1; height: 76px; box-sizing: border-box; border: 1.5px dashed #9DB5EC; border-radius: 16px; background: #F4F7FE; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #123A9C; font-size: 13px; font-weight: 800"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/></svg>Upload lease</div>
+</div>
+
+<div style="height: 44px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; color: #0A2260">Invite tenant to the Fam app<span style="width: 46px; height: 28px; border-radius: 14px; background: #1D4ED8; position: relative"><span style="position: absolute; right: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #ffffff"></span></span></div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 26px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; gap: 12px">
+<a href="#s-Tenants" style="flex: 1; height: 54px; border-radius: 16px; border: 1.5px solid #BFCBE6; color: #0A2260; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center">Cancel</a>
+<a href="#s-Tenants" style="flex: 1.5; height: 54px; border-radius: 16px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px rgba(29,78,216,0.3)">Save tenant</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Stock"><div class="cap">11 Stock management</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="flex: 1; font-size: 26px; font-weight: 800; color: #0A2260">Stock</div>
+<button aria-label="Scan barcode" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 8v8M12 8v8M16 8v8"/></svg></button>
+<button aria-label="Search stock" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+</div>
+
+<div style="display: flex; background: #E6EEFF; border-radius: 16px; padding: 4px">
+<a href="#s-Properties" style="flex: 1; height: 40px; border-radius: 12px; color: #123A9C; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">Properties</a>
+<a href="#s-Shops" style="flex: 1; height: 40px; border-radius: 12px; color: #123A9C; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">Shops</a>
+<a href="#s-Stock" style="flex: 1; height: 40px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">Stock</a>
+</div>
+
+<div style="display: flex; gap: 8px">
+<span style="padding: 9px 16px; border-radius: 999px; background: #1D4ED8; color: #ffffff; font-size: 13px; font-weight: 800">Supplies</span>
+<span style="padding: 9px 16px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; border: 1px solid #DDE5F5">Rentable units</span>
+<span style="padding: 9px 16px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; border: 1px solid #DDE5F5">History</span>
+</div>
+
+<div style="display: flex; gap: 10px">
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">126</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Items</div></div>
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #1D4ED8; line-height: 1.1">9</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Low stock</div></div>
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #B42318; line-height: 1.1">2</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Out of stock</div></div>
+</div>
+
+<div style="display: flex; gap: 10px">
+<a href="#s-Stock" style="flex: 1; height: 48px; border-radius: 14px; background: #0A2260; color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V6M6 12l6-6 6 6"/></svg>Stock in</a>
+<a href="#s-Stock" style="flex: 1; height: 48px; border-radius: 14px; border: 1.5px solid #0A2260; color: #0A2260; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v14M6 12l6 6 6-6"/></svg>Stock out</a>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 44px; height: 44px; border-radius: 13px; background: #E6EEFF; color: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">LED bulbs 12W</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 3px 9px; border-radius: 999px">In stock · min 20</span></span>
+<span style="display: flex; align-items: center; gap: 4px"><button aria-label="Decrease LED bulbs" style="width: 40px; height: 40px; border: 1.5px solid #DDE5F5; border-radius: 12px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span style="min-width: 30px; text-align: center; font-size: 16px; font-weight: 800; color: #0A2260">48</span><button aria-label="Increase LED bulbs" style="width: 40px; height: 40px; border: 0; border-radius: 12px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></span>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 44px; height: 44px; border-radius: 13px; background: #E6EEFF; color: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Heavy door locks</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #3D4E78; background: #EEF1F8; padding: 3px 9px; border-radius: 999px">Low · min 8</span></span>
+<span style="display: flex; align-items: center; gap: 4px"><button aria-label="Decrease door locks" style="width: 40px; height: 40px; border: 1.5px solid #DDE5F5; border-radius: 12px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span style="min-width: 30px; text-align: center; font-size: 16px; font-weight: 800; color: #0A2260">6</span><button aria-label="Increase door locks" style="width: 40px; height: 40px; border: 0; border-radius: 12px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></span>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 44px; height: 44px; border-radius: 13px; background: #FDECEC; color: #B42318; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/></svg></span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Pump seals</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #B42318; background: #FDECEC; padding: 3px 9px; border-radius: 999px">Out of stock · min 4</span></span>
+<span style="display: flex; align-items: center; gap: 4px"><button aria-label="Decrease pump seals" style="width: 40px; height: 40px; border: 1.5px solid #DDE5F5; border-radius: 12px; background: #ffffff; color: #9AA8C7; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span style="min-width: 30px; text-align: center; font-size: 16px; font-weight: 800; color: #B42318">0</span><button aria-label="Increase pump seals" style="width: 40px; height: 40px; border: 0; border-radius: 12px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></span>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 44px; height: 44px; border-radius: 13px; background: #E6EEFF; color: #1D4ED8; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5zM3 7.5l9 4.5 9-4.5M12 12v9"/></svg></span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">White paint 20L</span><span style="display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 3px 9px; border-radius: 999px">In stock · min 6</span></span>
+<span style="display: flex; align-items: center; gap: 4px"><button aria-label="Decrease paint" style="width: 40px; height: 40px; border: 1.5px solid #DDE5F5; border-radius: 12px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span style="min-width: 30px; text-align: center; font-size: 16px; font-weight: 800; color: #0A2260">14</span><button aria-label="Increase paint" style="width: 40px; height: 40px; border: 0; border-radius: 12px; background: #0A2260; color: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></span>
+</div>
+</div>
+</div>
+
+<a href="#s-Stock" style="position: absolute; right: 20px; bottom: 92px; height: 54px; padding: 0 22px 0 18px; border-radius: 27px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 14px 28px rgba(10,34,96,0.38)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add item</a>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Rent"><div class="cap">12 Rent control</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="flex: 1; font-size: 26px; font-weight: 800; color: #0A2260">Rent control</div>
+<button aria-label="Export report" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button>
+<button aria-label="Filter" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+</div>
+
+<div style="height: 44px; display: flex; align-items: center; justify-content: space-between; background: #ffffff; border-radius: 14px; padding: 0 4px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<button aria-label="Previous month" style="width: 44px; height: 44px; border: 0; background: transparent; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+<span style="font-size: 15px; font-weight: 800; color: #0A2260">October 2026</span>
+<button aria-label="Next month" style="width: 44px; height: 44px; border: 0; background: transparent; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+</div>
+
+<div style="position: relative; overflow: hidden; border-radius: 22px; padding: 16px 18px; background: linear-gradient(150deg, #1A47C4 0%, #0A2260 55%, #061538 100%); color: #ffffff; box-shadow: 0 16px 32px rgba(10,34,96,0.26); display: flex; flex-direction: column; gap: 12px">
+<div style="position: absolute; width: 200px; height: 200px; border-radius: 50%; border: 1px solid rgba(191,212,255,0.2); right: -70px; top: -90px"></div>
+<div style="display: flex; justify-content: space-between; position: relative">
+<div><div style="font-size: 12px; font-weight: 600; color: #D6E3FF">Expected</div><div style="font-size: 17px; font-weight: 800">1,520,000</div></div>
+<div><div style="font-size: 12px; font-weight: 600; color: #D6E3FF">Collected</div><div style="font-size: 17px; font-weight: 800">1,284,500</div></div>
+<div><div style="font-size: 12px; font-weight: 600; color: #D6E3FF">Outstanding</div><div style="font-size: 17px; font-weight: 800">235,500</div></div>
+</div>
+<div style="position: relative; display: flex; flex-direction: column; gap: 6px"><div style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.18)"><div style="width: 84%; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #BFD4FF, #ffffff)"></div></div><div style="font-size: 12px; font-weight: 600; color: #D6E3FF">84% collected · amounts in ETB</div></div>
+</div>
+
+<div style="display: flex; gap: 10px">
+<a href="#s-Rent" style="flex: 1; height: 48px; border-radius: 14px; background: linear-gradient(180deg, #1D4ED8, #0A2260); color: #ffffff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Record payment</a>
+<a href="#s-Rent" style="flex: 1; height: 48px; border-radius: 14px; border: 1.5px solid #0A2260; color: #0A2260; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4"/></svg>Remind all</a>
+</div>
+
+<div style="display: flex; gap: 8px; overflow: hidden">
+<span style="padding: 8px 14px; border-radius: 999px; background: #1D4ED8; color: #ffffff; font-size: 13px; font-weight: 800; white-space: nowrap">All</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Paid 48</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Pending 8</span>
+<span style="padding: 8px 14px; border-radius: 999px; background: #ffffff; color: #0A2260; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid #DDE5F5">Overdue 7</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 40px; height: 40px; border-radius: 50%; background: #FDECEC; color: #B42318; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">DA</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Dawit Alemu</span><span style="display: block; font-size: 12px; color: #B42318; font-weight: 700">Shop B-05 · due Oct 5 · 5 days late</span></span><span style="text-align: right"><span style="display: block; font-size: 14px; font-weight: 800">16,000</span><span style="display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 800; color: #B42318; background: #FDECEC; padding: 3px 9px; border-radius: 999px">Overdue</span></span></div>
+<div style="display: flex; gap: 8px"><a href="#s-Rent" style="flex: 1; height: 40px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">Record payment</a><a href="#s-Rent" style="flex: 1; height: 40px; border-radius: 12px; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">Send reminder</a></div>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 40px; height: 40px; border-radius: 50%; background: #EEF1F8; color: #3D4E78; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">HB</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Hana Bekele</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Shop B-04 · due Oct 12</span></span><span style="text-align: right"><span style="display: block; font-size: 14px; font-weight: 800">18,500</span><span style="display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 800; color: #3D4E78; background: #EEF1F8; padding: 3px 9px; border-radius: 999px">Pending</span></span></div>
+<div style="display: flex; gap: 8px"><a href="#s-Rent" style="flex: 1; height: 40px; border-radius: 12px; background: #0A2260; color: #ffffff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">Record payment</a><a href="#s-Rent" style="flex: 1; height: 40px; border-radius: 12px; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">Send reminder</a></div>
+</div>
+<div style="background: #ffffff; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)">
+<span style="width: 40px; height: 40px; border-radius: 50%; background: #E6EEFF; color: #123A9C; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">MT</span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 14px; font-weight: 800">Meron Tadesse</span><span style="display: block; font-size: 12px; color: #4A5B82; font-weight: 600">Shop C-12 · paid Oct 3</span></span>
+<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: #123A9C; background: #E6EEFF; padding: 4px 10px; border-radius: 999px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Paid 27,500</span>
+<a href="#s-Rent" aria-label="View receipt" style="width: 44px; height: 40px; border-radius: 12px; border: 1.5px solid #DDE5F5; color: #0A2260; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg></a>
+</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+<section class="page phone" id="s-Admin"><div class="cap">13 Admin</div><div class="frame" data-w="390" style="width:390px;height:844px">
+
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4F7FE; font-family: 'Manrope', system-ui, sans-serif; color: #0B1B3F">
+<div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(160deg, #1D4ED8, #061538); color: #ffffff; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center">FA</span>
+<div style="flex: 1; min-width: 0"><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Admin console</div><div style="font-size: 19px; font-weight: 800; color: #0A2260">Fam Portfolio</div></div>
+<button aria-label="Settings" style="width: 44px; height: 44px; border: 0; border-radius: 14px; background: #ffffff; color: #0A2260; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(10,34,96,0.08)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+</div>
+
+<div style="display: flex; gap: 10px">
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">14</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Active users</div></div>
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #1D4ED8; line-height: 1.1">3</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Pending approvals</div></div>
+<div style="flex: 1; background: #ffffff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><div style="font-size: 22px; font-weight: 800; color: #0A2260; line-height: 1.1">12</div><div style="font-size: 12px; font-weight: 600; color: #4A5B82">Properties</div></div>
+</div>
+
+<div style="background: linear-gradient(150deg, #0F2F85 0%, #0A2260 55%, #061538 100%); border-radius: 22px; padding: 14px 16px 12px; color: #ffffff; box-shadow: 0 16px 32px rgba(10,34,96,0.24)">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; font-weight: 800">Revenue, last 6 months</span><span style="font-size: 12px; font-weight: 700; color: #BFD4FF">ETB millions</span></div>
+<svg viewBox="0 0 326 110" width="100%" role="img" aria-label="Bar chart of monthly revenue: May 0.92, June 1.01, July 1.08, August 1.12, September 1.18, October 1.28 million birr" style="display: block; margin-top: 8px">
+<g stroke="#ffffff" stroke-opacity="0.14"><path d="M0 20H326M0 55H326M0 90H326"/></g>
+<g fill="#7FA3F5"><rect x="12" y="46" width="30" height="44" rx="6"/><rect x="66" y="40" width="30" height="50" rx="6"/><rect x="120" y="35" width="30" height="55" rx="6"/><rect x="174" y="32" width="30" height="58" rx="6"/><rect x="228" y="26" width="30" height="64" rx="6"/></g>
+<rect x="282" y="16" width="30" height="74" rx="6" fill="#ffffff"/>
+<g font-family="Manrope, sans-serif" font-size="11" font-weight="700" fill="#D6E3FF" text-anchor="middle"><text x="27" y="106">May</text><text x="81" y="106">Jun</text><text x="135" y="106">Jul</text><text x="189" y="106">Aug</text><text x="243" y="106">Sep</text><text x="297" y="106">Oct</text></g>
+<text x="297" y="11" font-family="Manrope, sans-serif" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">1.28</text>
+</svg>
+</div>
+
+<div style="font-size: 15px; font-weight: 800; color: #0A2260; margin-top: 2px">Manage</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<a href="#s-Admin" style="height: 82px; background: #ffffff; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0A2260; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg>Users and roles</a>
+<a href="#s-Admin" style="height: 82px; background: #ffffff; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0A2260; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Permissions</a>
+<a href="#s-Rent" style="height: 82px; background: #ffffff; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0A2260; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Reports</a>
+<a href="#s-Properties" style="height: 82px; background: #ffffff; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0A2260; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20"/></svg>Properties</a>
+<a href="#s-Stock" style="height: 82px; background: #ffffff; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0A2260; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5zM3 7.5l9 4.5 9-4.5M12 12v9"/></svg>Stock</a>
+<a href="#s-Admin" style="height: 82px; background: #ffffff; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0A2260; box-shadow: 0 4px 14px rgba(10,34,96,0.06)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/></svg>Audit log</a>
+</div>
+
+<a href="#s-Login" style="height: 50px; border-radius: 16px; border: 1.5px solid #BFCBE6; background: #ffffff; color: #0A2260; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5M15 8l4 4-4 4M19 12H9"/></svg>Log out</a>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #ffffff; border-top: 1px solid #DDE5F5; display: flex; padding: 6px 8px 0; box-sizing: border-box">
+<a href="#s-Dashboard" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a>
+<a href="#s-Properties" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg></span>Properties</a>
+<a href="#s-Tenants" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2 .7 3.5 2.5 3.5 5.6"/></svg></span>Tenants</a>
+<a href="#s-Rent" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #4A5B82"><span style="width: 52px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/></svg></span>Rent</a>
+<a href="#s-Admin" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #1D4ED8"><span style="width: 52px; height: 30px; border-radius: 15px; background: #E6EEFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg></span>Admin</a>
+</div>
+</div>
+</div></section>
+</div>
+<script>
+function fit(){
+  var avail = window.innerWidth - 32;
+  document.querySelectorAll('.frame').forEach(function(f){
+    var w = +f.getAttribute('data-w');
+    f.style.zoom = w > avail ? (avail / w) : 1;
+  });
+}
+function unfit(){ document.querySelectorAll('.frame').forEach(function(f){ f.style.zoom = 1; }); }
+window.addEventListener('resize', fit);
+window.addEventListener('beforeprint', unfit);
+window.addEventListener('afterprint', fit);
+fit();
+</script>
+</body>
+</html>
