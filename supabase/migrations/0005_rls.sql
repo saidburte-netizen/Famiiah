@@ -283,6 +283,5 @@ create policy feature_flags_select on public.feature_flags
   using (org_id is null or is_org_member(org_id) or is_platform_admin());
 -- management via admin_set_feature_flag RPC only
 
--- anon read access for version gate
-grant select on public.app_versions to anon;
-grant execute on function public.check_app_version(text, text) to anon;
+-- The version gate RPC (check_app_version) is created in 0009; its execute grant
+-- to anon is added there, immediately after the function definition.
