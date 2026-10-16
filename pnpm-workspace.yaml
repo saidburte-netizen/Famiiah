@@ -1,5 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
-allowBuilds:
-  esbuild: true
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - "@sentry/cli"
+ignoredBuiltDependencies:
+  - unrs-resolver
+  unrs-resolver: true

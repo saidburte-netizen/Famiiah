@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 const NAV = [
@@ -14,7 +15,7 @@ const NAV = [
   { href: "/flags", label: "Feature flags" },
 ];
 
-export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {
+export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },

@@ -9,7 +9,6 @@ import { t } from "@/i18n";
  * The Admin tab is hidden unless the user's role allows it (owner/manager).
  */
 export default function TabsLayout() {
-  const [role, setRole] = useState<string | null>(null);
   const [showAdmin, setShowAdmin] = useState(false);
 
   useEffect(() => {
@@ -24,7 +23,6 @@ export default function TabsLayout() {
         .eq("status", "active")
         .limit(1);
       const r = members?.[0]?.role ?? null;
-      setRole(r);
       setShowAdmin(r === "owner" || r === "manager");
     });
   }, []);
