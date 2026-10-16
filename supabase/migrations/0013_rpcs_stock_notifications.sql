@@ -19,7 +19,9 @@ begin
   if not has_org_role(v_item.org_id, array['owner','manager','staff']::public.org_role[]) then
     raise exception 'forbidden' using errcode = '42501';
   end if;
-  if p_qty is null or p_qty <= 0 then
+  if p_qty is null
+     or (p_type in ('in','out') and p_qty <= 0)
+     or (p_type = 'adjustment' and p_qty < 0) then
     raise exception 'invalid_qty' using errcode = '22023';
   end if;
 
@@ -165,12 +167,11 @@ language plpgsql security definer set search_path = public as $$
 declare
   v_ch record; v_uid uuid; v_notif uuid;
 begin
-  select rc.*, l.tenant_id, t.user_id as tenant_user, t.full_name, o.id as org_id
+  select rc.*, l.tenant_id, t.user_id as tenant_user, t.full_name
     into v_ch
     from rent_charges rc
     join leases l on l.id = rc.lease_id
     join tenants t on t.id = l.tenant_id
-    join organizations o on o.id = rc.org_id
    where rc.id = p_charge;
 
   if not found then raise exception 'lease_not_found' using errcode = 'P0002'; end if;

@@ -9,8 +9,8 @@ language plpgsql stable security definer set search_path = public as $$
 declare
   v_month_start date := date_trunc('month', now())::date;
   v_month_end date := (date_trunc('month', now()) + interval '1 month - 1 day')::date;
-  v r;
   v_due jsonb;
+  v record;
 begin
   if not is_org_member(p_org) then raise exception 'forbidden' using errcode = '42501'; end if;
 
@@ -22,7 +22,7 @@ begin
     into v
     from rent_charges rc where rc.org_id = p_org;
 
-  select coalesce(jsonb_agg(row), '[]'::jsonb) into v_due from (
+  select coalesce(jsonb_agg(sub), '[]'::jsonb) into v_due from (
     select rc.id, rc.amount, rc.due_date, t.full_name as tenant_name, u.code as unit_code
       from rent_charges rc
       join leases l on l.id = rc.lease_id
@@ -32,7 +32,7 @@ begin
        and rc.status in ('pending','partial','overdue')
        and rc.due_date between current_date and current_date + interval '7 days'
      order by rc.due_date limit 10
-  ) row;
+  ) sub;
 
   return jsonb_build_object(
     'collected_month', v.collected,
@@ -175,7 +175,7 @@ begin
     from rent_charges rc
    where rc.org_id = p_org and rc.period_start between v_start and v_end;
 
-  select coalesce(jsonb_agg(row), '[]'::jsonb) into v_rows from (
+  select coalesce(jsonb_agg(sub), '[]'::jsonb) into v_rows from (
     select rc.id, rc.amount, rc.amount_paid, rc.status, rc.due_date,
            t.full_name as tenant_name, u.code as unit_code, l.id as lease_id
       from rent_charges rc
@@ -187,7 +187,7 @@ begin
        and (p_search is null or t.full_name % p_search or u.code % p_search)
      order by rc.due_date
      limit p_limit offset p_offset
-  ) row;
+  ) sub;
 
   return jsonb_build_object('rows', v_rows, 'expected', v_expected,
                             'collected', v_collected, 'outstanding', v_outstanding);
