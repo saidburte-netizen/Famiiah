@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f4f7fe;
+  color: #0b1b3f;
+  font-family: "Manrope", system-ui, sans-serif;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-btn text-white font-bold;
+  height: 48px;
+  padding: 0 20px;
+  background-image: linear-gradient(to bottom, #1d4ed8, #0a2260);
+}
+.card {
+  @apply bg-white rounded-card shadow-card border border-border;
+}

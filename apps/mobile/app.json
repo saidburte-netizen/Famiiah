@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Fam",
+    "slug": "fam",
+    "scheme": "fam",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#061538"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fam.app",
+      "usesAppleSignIn": false
+    },
+    "android": {
+      "package": "com.fam.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#061538"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-local-authentication",
+        { "faceIDPermission": "Allow Fam to unlock with Face ID." }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "appEnv": "local"
+    }
+  }
+}
