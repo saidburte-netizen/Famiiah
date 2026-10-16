@@ -7,4 +7,3 @@ onlyBuiltDependencies:
   - "@sentry/cli"
 ignoredBuiltDependencies:
   - unrs-resolver
-  unrs-resolver: true
