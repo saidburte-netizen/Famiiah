@@ -1,0 +1,29 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+.next/
+.expo/
+expo-env.d.ts
+.turbo/
+
+# env — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# supabase local
+supabase/.temp/
+supabase/.branches/
+
+# logs / os
+*.log
+npm-debug.log*
+.DS_Store
+coverage/
+
+# generated types are committed (packages/shared/src/types/database.types.ts) but temp gen not
+*.tsbuildinfo
