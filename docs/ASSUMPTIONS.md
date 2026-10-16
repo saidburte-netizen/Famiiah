@@ -1,0 +1,31 @@
+# Assumptions
+
+Decisions taken where the brief was unspecified. Chosen to be the most
+conventional option, per the build prompt. Update this file when a decision
+changes.
+
+| # | Area | Assumption | Rationale |
+|---|------|-----------|-----------|
+| A1 | Money | All money handled as integer minor units (bigint) client-side; DB stores `numeric(14,2)`. | Avoids float error; DB remains source of truth. |
+| A2 | Currency | ETB only in v1; currency column exists on `organizations` for future use. | Spec says ETB. |
+| A3 | Timezone | All timestamps stored UTC (`timestamptz`); display in `Africa/Addis_Ababa`. | Standard; DST-free zone. |
+| A4 | Tenant identity | A tenant is not an auth role; a `tenants.user_id` link grants self-service access. | Spec section 9. |
+| A5 | Billing day | `1..28` to avoid month-end edge cases. | Check constraint; matches spec. |
+| A6 | Charge generation | Generated for the **current** month on the 1st (cron 01:00 UTC = 04:00 Addis). | Spec cron; no back-fill in v1. |
+| A7 | Grace period | Defaults to 5 days; a charge becomes overdue when `due_date + grace_days < today`. | Spec default. |
+| A8 | Payment allocation | Oldest unpaid charge first; leftover stored in `unallocated_amount`. | Spec `record_payment`. |
+| A9 | Receipt numbers | `RCP-YYYY-NNNNNN`, per-org atomic counter. | Spec. |
+| A10 | Soft delete | Properties/units/tenants use `deleted_at`; archive only, no hard delete via client. | Spec section 4. |
+| A11 | Stock adjustment | `adjustment` sets an **absolute** balance (from a stock count); `in`/`out` are relative. | Common inventory pattern. |
+| A12 | Invitations | Raw token is only sent to the user; DB stores SHA-256 `token_hash`. | Security. |
+| A13 | Phone OTP | Off in v1 (`[auth.sms].enable_signup = false`); email+password required. | Spec says optional/flag. |
+| A14 | MFA | Platform-admin RPCs require AAL2; `ADMIN_REQUIRE_MFA=false` can disable for local dev. | Spec admin gate. |
+| A15 | First platform admin | Promoted manually (seed or migration) — no client path. | Spec section 9. |
+| A16 | Online payments | `online_payments` flag off by default; webhook verifies HMAC signature. | Spec. |
+| A17 | i18n | Keys exist for `en`; `am`/`om` added without code changes. | Spec. |
+| A18 | Offline writes | Stock adjustments may be queued; payments never queued (idempotency key on retry). | Spec section 10. |
+| A19 | PDF generation | `generate-receipt` emits a minimal PDF placeholder; swap in `pdf-lib` for real layout. | Kept dependency-light. |
+| A20 | `unique nulls not distinct` | Requires Postgres 15+; Supabase projects meet this. | Spec note. |
+| A21 | Sentry | DSNs are env-driven; disabled when unset. | Avoids build failures. |
+| A22 | Email/SMS providers | Abstracted behind `EMAIL_PROVIDER_KEY` / `SMS_PROVIDER_KEY`; not bound to a vendor. | Spec lists them as secrets. |
+| A23 | Password reset | Supabase email link flow; OTP screen shown when SMS enabled. | Spec screen list. |
