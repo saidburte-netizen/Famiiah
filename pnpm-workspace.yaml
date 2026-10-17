@@ -4,3 +4,8 @@ packages:
 allowBuilds:
   esbuild: true
   unrs-resolver: false
+overrides:
+  # React and React DOM must match exactly; React Native 0.79 requires 19.1.0.
+  react: 19.1.0
+  react-dom: 19.1.0
+

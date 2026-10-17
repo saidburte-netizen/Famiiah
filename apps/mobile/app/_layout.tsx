@@ -52,10 +52,12 @@ export default function RootLayout() {
   // Route based on auth state once we know it.
   useEffect(() => {
     if (!ready || gate?.kind === "force_update") return;
-    const inAuthGroup = segments[0] === "(auth)";
+    const segs = segments as unknown as string[];
+    const inAuthGroup = segs[0] === "(auth)";
+    const onInvite = inAuthGroup && segs[1] === "invite";
     if (!session && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (session && inAuthGroup) {
+    } else if (session && inAuthGroup && !onInvite) {
       router.replace("/(app)/(tabs)");
     }
   }, [ready, session, segments, router, gate]);

@@ -621,3 +621,16 @@ export async function listMembers(orgId: string, search?: string) {
     created_at: string;
   }>;
 }
+
+// ----------------------------------------------------------------- Invitations
+
+/** Accept an invitation. `tokenHash` is the SHA-256 hex of the raw deep-link token. */
+export async function acceptInvitation(tokenHash: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("accept_invitation", {
+    p_token_hash: tokenHash,
+  });
+  if (error) throw error;
+  return data;
+}
+

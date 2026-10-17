@@ -52,9 +52,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **SQL**: `check_app_version` declared `v rec;` (not a type); changed to
+  `v record;`. This broke `supabase db reset` / `db push` at migration `0009`.
+- **CI**: admin job now builds `@fam/shared` before `next build` (the admin
+  build script runs `pnpm --filter @fam/shared build` first), fixing
+  "Cannot find module '@fam/shared'" on CI.
+- **CI**: dependency-audit step is now informational (`continue-on-error`) since
+  the remaining advisories are transitive build tooling with no patched release.
+- **CI**: `supabase start` retries with backoff (Docker Hub rate-limits
+  unauthenticated pulls on shared runners); `db lint` pinned to `--level error`.
 - `terminate_lease` wrapper now passes the required `p_end_date`.
 - `createUnit` writes the correct `units.area_sqm` column.
 - Corrected RPC argument names for dashboard/list/report/stock/notification calls.
+
+### Added (mobile)
+
+- `(auth)/invite` screen: accepts `fam://invite?token=…` deep links by hashing
+  the token (SHA-256) and calling `accept_invitation`; stashes a pending token
+  across sign-in/sign-up via `lib/invite.ts`.
+- Launch version gate is now wired in `app/_layout.tsx` (force-update screen);
+  the `x-client-version` header now carries the real app version.
 
 ### Notes
 

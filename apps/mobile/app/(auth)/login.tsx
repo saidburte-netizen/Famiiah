@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { getSupabase } from "@/lib/supabase";
+import { takePendingInvite } from "@/lib/invite";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { t } from "@/i18n";
@@ -23,6 +24,11 @@ export default function LoginScreen() {
       const supabase = getSupabase();
       const { error: e } = await supabase.auth.signInWithPassword({ email: identifier, password });
       if (e) throw e;
+      const pendingInvite = await takePendingInvite();
+      if (pendingInvite) {
+        router.replace(`/(auth)/invite?token=${encodeURIComponent(pendingInvite)}`);
+        return;
+      }
       router.replace("/(app)/(tabs)");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error.unknown"));

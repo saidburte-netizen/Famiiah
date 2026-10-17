@@ -30,5 +30,7 @@ changes.
 | A22 | Email/SMS providers | Abstracted behind `EMAIL_PROVIDER_KEY` / `SMS_PROVIDER_KEY`; not bound to a vendor. | Spec lists them as secrets. |
 | A23 | Password reset | Supabase email link flow; OTP screen shown when SMS enabled. | Spec screen list. |
 | A24 | Simple CRUD writes | Property/unit creation uses direct table inserts guarded by RLS (`has_org_role(...,'owner','manager')`), not RPCs. Business writes (payments, leases, stock) stay RPC-only. | RLS suffices; avoids boilerplate RPCs for trivial inserts. |
-| A25 | React version | React and React DOM are pinned to `19.1.0` workspace-wide via `pnpm.overrides`, matching React Native 0.79. | Mismatched react/react-dom breaks the admin build. |
+| A25 | React version | React and React DOM are pinned to `19.1.0` workspace-wide via `pnpm-workspace.yaml` `overrides`, matching React Native 0.79. | Mismatched react/react-dom breaks the admin build. |
 | A26 | Dependency audit | The CI `audit` job is informational (`continue-on-error`). | Remaining advisories are transitive build tooling (`braces`, `node-forge`) with no patched release. |
+| A27 | Invite acceptance | The client hashes the raw deep-link token (SHA-256, via `expo-crypto`) before calling `accept_invitation(p_token_hash)`; the Edge Function stores the same hash. | Keeps the raw token out of the database. |
+| A28 | EAS monorepo build | Mobile adds `eas-build-post-install` to build `@fam/shared`; admin's `build` script builds `@fam/shared` first. | Workspace packages resolve to `dist`, which must exist before bundling. |

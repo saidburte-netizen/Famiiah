@@ -7,7 +7,7 @@ create or replace function public.check_app_version(p_platform text, p_version t
 returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
-  v rec;
+  v record;
   v_status text := 'ok';
   v_latest text;
   v_min text;

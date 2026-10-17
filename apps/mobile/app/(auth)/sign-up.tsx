@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { SignUpSchema } from "@fam/shared";
 import { getSupabase } from "@/lib/supabase";
+import { takePendingInvite } from "@/lib/invite";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { t } from "@/i18n";
@@ -44,6 +45,11 @@ export default function SignUpScreen() {
         options: { data: { full_name: fullName } },
       });
       if (e) throw e;
+      const pendingInvite = await takePendingInvite();
+      if (pendingInvite) {
+        router.replace(`/(auth)/invite?token=${encodeURIComponent(pendingInvite)}`);
+        return;
+      }
       router.replace("/(auth)/create-organization");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error.unknown"));

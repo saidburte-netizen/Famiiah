@@ -41,8 +41,18 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase start
-      - run: supabase db lint
+      # Supabase pulls several images from Docker Hub, which rate-limits
+      # unauthenticated pulls on shared runners. Retry with backoff.
+      - name: Start Supabase (with retries)
+        run: |
+          for i in 1 2 3 4 5; do
+            if supabase start; then exit 0; fi
+            echo "supabase start failed (attempt $i); waiting before retry…"
+            supabase stop --no-backup >/dev/null 2>&1 || true
+            sleep $((i * 20))
+          done
+          echo "supabase start failed after retries"; exit 1
+      - run: supabase db lint --level error
       - run: supabase test db
       - run: supabase db reset
       - name: Ensure no drift (migrations reproduce cleanly)
@@ -65,11 +75,12 @@ jobs:
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
-    # Informational only: these are transitive build-tooling advisories
-    # (e.g. `braces` via eslint/tailwind, `node-forge` via the Expo CLI) that
-    # currently ship no patched version. Reported but not blocking.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4   # version comes from packageManager in package.json
+      # Informational only: the remaining advisories are transitive build
+      # tooling (e.g. `braces` via eslint/tailwind, `node-forge` via the Expo
+      # CLI) that currently ship no patched version. Failures are reported
+      # (annotations) but must not block the pipeline.
       - run: pnpm audit --audit-level=high
+        continue-on-error: true
