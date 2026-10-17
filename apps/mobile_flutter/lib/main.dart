@@ -14,7 +14,13 @@ Future<void> main() async {
     return;
   }
 
-  await initSupabase();
+  try {
+    await initSupabase();
+  } catch (_) {
+    // A broken/partial config must not white-screen the app before runApp.
+    runApp(const ConfigMissingApp());
+    return;
+  }
   runApp(const ProviderScope(child: FamApp()));
 }
 

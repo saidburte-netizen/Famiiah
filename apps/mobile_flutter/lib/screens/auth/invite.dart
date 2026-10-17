@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/errors/user_message.dart';
 import '../../core/invite_store.dart';
 import '../../core/supabase/client.dart';
 import '../../features/api.dart';
+import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/ui.dart';
 
@@ -15,28 +17,30 @@ enum _InviteState { checking, needsAuth, accepting, done, error }
 
 /// Accept an organization invitation from `fam://invite?token=<rawToken>`.
 /// `accept_invitation` matches on the SHA-256 hash of the raw token.
-class InviteScreen extends StatefulWidget {
+class InviteScreen extends ConsumerStatefulWidget {
   final String? token;
   const InviteScreen({super.key, this.token});
 
   @override
-  State<InviteScreen> createState() => _InviteScreenState();
+  ConsumerState<InviteScreen> createState() => _InviteScreenState();
 }
 
-class _InviteScreenState extends State<InviteScreen> {
+class _InviteScreenState extends ConsumerState<InviteScreen> {
   _InviteState _state = _InviteState.checking;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _run();
+    // Kick the flow off after the first frame: it calls setState, which must
+    // not happen during initState.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _run());
   }
 
   Future<void> _run() async {
     final token = widget.token;
     if (token == null || token.isEmpty) {
-      // Runs during initState (before first build): assign directly, no setState.
+      // No token in the deep link: show the error state immediately.
       _error = 'No invitation token was provided.';
       _state = _InviteState.error;
       return;
@@ -58,6 +62,8 @@ class _InviteScreenState extends State<InviteScreen> {
     try {
       final hash = sha256.convert(utf8.encode(raw)).toString();
       await acceptInvitation(hash);
+      // Membership changed: refresh the shared org state before routing home.
+      await ref.read(orgProvider.notifier).refresh();
       if (!mounted) return;
       setState(() => _state = _InviteState.done);
       await Future<void>.delayed(const Duration(milliseconds: 800));

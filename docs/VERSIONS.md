@@ -11,14 +11,24 @@ resolved versions here at build time.
 | pnpm | 12.x (workspace) |
 | PostgreSQL | 15.x (Supabase local + hosted) |
 | Deno (Edge Functions) | Supabase-managed |
+| Flutter | `stable` channel (latest at build, resolved by CI) |
+| Dart SDK | `^3.5.0` (`apps/mobile_flutter/pubspec.yaml`) |
 | Expo SDK | latest stable at build |
 | Next.js | latest stable at build |
+
+## App versions
+
+| App | Version | Source |
+|---|---|---|
+| Expo mobile | 1.0.0 | `apps/mobile/app.json` (`expo.version`) |
+| Flutter mobile | 1.1.0+2 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
+| Android application id | `com.fami.myapp` | `.github/workflows/flutter.yml`, `tool/setup_android.sh` |
 
 ## Backend schema
 
 | Item | Version |
 |---|---|
-| Migrations | `0001`–`0015` |
+| Migrations | `0001`–`0016` |
 | API/RPC contract | `v1` |
 | Database tag | `db-<timestamp>` |
 
@@ -40,6 +50,18 @@ resolved versions here at build time.
 | expo-router | ^5.1 | mobile routing |
 | next | ^15.4 | admin |
 | react / react-native | 19.1 / 0.79 | mobile |
+
+### Flutter mobile (`apps/mobile_flutter`)
+
+| Package | Range | Notes |
+|---|---|---|
+| flutter_secure_storage | ^11.2.0 | session + invitation tokens (Keystore / Keychain) |
+| flutter_riverpod | ^2.6.1 | state |
+| go_router | ^14.6.2 | routing |
+| supabase_flutter | ^2.8.4 | resolves to the newest 2.x |
+| google_fonts | ^6.2.1 | Manrope / Playfair, fetched at runtime with a fallback |
+| package_info_plus | ^8.1.2 | version gate |
+| intl | ^0.19.0 | money / dates |
 
 ## Tooling
 

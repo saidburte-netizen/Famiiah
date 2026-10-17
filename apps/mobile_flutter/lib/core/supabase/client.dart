@@ -1,6 +1,8 @@
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'secure_local_storage.dart';
+
 /// Compile-time configuration keys (pass via `--dart-define`).
 const _kSupabaseUrl = 'FAM_SUPABASE_URL';
 const _kSupabaseAnonKey = 'FAM_SUPABASE_ANON_KEY';
@@ -25,6 +27,9 @@ Future<void> initSupabase() async {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUri: false,
+      // Keep the refresh token in the platform secure store, not in plain
+      // preferences. Mirrors the RN client's expo-secure-store adapter.
+      localStorage: SecureLocalStorage(),
     ),
     realtimeClientOptions: const RealtimeClientOptions(eventsPerSecond: 10),
   );

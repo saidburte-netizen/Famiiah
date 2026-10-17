@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { getSupabase } from "@/lib/supabase";
+import { queryKeys } from "@/lib/query";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { userMessage } from "@/lib/errors";
 
-/** First-run: the signed-in user creates their organization (becomes owner). */
+/**
+ * First-run: the signed-in user creates their organization (becomes owner).
+ * Reachable while signed in — see the `create-organization` guard in the root
+ * layout, without which sign-up would dead-end here.
+ */
 export default function CreateOrganizationScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -19,6 +26,9 @@ export default function CreateOrganizationScreen() {
       const supabase = getSupabase();
       const { error: e } = await supabase.rpc("create_organization", { p_name: name, p_slug: null });
       if (e) throw e;
+      // The active-org query cached "no membership"; drop it before routing so
+      // the dashboard comes up already pointing at the new organization.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.activeOrg });
       router.replace("/(app)/(tabs)");
     } catch (err) {
       setError(userMessage(err));

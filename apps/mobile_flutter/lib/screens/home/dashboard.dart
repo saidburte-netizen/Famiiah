@@ -36,7 +36,39 @@ class DashboardScreen extends ConsumerWidget {
       );
     }
     if (org.orgId == null) {
-      return const FamScreen(child: ErrorState(message: 'No organization is linked to this account yet.'));
+      // A signed-in user with no membership is not a dead end: they can create
+      // their own workspace (or accept a pending invitation) from here.
+      return FamScreen(
+        child: ListView(
+          children: [
+            const SizedBox(height: 60),
+            FamCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('No workspace yet',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Create an organization to start managing properties, tenants and rent.',
+                    style: TextStyle(color: FamColors.textMuted),
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton(
+                    onPressed: () => context.go('/auth/create-organization'),
+                    child: const Text('Create organization'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () => ref.read(orgProvider.notifier).refresh(),
+                    child: const Text('Refresh'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return FamScreen(
@@ -219,16 +251,11 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => context.push('/app/stock'),
-                      child: const Text('Stock'),
+                      onPressed: () => context.push('/app/settings'),
+                      child: const Text('Settings'),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => context.push('/app/settings'),
-                child: const Text('Settings'),
               ),
             ],
           );

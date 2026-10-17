@@ -1,18 +1,24 @@
 # Architecture
 
 Fam is a property and rental management product built on Supabase only — no
-separate API server. Two clients (Expo mobile, Next.js admin) talk to Supabase
-over `supabase-js` using the anon key plus the user's JWT. All authorization is
-enforced in Postgres via RLS and security-definer RPCs.
+separate API server. Three clients (Expo mobile, Flutter mobile, Next.js admin)
+talk to Supabase over `supabase-js` / `supabase_flutter` using the publishable
+(anon) key plus the user's JWT. All authorization is enforced in Postgres via RLS
+and security-definer RPCs.
+
+The two mobile clients are kept at feature parity: the same screens, the same
+`*_rpc` surface, and the same error mapping. Expo is the reference
+implementation; the Flutter client mirrors it (React Query → Riverpod,
+`AuthProvider` → `authProvider`, `userMessage()` → `userMessage()`).
 
 ```
-┌──────────────┐   ┌────────────────┐
-│ Expo mobile  │   │ Next.js admin  │
-│ (owner/staff/│   │ (platform admin│
-│  tenant)     │   │  + org admin)  │
-└──────┬───────┘   └───────┬────────┘
-       │ supabase-js (anon key + user JWT)
-       ▼                   ▼
+┌──────────────┐  ┌─────────────────┐  ┌────────────────┐
+│ Expo mobile  │  │ Flutter mobile  │  │ Next.js admin  │
+│ (owner/staff/│  │ (owner/staff/   │  │ (platform admin│
+│  tenant)     │  │  tenant)        │  │  + org admin)  │
+└──────┬───────┘  └────────┬────────┘  └───────┬────────┘
+       │ supabase-js / supabase_flutter (anon key + user JWT)
+       ▼                   ▼                    ▼
 ┌─────────────────────────────────────────────┐
 │ Supabase                                    │
 │  Auth ── JWT (sub, role, aal)               │
@@ -44,16 +50,17 @@ enforced in Postgres via RLS and security-definer RPCs.
 ```
 fam/
 ├─ apps/mobile/        Expo (React Native) + TypeScript, Expo Router
+├─ apps/mobile_flutter/ Flutter (Dart) client, Riverpod + go_router
 ├─ apps/admin/         Next.js App Router + Tailwind + shadcn/ui
 ├─ packages/shared/    types/, schemas, money/date helpers, permission matrix,
 │                      error codes, version gate
 ├─ supabase/
-│  ├─ migrations/      timestamp-free ordered .sql (0001..0015)
+│  ├─ migrations/      timestamp-free ordered .sql (0001..0016)
 │  ├─ functions/       Edge Functions (Deno)
 │  ├─ tests/           *.test.sql (pgTAP)
 │  └─ seed.sql
 ├─ docs/
-├─ .github/workflows/
+├─ .github/workflows/  ci.yml, flutter.yml, deploy.yml
 └─ .env.example
 ```
 
@@ -69,7 +76,10 @@ fam/
 ## Auth and roles
 
 - Email + password (required); phone OTP optional (flag).
-- Session storage on mobile: `expo-secure-store` via a custom adapter.
+- Session storage on mobile: the platform secure store via a custom adapter —
+  `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
+  token never lands in plain preferences.
+- Invitation deep-link tokens are held in the same secure store until accepted.
 - Biometrics gate **opening an existing session**, never replace credentials.
 - Org roles: `owner`, `manager`, `staff`, `viewer`. A **tenant** is not a role —
   it is a `tenants` row linked to a user who then sees only their own data.
@@ -91,6 +101,40 @@ fam/
   prune logs Sun 02:30.
 - `pg_net` calls the `send-reminders` Edge Function; the service key is read from
   Supabase **Vault**, never hard-coded in SQL.
+- Edge Function auth: everything requires a valid JWT (`verify_jwt = true`)
+  except `payment-webhook`, which is called by the payment provider and is
+  verified with a timing-safe HMAC instead.
+
+## Clients
+
+- **Expo** (`apps/mobile`): Expo Router file-based routes, React Query for server
+  state, `AuthProvider` context, `lib/errors.ts#userMessage` for user-facing errors.
+- **Flutter** (`apps/mobile_flutter`): `go_router` with the same route table,
+  Riverpod providers, an `authProvider` notifier, `core/errors/user_message.dart`
+  for the same error mapping. Env is injected at build time with
+  `--dart-define=FAM_SUPABASE_URL/FAM_SUPABASE_ANON_KEY/FAM_APP_ENV`.
+- Both enforce the same first-run flow: sign up → (signed in, no membership) →
+  create organization, and both keep that screen reachable while signed in.
+- Android application id for both mobile builds is `com.fami.myapp`.
+
+## CI/CD
+
+- `ci.yml` (push/PR): Node — lint, typecheck, unit tests, admin build; Supabase —
+  `supabase db reset` (applies `0001..0016`), `supabase test db` (pgTAP,
+  `rls`/`rpc`/`security`), `supabase db lint`.
+- `flutter.yml` (push to `apps/mobile_flutter/**` or manual): `flutter analyze`,
+  `flutter test`, then a release **APK** and **AAB**.
+  - `android/` is not committed (it carries a binary `gradle-wrapper.jar`);
+    `tool/setup_android.sh` generates it with `flutter create`, rewrites the
+    application id to `com.fami.myapp`, labels the app `Fam`, sets
+    `minSdk = 24` and `allowBackup="false"`.
+  - Release signing: when `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+    `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` are set, the script decodes the
+    keystore into `android/key.properties` and `tool/patch_android_signing.py`
+    switches `buildTypes.release` to the upload key. Without the secrets the build
+    stays debug-signed, so CI stays green on forks.
+- `deploy.yml` (manual or version tag): database, Edge Functions and Expo
+  (EAS) mobile. The admin web app is hosted separately.
 
 ## Observability
 

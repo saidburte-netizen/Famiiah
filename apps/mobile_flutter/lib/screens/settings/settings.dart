@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/errors/user_message.dart';
 import '../../core/supabase/client.dart';
 import '../../state/auth_notifier.dart';
 import '../../state/org_provider.dart';
@@ -113,6 +114,13 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
-    await ref.read(authProvider.notifier).signOut();
+    try {
+      await ref.read(authProvider.notifier).signOut();
+    } catch (err) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(userMessage(err))),
+      );
+    }
   }
 }

@@ -47,11 +47,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (session == null) {
         return public ? null : '/auth/login';
       }
+      // Note: `/auth/create-organization` is deliberately *not* redirected away
+      // from: a user who has a session but no membership yet (e.g. sign-up with
+      // email confirmation disabled) must still be able to create a workspace.
       if (loc == '/' ||
           loc == '/auth/login' ||
           loc == '/auth/sign-up' ||
-          loc == '/auth/forgot-password' ||
-          loc == '/auth/create-organization') {
+          loc == '/auth/forgot-password') {
         return '/app/home';
       }
       return null;

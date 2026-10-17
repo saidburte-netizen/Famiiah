@@ -45,7 +45,23 @@ fi
 manifest="android/app/src/main/AndroidManifest.xml"
 if [ -f "${manifest}" ]; then
   sed -i.bak "s/android:label=\"[^\"]*\"/android:label=\"${APP_NAME}\"/" "${manifest}"
+  # flutter_secure_storage keeps app data out of Google Drive backups; a restored
+  # backup would carry encrypted values without their Keystore key.
+  if ! grep -q 'android:allowBackup' "${manifest}"; then
+    sed -i.bak -e 's/<application$/<application android:allowBackup="false"/' \
+      -e 's/<application /<application android:allowBackup="false" /' "${manifest}"
+  fi
   rm -f "${manifest}.bak"
+fi
+
+# flutter_secure_storage needs API 23+; pin the floor explicitly rather than
+# depending on the Flutter template's default.
+if grep -q 'minSdk = flutter.minSdkVersion' android/app/build.gradle.kts 2>/dev/null; then
+  sed -i.bak 's/minSdk = flutter.minSdkVersion/minSdk = 24/' android/app/build.gradle.kts
+  rm -f android/app/build.gradle.kts.bak
+elif grep -q 'minSdkVersion flutter.minSdkVersion' android/app/build.gradle 2>/dev/null; then
+  sed -i.bak 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' android/app/build.gradle
+  rm -f android/app/build.gradle.bak
 fi
 
 # ---- optional release signing -------------------------------------------

@@ -55,9 +55,12 @@ function RootNavigator() {
     const segs = segments as unknown as string[];
     const inAuthGroup = segs[0] === "(auth)";
     const onInvite = inAuthGroup && segs[1] === "invite";
+    // Signed in but without a membership yet: the create-workspace screen must
+    // stay reachable, otherwise sign-up with email confirmation disabled dead-ends.
+    const onCreateOrg = inAuthGroup && segs[1] === "create-organization";
     if (!session && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (session && inAuthGroup && !onInvite) {
+    } else if (session && inAuthGroup && !onInvite && !onCreateOrg) {
       router.replace("/(app)/(tabs)");
     }
   }, [loading, session, segments, router, gate]);

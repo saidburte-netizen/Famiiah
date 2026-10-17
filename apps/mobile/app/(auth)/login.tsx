@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { getSupabase } from "@/lib/supabase";
 import { takePendingInvite } from "@/lib/invite";
@@ -8,11 +7,8 @@ import { colors } from "@/theme/tokens";
 import { t } from "@/i18n";
 import { userMessage } from "@/lib/errors";
 
-const ROLE_CHIPS = ["owner", "manager", "staff"] as const;
-
 export default function LoginScreen() {
   const router = useRouter();
-  const [role, setRole] = useState<(typeof ROLE_CHIPS)[number]>("owner");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -46,21 +42,6 @@ export default function LoginScreen() {
       <Text variant="muted">Property &amp; rental control</Text>
 
       <Card>
-        <Text variant="semibold" color={colors.textMuted}>
-          Sign in as
-        </Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {ROLE_CHIPS.map((r) => (
-            <View key={r} style={{ flex: 1 }}>
-              <Button
-                title={r}
-                variant={role === r ? "primary" : "ghost"}
-                onPress={() => setRole(r)}
-              />
-            </View>
-          ))}
-        </View>
-
         {error ? (
           <Text variant="medium" color={colors.danger}>
             {error}

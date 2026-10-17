@@ -69,7 +69,10 @@ enabled = true
 enabled = false
 
 [functions.send-reminders]
-verify_jwt = false
+# Cron-only, and every call carries the service-role JWT (see
+# `invoke_edge_function`). Requiring a valid JWT stops anonymous callers from
+# queueing/dispatching pushes.
+verify_jwt = true
 
 [functions.invite-member]
 verify_jwt = true

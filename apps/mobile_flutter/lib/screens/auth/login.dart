@@ -9,8 +9,6 @@ import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/ui.dart';
 
-const _roleChips = ['owner', 'manager', 'staff'];
-
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -19,7 +17,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  String _role = 'owner';
   final _email = TextEditingController();
   final _password = TextEditingController();
   String? _error;
@@ -69,24 +66,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Sign in as',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(color: FamColors.textMuted)),
-                const SizedBox(height: 8),
-                Row(
-                  children: _roleChips
-                      .map((r) => Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: _role == r
-                                  ? FilledButton(onPressed: () => setState(() => _role = r), child: Text(r))
-                                  : OutlinedButton(onPressed: () => setState(() => _role = r), child: Text(r)),
-                            ),
-                          ))
-                      .toList(),
-                ),
                 if (_error != null) ...[
-                  const SizedBox(height: 12),
                   Text(_error!, style: const TextStyle(color: FamColors.danger)),
+                  const SizedBox(height: 12),
                 ],
                 const SizedBox(height: 12),
                 FamField(

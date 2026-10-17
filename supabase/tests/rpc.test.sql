@@ -39,11 +39,15 @@ select throws_ok($$ select public.assign_tenant_to_unit(
   (select id from tenants limit 1), current_date, null, 1000, 0, 5, 5) $$,
   '23505', 'unit_not_vacant', 'cannot double-book an occupied unit');
 
--- generate charges (idempotent)
+-- generate charges (idempotent). These are cron-only RPCs — client roles have no
+-- EXECUTE (see tests/security.test.sql) — so run this step as the job owner.
+reset role;
 select is(public.generate_monthly_charges('00000000-0000-0000-0000-0000000000cc'), 1,
   'one charge generated for the active lease');
 select is(public.generate_monthly_charges('00000000-0000-0000-0000-0000000000cc'), 0,
   'charge generation is idempotent');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal1"}';
 
 -- partial payment
 select lives_ok($$ select public.record_payment(

@@ -4,9 +4,13 @@ Property and rental management app: mobile app (owners/managers/staff/tenants),
 admin web console (platform + org admins), and a Supabase-only backend.
 
 - **Mobile**: `apps/mobile` — Expo (React Native) + TypeScript, Expo Router
+- **Mobile (Flutter)**: `apps/mobile_flutter` — Flutter + Riverpod + go_router
 - **Admin**: `apps/admin` — Next.js App Router + Tailwind
 - **Shared**: `packages/shared` — types, schemas, money/version/permission helpers
 - **Backend**: `supabase/` — Postgres migrations, RLS, RPCs, Edge Functions, tests
+
+The two mobile clients are feature-equivalent; the Expo app is the reference and
+the Flutter app mirrors its screens, RPC surface and error handling.
 
 Currency is ETB; timezone `Africa/Addis_Ababa`; English first (i18n-ready).
 
@@ -32,7 +36,7 @@ pnpm install
 
 ```bash
 supabase start          # starts Postgres, Auth, Storage, Realtime, Studio
-supabase db reset       # applies migrations 0001..0015 and runs seed.sql
+supabase db reset       # applies migrations 0001..0016 and runs seed.sql
 ```
 
 Set Vault secrets used by `pg_cron` (once per project):
@@ -64,12 +68,23 @@ pnpm --filter @fam/mobile dev    # Expo
 pnpm --filter @fam/admin dev     # Next.js admin
 ```
 
+Flutter (needs the Flutter SDK; the Android project is generated on demand):
+
+```bash
+cd apps/mobile_flutter
+flutter pub get
+flutter run --dart-define=FAM_SUPABASE_URL=<url> \
+            --dart-define=FAM_SUPABASE_ANON_KEY=<anon> \
+            --dart-define=FAM_APP_ENV=dev
+```
+
 ## 6. Tests
 
 ```bash
 pnpm test          # unit tests (shared, apps)
 pnpm test:db       # pgTAP (supabase test db)
 pnpm db:lint       # supabase db lint
+cd apps/mobile_flutter && flutter analyze && flutter test   # Flutter
 ```
 
 ## 7. Migrations
@@ -79,9 +94,15 @@ migration. CI runs migrations on a fresh DB and lints the schema.
 
 ## 8. Build and release
 
-- Mobile: `eas build` then `eas submit`; publish an `app_versions` row via
+- Mobile (Expo): `eas build` then `eas submit`; publish an `app_versions` row via
   `admin_publish_app_version` to control the update gate.
+- Mobile (Flutter): `.github/workflows/flutter.yml` builds a signed release APK and
+  AAB. Create an upload keystore and add the `ANDROID_KEYSTORE_BASE64`,
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`
+  repository secrets; without them the build falls back to debug signing.
 - Admin: deploy the Next.js app and set the public env vars.
+- Bump the version in `apps/mobile_flutter/pubspec.yaml` (`x.y.z+n`) and record it
+  in `docs/VERSIONS.md` / `docs/CHANGELOG.md`.
 
 ## 9. First platform admin
 
@@ -110,3 +131,7 @@ RLS is enabled on every `public` table and denies by default. The service-role k
 is never shipped to a client. Security-definer functions set `search_path` and
 have execute revoked from `public`/`anon`. Storage buckets are private; downloads
 use short-lived signed URLs. Online payments are off behind a feature flag.
+Invitation tokens are stored hashed, are never selectable by client roles, and
+`accept_invitation` only succeeds for the exact email or phone they were sent to.
+Mobile session and invitation tokens live in the platform secure store
+(`expo-secure-store` / `flutter_secure_storage`), not in plain preferences.

@@ -124,6 +124,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   instead of throwing when the build lacks its public Supabase env.
 - `i18n` catalogue now covers every shared error key plus auth/network/transport.
 
+### Added (Flutter mobile)
+
+- `apps/mobile_flutter/` — a Flutter client mirroring the Expo app: `go_router`
+  route table, Riverpod providers (`authProvider`, `orgProvider`), shared theme
+  tokens, and `features/api.dart` wrappers for the same RPC/table surface.
+  Version `1.1.0+2`.
+- `.github/workflows/flutter.yml` — `flutter analyze` + `flutter test`, then a
+  release APK and AAB for `com.fami.myapp`. `tool/setup_android.sh` generates the
+  Gradle project on demand (no committed `android/`) and
+  `tool/patch_android_signing.py` switches to the upload keystore when the
+  `ANDROID_KEYSTORE_*` secrets are present.
+- Secure session storage: `flutter_secure_storage` behind a custom
+  `SecureLocalStorage` adapter, matching the Expo app's `expo-secure-store`; the
+  pending invitation token uses the same store.
+- First-run flow: a signed-in user with no membership can reach
+  `/auth/create-organization` (both clients), and the dashboard offers a
+  "Create organization" action instead of a dead end. Creating an org (or
+  accepting an invite) refreshes the active-org state before routing.
+
 ### Changed (mobile)
 
 - Home / Properties / Tenants / Rent tabs now read through React Query against
@@ -131,6 +150,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Auth and mutation screens surface errors with `userMessage()`; the rent tab's
   "send reminder" is a tracked mutation that surfaces failures via Alert.
 - The Admin tab's visibility derives from `useOrg().role`.
+
+### Fixed (Flutter mobile)
+
+- Forgot-password swallowed failures (`try/finally` with no `catch`), leaking an
+  unhandled async error; network failures now surface via `userMessage()`.
+- Stock adjust/rent now invalidates the low-stock provider as well as the
+  catalogue, so the reorder badge updates immediately.
+- Sign-out failures are reported instead of silently ignored.
+- `initSupabase()` failure renders the config screen instead of crashing before
+  `runApp`.
+- Removed the duplicate **Stock** quick action (it is already in the shell).
+- Removed the decorative owner/manager/staff role chips from login in both mobile
+  clients — they looked selectable but changed nothing.
+
+### Security
+
+- `invitations` row policy narrowed to owner/manager, and `token_hash` revoked
+  from client roles via column-level grants.
+- `accept_invitation` fails closed: the caller's email (or, for phone-only
+  invitations, the verified phone) must match the invitation.
+- `invite_member` only lets an owner mint an `owner` invitation.
+- Cron-only `generate_monthly_charges` / `mark_overdue_charges` revoked from
+  client roles.
+- `assign_tenant_to_unit` requires the tenant to belong to the unit's org.
+- Avatar writes scoped to the caller's own storage folder.
+- `admin_set_member_status` cannot be used by a manager to suspend an owner.
+- `register_device_token` cannot reassign an existing token to another user.
+- `profiles` INSERT column grants stop a client from self-setting
+  `is_platform_admin`.
+- `send-reminders` requires a valid JWT (`verify_jwt = true`).
+- New pgTAP regression suite `supabase/tests/security.test.sql`.
 
 ### Notes
 

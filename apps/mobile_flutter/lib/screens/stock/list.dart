@@ -169,7 +169,10 @@ class StockScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: FamColors.background,
-      builder: (_) => _AdjustSheet(item: item, onDone: () async => ref.invalidate(stockItemsProvider)),
+      builder: (_) => _AdjustSheet(item: item, onDone: () async {
+        ref.invalidate(stockItemsProvider);
+        ref.invalidate(lowStockProvider);
+      }),
     );
   }
 
@@ -182,7 +185,10 @@ class StockScreen extends ConsumerWidget {
       builder: (_) => _RentSheet(
         item: item,
         tenants: tenants,
-        onDone: () async => ref.invalidate(stockItemsProvider),
+        onDone: () async {
+          ref.invalidate(stockItemsProvider);
+          ref.invalidate(lowStockProvider);
+        },
       ),
     );
   }

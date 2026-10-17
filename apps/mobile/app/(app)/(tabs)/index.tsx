@@ -36,9 +36,21 @@ export default function DashboardScreen() {
   }
 
   if (!orgId) {
+    // A signed-in user with no membership is not a dead end: they can create
+    // their own workspace (or accept a pending invitation) from here.
     return (
       <Screen>
-        <ErrorState message="No organization is linked to this account yet." />
+        <Card>
+          <Text variant="semibold">No workspace yet</Text>
+          <Text variant="muted">
+            Create an organization to start managing properties, tenants and rent.
+          </Text>
+          <Button
+            title="Create organization"
+            onPress={() => router.push("/(auth)/create-organization")}
+          />
+          <Button title="Refresh" variant="ghost" onPress={() => void refetchOrg()} />
+        </Card>
       </Screen>
     );
   }
@@ -153,9 +165,6 @@ export default function DashboardScreen() {
               variant="ghost"
               onPress={() => router.push("/(app)/notifications")}
             />
-          </View>
-          <View style={{ flexGrow: 1, minWidth: 140 }}>
-            <Button title="Stock" variant="ghost" onPress={() => router.push("/(app)/stock")} />
           </View>
           <View style={{ flexGrow: 1, minWidth: 140 }}>
             <Button title="Settings" variant="ghost" onPress={() => router.push("/(app)/settings")} />
