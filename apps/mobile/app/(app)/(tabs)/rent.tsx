@@ -63,6 +63,11 @@ export default function RentScreen() {
   return (
     <Screen>
       <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
+      <Button
+        title="Payment history"
+        variant="ghost"
+        onPress={() => router.push("/(app)/payments")}
+      />
       <Card>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Stat label="Expected" value={formatMoney(totals.expected)} />

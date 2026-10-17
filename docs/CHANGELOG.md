@@ -37,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
     payment, stock (list + adjust), notifications, settings.
   - `features/api.ts` — typed wrappers for every RPC/table query the app uses.
   - `lib/org.ts` — `useOrg()` active-organization hook.
+- **Phase 2 — Mobile: remaining screens**: payment history + void, stock
+  rentals (rent out / return), reports (collections, occupancy, overdue
+  ageing), and admin member management (invite, role, status).
 
 ### Changed
 

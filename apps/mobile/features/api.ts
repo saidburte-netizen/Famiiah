@@ -478,6 +478,37 @@ export async function listLowStock(orgId: string) {
   return (data ?? []) as unknown as StockItemRow[];
 }
 
+export interface StockRentalRow {
+  id: string;
+  item_id: string;
+  tenant_id: string;
+  quantity: string;
+  daily_rate: string;
+  start_date: string;
+  due_date: string;
+  returned_at: string | null;
+  status: string;
+}
+
+export async function listStockRentals(orgId: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("stock_rentals")
+    .select(
+      "id, item_id, tenant_id, quantity, daily_rate, start_date, due_date, returned_at, status, stock_items(name), tenants(full_name)",
+    )
+    .eq("org_id", orgId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data ?? []) as unknown as Array<
+    StockRentalRow & {
+      stock_items?: { name?: string } | null;
+      tenants?: { full_name?: string } | null;
+    }
+  >;
+}
+
 export async function stockAdjust(itemId: string, type: string, qty: string, reason?: string) {
   const supabase = getSupabase();
   const { data, error } = await supabase.rpc("stock_adjust", {
@@ -620,6 +651,47 @@ export async function listMembers(orgId: string, search?: string) {
     status: string;
     created_at: string;
   }>;
+}
+
+export async function adminSetMemberRole(orgId: string, userId: string, role: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_set_member_role", {
+    p_org: orgId,
+    p_user: userId,
+    p_role: role as never,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function adminSetMemberStatus(orgId: string, userId: string, status: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_set_member_status", {
+    p_org: orgId,
+    p_user: userId,
+    p_status: status,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Invite a teammate. Runs the `invite-member` Edge Function, which hashes the
+ * token and (when an email provider is configured) emails the deep link. The
+ * returned `link` can be shared manually when no provider is set.
+ */
+export async function inviteMember(input: {
+  orgId: string;
+  email?: string;
+  phone?: string;
+  role: string;
+}) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.functions.invoke("invite-member", {
+    body: { org_id: input.orgId, email: input.email, phone: input.phone, role: input.role },
+  });
+  if (error) throw error;
+  return data as { ok: boolean; invitation_id?: string; link?: string };
 }
 
 // ----------------------------------------------------------------- Invitations

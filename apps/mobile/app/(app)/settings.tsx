@@ -47,6 +47,14 @@ export default function SettingsScreen() {
 
       <Card>
         <Text variant="semibold" color={colors.navy}>
+          Reports
+        </Text>
+        <Text variant="muted">Collections, occupancy and overdue ageing.</Text>
+        <Button title="Open reports" variant="ghost" onPress={() => router.push("/(app)/reports")} />
+      </Card>
+
+      <Card>
+        <Text variant="semibold" color={colors.navy}>
           About
         </Text>
         <Text variant="muted">App version 1.0.0</Text>
