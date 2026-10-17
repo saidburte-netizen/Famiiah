@@ -13,6 +13,15 @@ const _authCodes = <String, String>{
   'session_not_found': 'error.sessionExpired',
   'refresh_token_not_found': 'error.sessionExpired',
   'session_expired': 'error.sessionExpired',
+  // Sign-up failures that are worth naming instead of "Something went wrong":
+  // a rejected address (Supabase validates the domain) or a project with
+  // sign-ups / a provider switched off.
+  'email_address_invalid': 'error.emailInvalid',
+  'signup_disabled': 'error.signupDisabled',
+  'email_provider_disabled': 'error.signupDisabled',
+  'phone_provider_disabled': 'error.signupDisabled',
+  'validation_failed': 'error.invalidInput',
+  'otp_expired': 'error.invalidToken',
 };
 
 const _sqlstate = <String, String>{

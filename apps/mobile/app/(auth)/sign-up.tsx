@@ -9,11 +9,12 @@ import { colors } from "@/theme/tokens";
 import { t } from "@/i18n";
 import { userMessage } from "@/lib/errors";
 
-const STEPS = ["Your details", "Password", "Terms"] as const;
-
+/**
+ * One form: name, email, phone, password and the terms toggle together (the
+ * three-step version hid the password behind a "Continue" button).
+ */
 export default function SignUpScreen() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -21,6 +22,8 @@ export default function SignUpScreen() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Set when the account was created but the email still needs confirming. */
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
@@ -39,13 +42,21 @@ export default function SignUpScreen() {
     setBusy(true);
     try {
       const supabase = getSupabase();
-      const { error: e } = await supabase.auth.signUp({
+      // The phone number is profile data, not a sign-in identifier: sending it
+      // as `phone` makes GoTrue reject the request ("Only an email address or
+      // phone number should be provided on signup") unless phone sign-in is
+      // enabled for the project. It travels in the metadata instead, where
+      // `handle_new_user()` picks it up.
+      const { data, error: e } = await supabase.auth.signUp({
         email,
         password,
-        phone,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName, phone } },
       });
       if (e) throw e;
+      if (!data.session) {
+        setPendingEmail(email);
+        return;
+      }
       const pendingInvite = await takePendingInvite();
       if (pendingInvite) {
         router.replace(`/(auth)/invite?token=${encodeURIComponent(pendingInvite)}`);
@@ -59,69 +70,65 @@ export default function SignUpScreen() {
     }
   }
 
+  if (pendingEmail) {
+    return (
+      <Screen>
+        <Text variant="display" color={colors.midnight}>
+          {t("auth.confirmEmailTitle")}
+        </Text>
+        <Card>
+          <View style={{ gap: 12 }}>
+            <Text variant="medium">{t("auth.confirmEmailBody")}</Text>
+            <Text variant="semibold" color={colors.midnight}>
+              {pendingEmail}
+            </Text>
+            <Text variant="muted">{t("auth.confirmEmailHint")}</Text>
+            <Button title={t("auth.signIn")} onPress={() => router.replace("/(auth)/login")} />
+            <Button
+              title={t("auth.useAnotherEmail")}
+              variant="ghost"
+              onPress={() => setPendingEmail(null)}
+            />
+          </View>
+        </Card>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <Text variant="display" color={colors.midnight}>
         Create account
       </Text>
-      <View style={{ flexDirection: "row", gap: 6 }}>
-        {STEPS.map((s, i) => (
-          <View
-            key={s}
-            style={{
-              flex: 1,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: i <= step ? colors.royal : colors.border,
-            }}
-          />
-        ))}
-      </View>
 
       <Card>
-        {step === 0 && (
-          <>
-            <Field label="Full name" value={fullName} onChangeText={setFullName} />
-            <Field
-              label={t("auth.email")}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <Field label={t("auth.phone")} keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-            <Button title="Continue" onPress={() => setStep(1)} />
-          </>
-        )}
-        {step === 1 && (
-          <>
-            <Field label={t("auth.password")} secureTextEntry value={password} onChangeText={setPassword} />
-            {error ? (
-              <Text variant="medium" color={colors.danger}>
-                {error}
-              </Text>
-            ) : null}
-            <Button title="Continue" onPress={() => setStep(2)} />
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <Button
-              title={acceptTerms ? "✓ Terms accepted" : "Accept terms"}
-              variant={acceptTerms ? "primary" : "ghost"}
-              onPress={() => setAcceptTerms(true)}
-            />
-            {error ? (
-              <Text variant="medium" color={colors.danger}>
-                {error}
-              </Text>
-            ) : null}
-            <Button title="Create account" onPress={submit} loading={busy} />
-          </>
-        )}
+        <View style={{ gap: 12 }}>
+          {error ? (
+            <Text variant="medium" color={colors.danger}>
+              {error}
+            </Text>
+          ) : null}
+          <Field label="Full name" value={fullName} onChangeText={setFullName} autoCapitalize="words" />
+          <Field
+            label={t("auth.email")}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <Field label={t("auth.phone")} keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
+          <Field label={t("auth.password")} secureTextEntry value={password} onChangeText={setPassword} />
+          <Text variant="muted">At least 8 characters, with an uppercase letter and a number.</Text>
+          <Button
+            title={acceptTerms ? "✓ Terms accepted (tap to undo)" : "Accept terms"}
+            variant={acceptTerms ? "primary" : "ghost"}
+            onPress={() => setAcceptTerms((v) => !v)}
+          />
+          <Button title={t("auth.signUp")} onPress={submit} loading={busy} />
+        </View>
       </Card>
 
-      <Button title="Back to sign in" variant="ghost" onPress={() => router.replace("/(auth)/login")} />
+      <Button title={t("auth.signIn")} variant="ghost" onPress={() => router.replace("/(auth)/login")} />
     </Screen>
   );
 }

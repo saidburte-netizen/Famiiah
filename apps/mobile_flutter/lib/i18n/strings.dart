@@ -14,6 +14,11 @@ const Messages _en = {
   'auth.forgotPassword': 'Forgot password?',
   'auth.remember': 'Remember me',
   'auth.useBiometrics': 'Unlock with biometrics',
+  'auth.confirmEmailTitle': 'Confirm your email',
+  'auth.confirmEmailBody': 'We sent a confirmation link to',
+  'auth.confirmEmailHint':
+      'Open the link, then sign in. Check your spam folder if it has not arrived.',
+  'auth.useAnotherEmail': 'Use a different email',
   'nav.home': 'Home',
   'nav.properties': 'Properties',
   'nav.tenants': 'Tenants',
@@ -44,6 +49,8 @@ const Messages _en = {
   'error.emailNotConfirmed': 'Confirm your email before signing in.',
   'error.alreadyRegistered': 'That account already exists. Try signing in.',
   'error.weakPassword': 'Choose a stronger password.',
+  'error.emailInvalid': 'That email address was rejected. Check it and try again.',
+  'error.signupDisabled': 'New sign-ups are turned off for this app.',
 
   // ---- errors: transport / protocol level ----
   'error.network': 'No connection. Check your network and try again.',

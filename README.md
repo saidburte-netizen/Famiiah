@@ -36,7 +36,7 @@ pnpm install
 
 ```bash
 supabase start          # starts Postgres, Auth, Storage, Realtime, Studio
-supabase db reset       # applies migrations 0001..0016 and runs seed.sql
+supabase db reset       # applies migrations 0001..0017 and runs seed.sql
 ```
 
 Set Vault secrets used by `pg_cron` (once per project):

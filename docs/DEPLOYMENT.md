@@ -98,6 +98,19 @@ path is referenced by the `submit` profile in `eas.json` and is gitignored.
 2. Create the Supabase projects and add the `SUPABASE_*` secrets.
 3. Add the mobile secrets (`EXPO_TOKEN`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
    the signing secrets). The CD job syncs the EAS environment variables for you.
+4. Check the project's **Auth** settings (dashboard → Authentication):
+   - **Providers → Email** must be enabled (it is by default). **Phone is not
+     required** — the clients collect a phone number as profile data, not as a
+     sign-in identifier.
+   - **Confirm email**: if it stays on, `signUp` issues no session until the user
+     opens the emailed link, and the built-in mailer only delivers to project
+     team members (strict hourly limit). Either configure **custom SMTP** for
+     production, or turn *Confirm email* off so sign-ups sign in immediately.
+     The app handles both: with confirmation on it shows a "confirm your email"
+     screen instead of routing into the app.
+   - Apply migrations (CD → Run workflow → `components: db`) so
+     `handle_new_user()` can store the phone number from the sign-up metadata
+     (`0017`).
 
 The admin app is not deployed by CD; if you host it, set
 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` /

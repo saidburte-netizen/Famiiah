@@ -41,9 +41,11 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          # Pinned: resolving `latest` hits the GitHub API and fails the job with
+          # "rate limit exceeded". v3 installs the CLI from npm.
+          version: 2.121.0
       - name: Link project and push migrations
         run: |
           supabase link --project-ref "$SUPABASE_PROJECT_ID" -p "$SUPABASE_DB_PASSWORD"
@@ -65,9 +67,11 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          # Pinned: resolving `latest` hits the GitHub API and fails the job with
+          # "rate limit exceeded". v3 installs the CLI from npm.
+          version: 2.121.0
       - name: Deploy Edge Functions
         run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_ID"
         env:

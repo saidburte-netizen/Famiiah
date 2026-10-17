@@ -14,6 +14,17 @@ void main() {
       expect(userMessage(err), 'Incorrect email or password.');
     });
 
+    test('names a rejected sign-up address instead of the generic message', () {
+      final err = Exception(
+          'AuthApiException: Email address "x@example.com" is invalid (code: email_address_invalid)');
+      expect(userMessage(err), 'That email address was rejected. Check it and try again.');
+    });
+
+    test('names a disabled provider instead of the generic message', () {
+      final err = Exception('AuthApiException: Phone signups are disabled (code: phone_provider_disabled)');
+      expect(userMessage(err), 'New sign-ups are turned off for this app.');
+    });
+
     test('maps a Postgres SQLSTATE from a JSON code field', () {
       final err = Exception('{"code":"42501","message":"forbidden"}');
       expect(userMessage(err), 'You do not have permission to do that.');

@@ -16,6 +16,14 @@ const AUTH_CODES: Record<string, string> = {
   session_not_found: "error.sessionExpired",
   refresh_token_not_found: "error.sessionExpired",
   session_expired: "error.sessionExpired",
+  // Sign-up failures worth naming instead of "Something went wrong": a rejected
+  // address (Supabase validates the domain) or sign-ups/providers switched off.
+  email_address_invalid: "error.emailInvalid",
+  signup_disabled: "error.signupDisabled",
+  email_provider_disabled: "error.signupDisabled",
+  phone_provider_disabled: "error.signupDisabled",
+  validation_failed: "error.invalidInput",
+  otp_expired: "error.invalidToken",
 };
 
 function rawMessage(err: unknown): string {

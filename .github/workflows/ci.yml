@@ -38,9 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          # Pinned: resolving `latest` hits the GitHub API and fails the job with
+          # "rate limit exceeded". v3 installs the CLI from npm.
+          version: 2.121.0
       # Supabase pulls several images from Docker Hub, which rate-limits
       # unauthenticated pulls on shared runners. Retry with backoff.
       - name: Start Supabase (with retries)

@@ -96,9 +96,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the remaining advisories are transitive build tooling with no patched release.
 - **CI**: `supabase start` retries with backoff (Docker Hub rate-limits
   unauthenticated pulls on shared runners); `db lint` pinned to `--level error`.
+- **CI**: `supabase/setup-cli` moved to `v3` with a pinned CLI version. The `v1`
+  action resolved `latest` through the GitHub API and intermittently failed the
+  database job with "rate limit exceeded"; v3 installs the CLI from npm.
 - `terminate_lease` wrapper now passes the required `p_end_date`.
 - `createUnit` writes the correct `units.area_sqm` column.
 - Corrected RPC argument names for dashboard/list/report/stock/notification calls.
+- **Sign-up failed for every new account**: both clients passed the phone number
+  as GoTrue's `phone`, which is rejected (`Only an email address or phone number
+  should be provided on signup`) unless phone sign-in is enabled for the project,
+  and the unmapped `validation_failed` code surfaced as "Something went wrong".
+  The number now travels in the sign-up metadata and `handle_new_user()`
+  (`0017`) stores it on `profiles.phone`; the auth codes GoTrue actually returns
+  (`email_address_invalid`, `signup_disabled`, `*_provider_disabled`,
+  `validation_failed`, `otp_expired`) now map to named messages.
+- Sign-up no longer dead-ends when the project requires email confirmation
+  (`mailer_autoconfirm = false`): `signUp` returns no session, so both clients
+  show a "confirm your email" screen instead of routing into the app.
 
 ### Added (mobile)
 
@@ -154,6 +168,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the shared `useOrg()` org instead of each re-querying `organization_members`.
 - Auth and mutation screens surface errors with `userMessage()`; the rent tab's
   "send reminder" is a tracked mutation that surfaces failures via Alert.
+- Sign-up is a **single** form in both clients — full name, email, phone,
+  password and the terms toggle on one screen (the three-step wizard hid the
+  password behind a "Continue" button and made the details hard to review).
 - The Admin tab's visibility derives from `useOrg().role`.
 
 ### Fixed (Flutter mobile)

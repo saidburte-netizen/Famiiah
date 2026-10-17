@@ -8,8 +8,9 @@ import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/ui.dart';
 
-const _steps = ['Your details', 'Password', 'Terms'];
-
+/// Sign-up is one form — name, email, phone, password and the terms toggle all
+/// on screen (splitting them across three steps hid the password behind a
+/// "Continue" button and let people submit a form they could not review).
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -18,14 +19,18 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  int _step = 0;
   final _fullName = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
   final _password = TextEditingController();
   bool _acceptTerms = false;
-  String? _error;
   bool _busy = false;
+  String? _error;
+
+  /// Email of the account created but not yet confirmed. When the project
+  /// requires email confirmation GoTrue returns no session, so there is nothing
+  /// to sign in with until the link in the email is opened.
+  String? _pendingEmail;
 
   @override
   void dispose() {
@@ -57,17 +62,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() => _error = error);
       return;
     }
+    final email = _email.text.trim();
     setState(() {
       _error = null;
       _busy = true;
     });
     try {
-      await getSupabase().auth.signUp(
-            email: _email.text.trim(),
+      // The phone number is profile data, not a sign-in identifier. Passing it
+      // as `phone` makes GoTrue reject the whole request ("Only an email
+      // address or phone number should be provided on signup") unless phone
+      // sign-in is enabled for the project, so it goes in the metadata and
+      // `handle_new_user()` stores it on the profile.
+      final res = await getSupabase().auth.signUp(
+            email: email,
             password: _password.text,
-            phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
-            data: {'full_name': _fullName.text.trim()},
+            data: {
+              'full_name': _fullName.text.trim(),
+              'phone': _phone.text.trim(),
+            },
           );
+      if (!mounted) return;
+      if (res.session == null) {
+        setState(() => _pendingEmail = email);
+        return;
+      }
       final pending = await takePendingInvite();
       if (!mounted) return;
       if (pending != null) {
@@ -84,72 +102,120 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final pendingEmail = _pendingEmail;
+    if (pendingEmail != null) return _confirmationScreen(pendingEmail);
+
     return FamScreen(
       child: ListView(
         children: [
           Text('Create account', style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 12),
-          Row(
-            children: List.generate(_steps.length, (i) {
-              return Expanded(
-                child: Container(
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: i <= _step ? FamColors.royal : FamColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              );
-            }),
-          ),
           const SizedBox(height: 16),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_step == 0) ...[
-                  FamField(label: 'Full name', controller: _fullName),
+                if (_error != null) ...[
+                  Text(_error!, style: const TextStyle(color: FamColors.danger)),
                   const SizedBox(height: 12),
-                  FamField(label: t('auth.email'), controller: _email, keyboardType: TextInputType.emailAddress),
-                  const SizedBox(height: 12),
-                  FamField(label: t('auth.phone'), controller: _phone, keyboardType: TextInputType.phone),
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: () => setState(() => _step = 1), child: const Text('Continue')),
                 ],
-                if (_step == 1) ...[
-                  FamField(label: t('auth.password'), controller: _password, obscureText: true),
-                  if (_error != null) ...[
-                    const SizedBox(height: 8),
-                    Text(_error!, style: const TextStyle(color: FamColors.danger)),
-                  ],
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: () => setState(() => _step = 2), child: const Text('Continue')),
-                ],
-                if (_step == 2) ...[
-                  _acceptTerms
-                      ? FilledButton(
-                          onPressed: () => setState(() => _acceptTerms = false),
-                          child: const Text('✓ Terms accepted (tap to undo)'))
-                      : OutlinedButton(
-                          onPressed: () => setState(() => _acceptTerms = true),
-                          child: const Text('Accept terms'),
-                        ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 8),
-                    Text(_error!, style: const TextStyle(color: FamColors.danger)),
-                  ],
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: _busy ? null : _submit,
-                    child: const Text('Create account'),
-                  ),
-                ],
+                FamField(
+                  label: 'Full name',
+                  controller: _fullName,
+                  textCapitalization: TextCapitalization.words,
+                ),
+                const SizedBox(height: 12),
+                FamField(
+                  label: t('auth.email'),
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 12),
+                FamField(
+                  label: t('auth.phone'),
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 12),
+                FamField(label: t('auth.password'), controller: _password, obscureText: true),
+                const SizedBox(height: 6),
+                Text(
+                  'At least 8 characters, with an uppercase letter and a number.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: FamColors.textMuted),
+                ),
+                const SizedBox(height: 12),
+                _acceptTerms
+                    ? FilledButton(
+                        onPressed: _busy ? null : () => setState(() => _acceptTerms = false),
+                        child: const Text('✓ Terms accepted (tap to undo)'))
+                    : OutlinedButton(
+                        onPressed: _busy ? null : () => setState(() => _acceptTerms = true),
+                        child: const Text('Accept terms'),
+                      ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: _busy ? null : _submit,
+                  child: _busy
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text(t('auth.signUp')),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(onPressed: () => context.go('/auth/login'), child: const Text('Back to sign in')),
+          OutlinedButton(onPressed: () => context.go('/auth/login'), child: Text(t('auth.signIn'))),
+        ],
+      ),
+    );
+  }
+
+  /// Shown when the account exists but the email has not been confirmed yet.
+  Widget _confirmationScreen(String email) {
+    return FamScreen(
+      child: ListView(
+        children: [
+          Text(t('auth.confirmEmailTitle'), style: Theme.of(context).textTheme.displayLarge),
+          const SizedBox(height: 16),
+          FamCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(t('auth.confirmEmailBody')),
+                const SizedBox(height: 6),
+                Text(
+                  email,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(color: FamColors.midnight),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  t('auth.confirmEmailHint'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: FamColors.textMuted),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => context.go('/auth/login'),
+                  child: Text(t('auth.signIn')),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => setState(() => _pendingEmail = null),
+                  child: Text(t('auth.useAnotherEmail')),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

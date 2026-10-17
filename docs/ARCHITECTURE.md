@@ -76,6 +76,15 @@ fam/
 ## Auth and roles
 
 - Email + password (required); phone OTP optional (flag).
+- Sign-up sends **one** identifier to GoTrue. The phone number typed on the form
+  is profile data, so it travels in the sign-up metadata
+  (`options.data.phone`) and `handle_new_user()` stores it on `profiles.phone`
+  (migration `0017`); passing it as GoTrue's `phone` is rejected with
+  `Only an email address or phone number should be provided on signup` unless
+  phone sign-in is enabled for the project.
+- When the project requires email confirmation (`mailer_autoconfirm = false`)
+  `signUp` returns no session: both clients then show a "confirm your email"
+  screen instead of routing into the app.
 - Session storage on mobile: the platform secure store via a custom adapter —
   `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
   token never lands in plain preferences.
@@ -125,8 +134,8 @@ fam/
 ## CI/CD
 
 - `ci.yml` (push/PR): Node — lint, typecheck, unit tests, admin build; Supabase —
-  `supabase db reset` (applies `0001..0016`), `supabase test db` (pgTAP,
-  `rls`/`rpc`/`security`), `supabase db lint`.
+  `supabase db reset` (applies `0001..0017`), `supabase test db` (pgTAP,
+  `rls`/`rpc`/`security`/`signup`), `supabase db lint`.
 - `flutter.yml` (push to `apps/mobile_flutter/**` or manual): `flutter analyze`,
   `flutter test`, then a release **APK** and **AAB**.
   - The Supabase URL and anon key are baked in with `--dart-define` from the
