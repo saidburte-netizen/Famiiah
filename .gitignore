@@ -19,6 +19,10 @@ expo-env.d.ts
 supabase/.temp/
 supabase/.branches/
 
+# vercel / eas
+.vercel/
+.eas/
+
 # logs / os
 *.log
 npm-debug.log*

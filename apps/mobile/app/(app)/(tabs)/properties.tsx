@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "react-native";
+import { useRouter } from "expo-router";
 import { getSupabase } from "@/lib/supabase";
 import { listPropertiesWithStats } from "@/features/api";
-import { Card, Screen, Text } from "@/components/ui";
+import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { formatMoney } from "@fam/shared";
 
@@ -18,6 +19,7 @@ interface PropertyRow {
 }
 
 export default function PropertiesScreen() {
+  const router = useRouter();
   const [rows, setRows] = useState<PropertyRow[]>([]);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,17 +35,17 @@ export default function PropertiesScreen() {
       .then(({ data }) => setOrgId(data?.[0]?.org_id ?? null));
   }, []);
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!orgId) return;
     const data = (await listPropertiesWithStats(orgId)) as PropertyRow[];
     setRows(data);
-  }
+  }, [orgId]);
 
   useEffect(() => {
     if (!orgId) return;
     setLoading(true);
     load().finally(() => setLoading(false));
-  }, [orgId]);
+  }, [orgId, load]);
 
   if (loading) {
     return (
@@ -55,6 +57,7 @@ export default function PropertiesScreen() {
 
   return (
     <Screen>
+      <Button title="New property" onPress={() => router.push("/(app)/properties/new")} />
       <FlatList
         data={rows}
         keyExtractor={(r) => r.id}
@@ -70,20 +73,24 @@ export default function PropertiesScreen() {
         }
         ListEmptyComponent={<Text variant="muted">No properties yet.</Text>}
         renderItem={({ item }) => (
-          <Card>
-            <Text variant="bold" color={colors.navy}>
-              {item.name}
-            </Text>
-            <Text variant="muted">
-              {item.type} · {item.city ?? "—"}
-            </Text>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
+          <Pressable onPress={() => router.push(`/(app)/properties/${item.id}`)}>
+            <Card>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text variant="bold" color={colors.navy}>
+                  {item.name}
+                </Text>
+                <Text variant="semibold" color={colors.royal}>
+                  {item.occupancy_pct}%
+                </Text>
+              </View>
               <Text variant="muted">
-                {item.units_rented}/{item.units_total} rented
+                {item.type} · {item.city ?? "—"}
               </Text>
-              <Text variant="semibold">{formatMoney(item.monthly_total)}/mo</Text>
-            </View>
-          </Card>
+              <Text variant="muted">
+                {item.units_rented}/{item.units_total} units rented · {formatMoney(item.monthly_total)}/mo
+              </Text>
+            </Card>
+          </Pressable>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
 import { getSupabase } from "@/lib/supabase";
 import { dashboardSummary } from "@/features/api";
-import { Card, Screen, Text } from "@/components/ui";
+import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { formatMoney } from "@fam/shared";
 
@@ -21,6 +22,7 @@ interface Summary {
 }
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,6 +90,21 @@ export default function DashboardScreen() {
             {summary.overdue_count} charge(s) · {formatMoney(summary.overdue_amount)}
           </Text>
         </Card>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button
+              title={`Notifications${summary.unread_notifications ? ` (${summary.unread_notifications})` : ""}`}
+              variant="ghost"
+              onPress={() => router.push("/(app)/notifications")}
+            />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Stock" variant="ghost" onPress={() => router.push("/(app)/stock")} />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Settings" variant="ghost" onPress={() => router.push("/(app)/settings")} />
+          </View>
+        </View>
       </ScrollView>
     </Screen>
   );

@@ -10,9 +10,13 @@
 // Row/Insert/Update/Relationships, Functions expose Args/Returns), while the
 // index signatures keep every table and RPC name valid. After regeneration this
 // comment and the index signatures are replaced by concrete types.
+/* eslint-disable @typescript-eslint/no-explicit-any -- permissive placeholder until regenerated */
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-type AnyRow = Record<string, any>;
+// `any` (not Record<string, any>) is deliberate: supabase-js's select-string
+// parser produces `never[]` for index-signature rows, but resolves the selected
+// column names against `any` correctly.
+type AnyRow = any;
 
 export interface Database {
   public: {

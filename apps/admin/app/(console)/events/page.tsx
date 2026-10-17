@@ -36,7 +36,7 @@ export default async function EventsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((row) => (
+              {data.map((row: any) => (
                 <tr key={row.id} className="border-b border-border/60">
                   <td className="p-3 whitespace-nowrap">{new Date(row.created_at).toLocaleString()}</td>
                   <td className="p-3">{row.level}</td>

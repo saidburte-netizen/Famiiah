@@ -29,3 +29,6 @@ changes.
 | A21 | Sentry | DSNs are env-driven; disabled when unset. | Avoids build failures. |
 | A22 | Email/SMS providers | Abstracted behind `EMAIL_PROVIDER_KEY` / `SMS_PROVIDER_KEY`; not bound to a vendor. | Spec lists them as secrets. |
 | A23 | Password reset | Supabase email link flow; OTP screen shown when SMS enabled. | Spec screen list. |
+| A24 | Simple CRUD writes | Property/unit creation uses direct table inserts guarded by RLS (`has_org_role(...,'owner','manager')`), not RPCs. Business writes (payments, leases, stock) stay RPC-only. | RLS suffices; avoids boilerplate RPCs for trivial inserts. |
+| A25 | React version | React and React DOM are pinned to `19.1.0` workspace-wide via `pnpm.overrides`, matching React Native 0.79. | Mismatched react/react-dom breaks the admin build. |
+| A26 | Dependency audit | The CI `audit` job is informational (`continue-on-error`). | Remaining advisories are transitive build tooling (`braces`, `node-forge`) with no patched release. |

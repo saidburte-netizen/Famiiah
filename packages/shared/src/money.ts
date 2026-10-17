@@ -91,10 +91,17 @@ export interface MoneyFormatOptions {
   decimals?: number;
 }
 
-/** Format a decimal string for display, e.g. "12,345.50 ETB". */
-export function formatMoney(value: string, opts: MoneyFormatOptions = {}): string {
+/**
+ * Format a decimal amount for display, e.g. "12,345.50 ETB".
+ *
+ * Accepts a decimal string or a number: Postgres `numeric` columns arrive from
+ * Supabase as JSON numbers, so numeric input is normalised without float drift
+ * by rounding to the currency's decimal places first.
+ */
+export function formatMoney(value: string | number, opts: MoneyFormatOptions = {}): string {
   const { currency = "ETB", locale = "en-ET", decimals = CURRENCY_DECIMALS[currency] ?? 2 } = opts;
-  const minor = toMinorUnits(value, decimals);
+  const normalized = typeof value === "number" ? value.toFixed(decimals) : value;
+  const minor = toMinorUnits(normalized, decimals);
   const negative = minor < 0n;
   const abs = negative ? -minor : minor;
   const s = abs.toString().padStart(decimals + 1, "0");

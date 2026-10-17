@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { useRouter } from "expo-router";
 import { getSupabase } from "@/lib/supabase";
 import { listTenantsWithStatus } from "@/features/api";
 import { Button, Card, Screen, Text } from "@/components/ui";
@@ -13,10 +14,13 @@ interface TenantRow {
   phone: string | null;
   unit_code: string | null;
   monthly_rent: string | null;
+  lease_end: string | null;
   overdue_days: number;
+  status: string;
 }
 
 export default function TenantsScreen() {
+  const router = useRouter();
   const [rows, setRows] = useState<TenantRow[]>([]);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -42,6 +46,7 @@ export default function TenantsScreen() {
 
   return (
     <Screen>
+      <Button title="New tenant" onPress={() => router.push("/(app)/tenants/new")} />
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         {FILTERS.map((f) => (
           <View key={f} style={{ flex: 1, minWidth: 80 }}>
@@ -58,19 +63,27 @@ export default function TenantsScreen() {
           ListEmptyComponent={<Text variant="muted">No tenants.</Text>}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           renderItem={({ item }) => (
-            <Card>
-              <Text variant="bold" color={colors.navy}>
-                {item.full_name}
-              </Text>
-              <Text variant="muted">
-                {item.unit_code ?? "—"} · {item.phone ?? "no phone"}
-              </Text>
-              {item.overdue_days > 0 ? (
-                <Text variant="semibold" color={colors.danger}>
-                  Overdue {item.overdue_days} day(s)
+            <Pressable onPress={() => router.push(`/(app)/tenants/${item.id}`)}>
+              <Card>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text variant="bold" color={colors.navy}>
+                    {item.full_name}
+                  </Text>
+                  {item.overdue_days > 0 ? (
+                    <Text variant="semibold" color={colors.danger}>
+                      Overdue {item.overdue_days}d
+                    </Text>
+                  ) : (
+                    <Text variant="semibold" color={colors.textMuted}>
+                      {item.status}
+                    </Text>
+                  )}
+                </View>
+                <Text variant="muted">
+                  {item.unit_code ?? "—"} · {item.phone ?? "no phone"}
                 </Text>
-              ) : null}
-            </Card>
+              </Card>
+            </Pressable>
           )}
         />
       )}

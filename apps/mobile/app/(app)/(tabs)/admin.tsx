@@ -29,15 +29,24 @@ export default function AdminScreen() {
 
   useEffect(() => {
     if (!orgId) return;
+    let cancelled = false;
     const supabase = getSupabase();
     setLoading(true);
-    supabase
-      .rpc("admin_list_members", { p_org: orgId, p_search: null, p_limit: 50, p_offset: 0 })
-      .then(({ data, error: e }) => {
-        if (e) setError(e.message);
-        else setRows((data ?? []) as MemberRow[]);
-      })
-      .finally(() => setLoading(false));
+    (async () => {
+      const { data, error: e } = await supabase.rpc("admin_list_members", {
+        p_org: orgId,
+        p_search: null,
+        p_limit: 100,
+        p_offset: 0,
+      });
+      if (cancelled) return;
+      if (e) setError(e.message);
+      else setRows((data ?? []) as unknown as MemberRow[]);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [orgId]);
 
   if (loading) {

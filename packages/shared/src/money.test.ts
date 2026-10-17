@@ -55,4 +55,10 @@ describe("money", () => {
   it("formats with thousands separators", () => {
     expect(formatMoney("12345.5")).toBe("12,345.50 ETB");
   });
+
+  it("formats numeric input from Postgres numeric columns", () => {
+    expect(formatMoney(12345.5)).toBe("12,345.50 ETB");
+    expect(formatMoney(0)).toBe("0.00 ETB");
+    expect(formatMoney(1234567.891)).toBe("1,234,567.89 ETB");
+  });
 });

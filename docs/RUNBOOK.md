@@ -3,6 +3,10 @@
 Operational procedures for Fam. Environments: `local` (Supabase CLI), `staging`,
 `production` (separate Supabase projects).
 
+> CI/CD is defined in `.github/workflows/` and documented in
+> [`DEPLOYMENT.md`](./DEPLOYMENT.md). Required secrets and the deploy order live
+> there.
+
 ## Deploy
 
 1. **Database**: merge migration PR → CI runs `supabase db reset` + `supabase test db`

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
 import type { Database } from "@fam/shared";
 import { AppState } from "react-native";
 
@@ -21,6 +22,9 @@ export function getSupabase(): SupabaseClient<Database> {
   const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anon) throw new Error("missing_supabase_env");
 
+  const appVersion = Constants.expoConfig?.version ?? "0.0.0";
+  const appEnv = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
+
   client = createClient<Database>(url, anon, {
     auth: {
       storage: SecureStorageAdapter,
@@ -30,7 +34,8 @@ export function getSupabase(): SupabaseClient<Database> {
     },
     global: {
       headers: {
-        "x-client-version": process.env.EXPO_PUBLIC_APP_ENV ?? "local",
+        "x-client-version": appVersion,
+        "x-app-env": appEnv,
       },
     },
   });

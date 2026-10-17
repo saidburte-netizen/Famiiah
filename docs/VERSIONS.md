@@ -29,6 +29,25 @@ resolved versions here at build time.
 | zod | ^3.25 |
 | typescript | ^5.9 |
 
+## Apps
+
+| Package | Range | Notes |
+|---|---|---|
+| @supabase/supabase-js | ^2.45 | mobile + admin |
+| @supabase/ssr | ^0.12 | admin; older `0.6.x` d.ts imports a removed `dist/module/lib/types` path and breaks row inference |
+| @tanstack/react-query | ^5.81 | mobile |
+| expo | ^53 | mobile SDK |
+| expo-router | ^5.1 | mobile routing |
+| next | ^15.4 | admin |
+| react / react-native | 19.1 / 0.79 | mobile |
+
+## Tooling
+
+| Package | Range | Notes |
+|---|---|---|
+| turbo | ^2.5 | workspace task runner |
+| eslint-plugin-react-hooks | ^7.1 | mobile; only the classic `rules-of-hooks` + `exhaustive-deps` rules are enabled |
+
 ## How to update
 
 1. Bump dependency, run `pnpm install`, commit `pnpm-lock.yaml`.

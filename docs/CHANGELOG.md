@@ -25,6 +25,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `payment-webhook`, `admin-api`.
 - **Phase 1 — Tests**: pgTAP RLS matrix and RPC invariants; seed data.
 - **Docs**: ARCHITECTURE, SCHEMA, API, VERSIONS, ASSUMPTIONS, RUNBOOK, CHANGELOG.
+- **CI/CD**: `.github/workflows/ci.yml` (lint/typecheck/test, DB migrate + lint
+  + pgTAP + drift check, admin production build, informational dependency audit)
+  and `.github/workflows/deploy.yml` (manual/tag CD: DB → Edge Functions → admin
+  → mobile). `apps/mobile/eas.json` build profiles and `docs/DEPLOYMENT.md`.
+- **Phase 2 — Mobile app** (`@fam/mobile`): Expo Router auth flow, tab shell
+  (Home, Properties, Tenants, Rent, Admin), secure-store Supabase client, i18n
+  shell, version gate, shared UI primitives.
+  - Screens: dashboard, properties list + detail + create, units, tenants list +
+    detail (renew/terminate), create tenant & lease, rent overview, record
+    payment, stock (list + adjust), notifications, settings.
+  - `features/api.ts` — typed wrappers for every RPC/table query the app uses.
+  - `lib/org.ts` — `useOrg()` active-organization hook.
+
+### Changed
+
+- `@fam/shared` `formatMoney` now accepts `string | number` (Postgres `numeric`
+  arrives as a JSON number) and normalises without float drift.
+- `Database` placeholder rows typed `any` so supabase-js's select-string parser
+  resolves column names (index-signature rows previously produced `never[]`).
+- Admin `@supabase/ssr` bumped `^0.6.1` → `^0.12.7` (0.6.x d.ts imported a
+  removed `@supabase/supabase-js/dist/module/lib/types` path).
+- Mobile: added `@supabase/supabase-js` and `@types/node`.
+- Tooling: added `eslint-plugin-react-hooks`; enabled only `rules-of-hooks` and
+  `exhaustive-deps` (v7's new rules flag standard RN patterns).
+
+### Fixed
+
+- `terminate_lease` wrapper now passes the required `p_end_date`.
+- `createUnit` writes the correct `units.area_sqm` column.
+- Corrected RPC argument names for dashboard/list/report/stock/notification calls.
 
 ### Notes
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { useRouter } from "expo-router";
 import { getSupabase } from "@/lib/supabase";
-import { rentOverview } from "@/features/api";
-import { Card, Screen, Text } from "@/components/ui";
+import { rentOverview, sendReminder } from "@/features/api";
+import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { formatMoney } from "@fam/shared";
 
@@ -14,9 +15,11 @@ interface ChargeRow {
   due_date: string;
   tenant_name: string;
   unit_code: string;
+  lease_id: string;
 }
 
 export default function RentScreen() {
+  const router = useRouter();
   const [rows, setRows] = useState<ChargeRow[]>([]);
   const [totals, setTotals] = useState({ expected: "0", collected: "0", outstanding: "0" });
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -59,6 +62,7 @@ export default function RentScreen() {
 
   return (
     <Screen>
+      <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
       <Card>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Stat label="Expected" value={formatMoney(totals.expected)} />
@@ -72,22 +76,35 @@ export default function RentScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         ListEmptyComponent={<Text variant="muted">No charges this month.</Text>}
         renderItem={({ item }) => (
-          <Card>
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text variant="bold" color={colors.navy}>
-                {item.unit_code} · {item.tenant_name}
+          <Pressable onPress={() => router.push(`/(app)/payments/new?leaseId=${item.lease_id}`)}>
+            <Card>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text variant="bold" color={colors.navy}>
+                  {item.unit_code} · {item.tenant_name}
+                </Text>
+                <Text
+                  variant="semibold"
+                  color={item.status === "overdue" ? colors.danger : colors.textMuted}
+                >
+                  {item.status}
+                </Text>
+              </View>
+              <Text variant="muted">
+                {formatMoney(item.amount)} · due {item.due_date} · paid {formatMoney(item.amount_paid)}
               </Text>
-              <Text
-                variant="semibold"
-                color={item.status === "overdue" ? colors.danger : colors.textMuted}
-              >
-                {item.status}
-              </Text>
-            </View>
-            <Text variant="muted">
-              {formatMoney(item.amount)} · due {item.due_date} · paid {formatMoney(item.amount_paid)}
-            </Text>
-          </Card>
+              {item.status === "overdue" || item.status === "pending" || item.status === "partial" ? (
+                <View style={{ marginTop: 8 }}>
+                  <Button
+                    title="Send reminder"
+                    variant="ghost"
+                    onPress={() => {
+                      void sendReminder(item.id);
+                    }}
+                  />
+                </View>
+              ) : null}
+            </Card>
+          </Pressable>
         )}
       />
     </Screen>
