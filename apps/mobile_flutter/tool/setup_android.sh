@@ -48,6 +48,25 @@ if [ -f "${manifest}" ]; then
   rm -f "${manifest}.bak"
 fi
 
+# ---- optional release signing -------------------------------------------
+# `flutter create` signs release builds with the debug key, which Play rejects.
+# When an upload keystore is supplied (ANDROID_KEYSTORE_* / KEYSTORE_* secrets),
+# materialise it and point the release build at it.
+STORE_B64="${ANDROID_KEYSTORE_BASE64:-${KEYSTORE_BASE64:-}}"
+if [ -n "${STORE_B64}" ]; then
+  printf '%s' "${STORE_B64}" | tr -d '\r\n ' | base64 -d > android/app/upload-keystore.jks
+  cat > android/key.properties <<EOF
+storeFile=upload-keystore.jks
+storePassword=${ANDROID_KEYSTORE_PASSWORD:-${KEYSTORE_PASSWORD:-}}
+keyAlias=${ANDROID_KEY_ALIAS:-${KEY_ALIAS:-}}
+keyPassword=${ANDROID_KEY_PASSWORD:-${KEY_PASSWORD:-}}
+EOF
+  python3 tool/patch_android_signing.py android/app/build.gradle.kts
+  echo "Release signing configured from the provided keystore."
+else
+  echo "No keystore provided; release builds stay debug-signed (Play will reject them)."
+fi
+
 echo "Android project ready:"
 grep -nE 'namespace|applicationId' android/app/build.gradle.kts 2>/dev/null \
   || grep -nE 'namespace|applicationId' android/app/build.gradle 2>/dev/null \

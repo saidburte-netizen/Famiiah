@@ -50,9 +50,34 @@ flutter test
 CI (`.github/workflows/flutter.yml`) runs `flutter analyze`, `flutter test`
 and then a real Android release build (APK + AAB) with Java 17, using the
 application id above. The APK/AAB are uploaded as the `fam-android-release`
-artifact. Add a real upload keystore (`android/key.properties` +
-`signingConfigs.release`) before submitting to the Play Console; the release
-build currently uses Flutter's default debug signing so it always compiles.
+artifact.
+
+### Release signing
+
+By default the release APK/AAB are signed with Flutter's debug key so the
+build always compiles — **Play will reject those**. To produce a Play-ready
+bundle, add an upload keystore to the repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 upload-keystore.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
+| `ANDROID_KEY_ALIAS` | key alias (e.g. `upload`) |
+| `ANDROID_KEY_PASSWORD` | key password |
+
+When they are present, `tool/setup_android.sh` writes the keystore to
+`android/app/upload-keystore.jks`, creates `android/key.properties` and runs
+`tool/patch_android_signing.py` to point `buildTypes.release` at it. With no
+secrets the build stays on debug signing, so CI keeps working.
+
+To build a signed bundle locally, export the four variables above and run
+`bash tool/setup_android.sh && flutter build appbundle --release`. Create the
+keystore once with:
+
+```
+keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 \
+  -validity 10000 -alias upload
+```
 
 ## Deep links
 
