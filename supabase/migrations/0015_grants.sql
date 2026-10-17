@@ -8,6 +8,11 @@
 revoke all on function public.prune_app_event_logs(int) from public, anon, authenticated;
 revoke all on function public.invoke_edge_function(text) from public, anon, authenticated;
 
+-- Atomic counter used for receipt numbers. It is only ever called from the
+-- SECURITY DEFINER assign_receipt_no() trigger, which runs as the owner, so no
+-- client role (public/anon/authenticated) needs EXECUTE on it.
+revoke all on function public.next_number(uuid, text) from public, anon, authenticated;
+
 -- Authenticated-only RPCs.
 do $$
 declare

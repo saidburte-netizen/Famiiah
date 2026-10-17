@@ -651,8 +651,9 @@ select name, case when ok then 'PASS' else 'FAIL' end as result, detail from (
                where n.nspname = 'public'
                  and p.proname in ('prune_app_event_logs','invoke_edge_function')), null
   union all
-  -- KNOWN FINDING: next_number() is not revoked from PUBLIC, so it stays
-  -- callable by anon. A PASS here means it has been hardened (see FIX part).
+  -- Should PASS now that migration 0015 revokes EXECUTE from PUBLIC/anon/
+  -- authenticated on public.next_number(uuid, text). If it FAILs, the fix was
+  -- not applied to this database (run the FIX block after this part).
   select 'FINDING: next_number is not executable by anon',
          not coalesce((select bool_or(has_function_privilege('anon', p.oid, 'EXECUTE'))
                 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -671,7 +672,8 @@ select name, case when ok then 'PASS' else 'FAIL' end as result, detail from (
 
 rollback;
 
--- OPTIONAL FIX for the next_number finding (uncomment to harden):
+-- FIX for older databases that were migrated before 0015 revoked next_number
+-- (this is already part of migration 0015, so a fresh install does not need it):
 -- revoke all on function public.next_number(uuid, text) from public, anon, authenticated;
 
 
