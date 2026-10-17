@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Assets**: real `icon.png`, `adaptive-icon.png` and `splash.png`
   (midnight + F-tower mark) replacing placeholders; admin nav label fixed
   to "Organizations".
+- **Push delivery**: `send-reminders` now also dispatches queued push
+  notifications to recipients' devices via the Expo push API and marks them
+  `sent`/`failed` (no-device ones fail rather than retry forever).
 - **Mobile push**: `lib/push.ts` registers the Expo push token on launch
   (permission prompt → `register_device_token`); tapping a notification
   routes to the Notifications screen.

@@ -24,7 +24,9 @@ for the components you deploy are needed.
 | `EXPO_TOKEN` | mobile | Expo access token (needs `eas init` once per project). |
 
 Edge Function *config* (URLs, provider keys) is set with
-`supabase secrets set --project-ref <ref> KEY=value`, not in CI.
+`supabase secrets set --project-ref <ref> KEY=value`, not in CI. Relevant keys:
+`EXPO_ACCESS_TOKEN` (push delivery from `send-reminders`), `EMAIL_PROVIDER_KEY`
+(`invite-member`), and the payment-provider secret used by `payment-webhook`.
 
 ## Deploy order
 
