@@ -43,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Phase 2 — Admin console**: org member drilldown (`/members/[id]`) and
   per-org reports (`/reports/[id]`). `admin_list_members` and the
   `report_*` RPCs now also authorise platform admins.
+- **Assets**: real `icon.png`, `adaptive-icon.png` and `splash.png`
+  (midnight + F-tower mark) replacing placeholders; admin nav label fixed
+  to "Organizations".
 
 ### Changed
 
