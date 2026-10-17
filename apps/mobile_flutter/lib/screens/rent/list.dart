@@ -48,9 +48,22 @@ class RentScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    FilledButton(
-                      onPressed: () => context.push('/app/payments/new'),
-                      child: const Text('Record payment'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () => context.push('/app/payments/new'),
+                            child: const Text('Record payment'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => context.push('/app/payments'),
+                            child: const Text('History'),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Row(

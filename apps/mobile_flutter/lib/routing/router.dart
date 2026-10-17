@@ -25,6 +25,7 @@ import '../screens/stock/rentals.dart';
 import '../screens/tenants/detail.dart';
 import '../screens/tenants/list.dart';
 import '../screens/tenants/new.dart';
+import '../screens/units/assign.dart';
 import '../state/auth_notifier.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -88,6 +89,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/app/tenants/new',
         builder: (_, state) => NewTenantScreen(unitId: state.uri.queryParameters['unitId']),
+      ),
+      GoRoute(
+        path: '/app/units/:id/assign',
+        builder: (_, state) => AssignTenantScreen(
+          unitId: state.pathParameters['id']!,
+          propertyId: state.uri.queryParameters['propertyId'],
+          unitCode: state.uri.queryParameters['code'],
+          monthlyRent: state.uri.queryParameters['rent'],
+        ),
       ),
       GoRoute(
         path: '/app/tenants/:id',

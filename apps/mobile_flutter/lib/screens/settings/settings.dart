@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/supabase/client.dart';
 import '../../state/auth_notifier.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+
+final appVersionProvider = FutureProvider.autoDispose<String>((_) => getAppVersion());
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -15,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
     final org = ref.watch(orgProvider);
+    final version = ref.watch(appVersionProvider).valueOrNull ?? '—';
     final name = user?.userMetadata?['full_name'] as String?;
 
     return FamPage(
@@ -39,6 +43,19 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Text('Payments', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                const Text('Every recorded payment, with receipts and voiding.',
+                    style: TextStyle(color: FamColors.textMuted)),
+                const SizedBox(height: 8),
+                OutlinedButton(onPressed: () => context.push('/app/payments'), child: const Text('Payment history')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          FamCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 const Text('Reports', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
                 const Text('Collections, occupancy and overdue ageing.',
                     style: TextStyle(color: FamColors.textMuted)),
@@ -48,13 +65,27 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const FamCard(
+          FamCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('Notifications', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                const Text('Reminders, receipts and overdue alerts.',
+                    style: TextStyle(color: FamColors.textMuted)),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                    onPressed: () => context.push('/app/notifications'), child: const Text('Open notifications')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('About', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                Text('App version 1.0.0', style: TextStyle(color: FamColors.textMuted)),
-                Text('Currency ETB · Timezone Africa/Addis_Ababa',
+                const Text('About', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                Text('App version $version', style: const TextStyle(color: FamColors.textMuted)),
+                const Text('Currency ETB · Timezone Africa/Addis_Ababa',
                     style: TextStyle(color: FamColors.textMuted)),
               ],
             ),

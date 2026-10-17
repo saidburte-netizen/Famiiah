@@ -129,7 +129,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 if (_step == 2) ...[
                   _acceptTerms
                       ? FilledButton(
-                          onPressed: () {}, child: const Text('✓ Terms accepted'))
+                          onPressed: () => setState(() => _acceptTerms = false),
+                          child: const Text('✓ Terms accepted (tap to undo)'))
                       : OutlinedButton(
                           onPressed: () => setState(() => _acceptTerms = true),
                           child: const Text('Accept terms'),

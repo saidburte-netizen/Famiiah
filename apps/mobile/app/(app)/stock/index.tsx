@@ -6,6 +6,7 @@ import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import {
+  listLowStock,
   listStockItems,
   listTenantsWithStatus,
   rentStockItem,
@@ -23,18 +24,19 @@ export default function StockScreen() {
   const [rows, setRows] = useState<StockItemRow[]>([]);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lowOnly, setLowOnly] = useState(false);
   const [adjusting, setAdjusting] = useState<StockItemRow | null>(null);
   const [renting, setRenting] = useState<StockItemRow | null>(null);
 
   const load = useCallback(async () => {
     if (!orgId) return;
     const [items, ts] = await Promise.all([
-      listStockItems(orgId),
+      lowOnly ? listLowStock(orgId) : listStockItems(orgId),
       listTenantsWithStatus(orgId),
     ]);
     setRows(items);
     setTenants(ts);
-  }, [orgId]);
+  }, [orgId, lowOnly]);
 
   useEffect(() => {
     if (!orgId) return;
@@ -45,12 +47,32 @@ export default function StockScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: "Stock" }} />
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <Button
+            title="All items"
+            variant={lowOnly ? "ghost" : "primary"}
+            onPress={() => setLowOnly(false)}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            title="Low stock"
+            variant={lowOnly ? "primary" : "ghost"}
+            onPress={() => setLowOnly(true)}
+          />
+        </View>
+      </View>
       <Button title="Stock rentals" variant="ghost" onPress={() => router.push("/(app)/stock/rentals")} />
       {loading ? (
         <ActivityIndicator color={colors.royal} />
       ) : (
         <ScrollView contentContainerStyle={{ gap: 12 }}>
-          {rows.length === 0 ? <Text variant="muted">No stock items yet.</Text> : null}
+          {rows.length === 0 ? (
+            <Text variant="muted">
+              {lowOnly ? "No items are below their minimum quantity." : "No stock items yet."}
+            </Text>
+          ) : null}
           {rows.map((item) => {
             const low = Number(item.quantity) <= Number(item.min_quantity);
             return (

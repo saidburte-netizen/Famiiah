@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import Constants from "expo-constants";
 import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { getSupabase } from "@/lib/supabase";
@@ -11,6 +12,7 @@ export default function SettingsScreen() {
   const { role } = useOrg();
   const [email, setEmail] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
+  const version = Constants.expoConfig?.version ?? "1.0.0";
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -47,6 +49,18 @@ export default function SettingsScreen() {
 
       <Card>
         <Text variant="semibold" color={colors.navy}>
+          Payments
+        </Text>
+        <Text variant="muted">Every recorded payment, with receipts and voiding.</Text>
+        <Button
+          title="Payment history"
+          variant="ghost"
+          onPress={() => router.push("/(app)/payments")}
+        />
+      </Card>
+
+      <Card>
+        <Text variant="semibold" color={colors.navy}>
           Reports
         </Text>
         <Text variant="muted">Collections, occupancy and overdue ageing.</Text>
@@ -55,9 +69,21 @@ export default function SettingsScreen() {
 
       <Card>
         <Text variant="semibold" color={colors.navy}>
+          Notifications
+        </Text>
+        <Text variant="muted">Reminders, receipts and overdue alerts.</Text>
+        <Button
+          title="Open notifications"
+          variant="ghost"
+          onPress={() => router.push("/(app)/notifications")}
+        />
+      </Card>
+
+      <Card>
+        <Text variant="semibold" color={colors.navy}>
           About
         </Text>
-        <Text variant="muted">App version 1.0.0</Text>
+        <Text variant="muted">App version {version}</Text>
         <Text variant="muted">Currency ETB · Timezone Africa/Addis_Ababa</Text>
       </Card>
 

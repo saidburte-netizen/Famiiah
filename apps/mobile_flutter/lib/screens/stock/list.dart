@@ -18,6 +18,16 @@ final stockItemsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>
   return listStockItems(org.orgId!);
 });
 
+/// Which subset of the catalogue is on screen: everything, or only items at or
+/// below their reorder point (the `list_low_stock` RPC).
+final stockFilterProvider = StateProvider<String>((_) => 'all');
+
+final lowStockProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final org = ref.watch(orgProvider);
+  if (org.orgId == null) return const [];
+  return listLowStock(org.orgId!);
+});
+
 final stockTenantsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final org = ref.watch(orgProvider);
   if (org.orgId == null) return const [];
@@ -29,7 +39,8 @@ class StockScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(stockItemsProvider);
+    final filter = ref.watch(stockFilterProvider);
+    final items = filter == 'low' ? ref.watch(lowStockProvider) : ref.watch(stockItemsProvider);
     final tenants = ref.watch(stockTenantsProvider).valueOrNull ?? const <Map<String, dynamic>>[];
 
     return FamPage(
@@ -40,71 +51,115 @@ class StockScreen extends ConsumerWidget {
           child: const Text('Rentals', style: TextStyle(color: FamColors.white)),
         ),
       ],
-      child: items.when(
-        loading: () => const FamLoading(),
-        error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(stockItemsProvider)),
-        data: (rows) => RefreshIndicator(
-          onRefresh: () async => ref.invalidate(stockItemsProvider),
-          child: rows.isEmpty
-              ? ListView(children: const [SizedBox(height: 120), EmptyState(message: 'No stock items yet.')])
-              : ListView.separated(
-                  itemCount: rows.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final item = rows[i];
-                    final low = (item['quantity'] as num? ?? 0) <= (item['min_quantity'] as num? ?? 0);
-                    final rentable = item['is_rentable'] == true;
-                    return FamCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('${item['name']}',
-                                  style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                              Text('${item['quantity']} ${item['uom']}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: low ? FamColors.danger : FamColors.textMuted,
-                                  )),
-                            ],
-                          ),
-                          Text(
-                            '${item['sku'] ?? 'no sku'}'
-                            '${item['category'] != null ? ' · ${item['category']}' : ''}'
-                            '${rentable ? ' · rentable' : ''}',
-                            style: const TextStyle(color: FamColors.textMuted),
-                          ),
-                          if (low)
-                            Text('Low stock (min ${item['min_quantity']})',
-                                style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.danger)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () => _showAdjust(context, ref, item),
-                                  child: const Text('Adjust'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: filter == 'all'
+                    ? FilledButton(
+                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'all',
+                        child: const Text('All items'))
+                    : OutlinedButton(
+                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'all',
+                        child: const Text('All items')),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: filter == 'low'
+                    ? FilledButton(
+                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'low',
+                        child: const Text('Low stock'))
+                    : OutlinedButton(
+                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'low',
+                        child: const Text('Low stock')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: items.when(
+              loading: () => const FamLoading(),
+              error: (e, _) => ErrorState(
+                  message: userMessage(e),
+                  onRetry: () =>
+                      ref.invalidate(filter == 'low' ? lowStockProvider : stockItemsProvider)),
+              data: (rows) => RefreshIndicator(
+                onRefresh: () async =>
+                    ref.invalidate(filter == 'low' ? lowStockProvider : stockItemsProvider),
+                child: rows.isEmpty
+                    ? ListView(children: [
+                        const SizedBox(height: 120),
+                        EmptyState(
+                            message: filter == 'low'
+                                ? 'No items are below their minimum quantity.'
+                                : 'No stock items yet.')
+                      ])
+                    : ListView.separated(
+                        itemCount: rows.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          final item = rows[i];
+                          final low =
+                              (item['quantity'] as num? ?? 0) <= (item['min_quantity'] as num? ?? 0);
+                          final rentable = item['is_rentable'] == true;
+                          return FamCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('${item['name']}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700, color: FamColors.navy)),
+                                    Text('${item['quantity']} ${item['uom']}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: low ? FamColors.danger : FamColors.textMuted,
+                                        )),
+                                  ],
                                 ),
-                              ),
-                              if (rentable && (item['quantity'] as num? ?? 0) > 0) ...[
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: FilledButton(
-                                    onPressed: () => _showRent(context, ref, item, tenants),
-                                    child: const Text('Rent out'),
-                                  ),
+                                Text(
+                                  '${item['sku'] ?? 'no sku'}'
+                                  '${item['category'] != null ? ' · ${item['category']}' : ''}'
+                                  '${rentable ? ' · rentable' : ''}',
+                                  style: const TextStyle(color: FamColors.textMuted),
+                                ),
+                                if (low)
+                                  Text('Low stock (min ${item['min_quantity']})',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600, color: FamColors.danger)),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        onPressed: () => _showAdjust(context, ref, item),
+                                        child: const Text('Adjust'),
+                                      ),
+                                    ),
+                                    if (rentable && (item['quantity'] as num? ?? 0) > 0) ...[
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: FilledButton(
+                                          onPressed: () => _showRent(context, ref, item, tenants),
+                                          child: const Text('Rent out'),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ],
-                            ],
-                          ),
-                        ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-        ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

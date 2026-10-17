@@ -86,11 +86,27 @@ export default function PropertyDetailScreen() {
               {item.tenant_name ? ` · ${item.tenant_name}` : ""}
             </Text>
             {item.status === "vacant" ? (
-              <Button
-                title="Assign tenant"
-                variant="ghost"
-                onPress={() => router.push(`/(app)/tenants/new?unitId=${item.id}`)}
-              />
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    title="New tenant"
+                    onPress={() => router.push(`/(app)/tenants/new?unitId=${item.id}`)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    title="Existing"
+                    variant="ghost"
+                    onPress={() =>
+                      router.push(
+                        `/(app)/units/${item.id}/assign?propertyId=${id}&code=${encodeURIComponent(
+                          item.code,
+                        )}&rent=${item.monthly_rent ?? ""}`,
+                      )
+                    }
+                  />
+                </View>
+              </View>
             ) : null}
           </Card>
         )}

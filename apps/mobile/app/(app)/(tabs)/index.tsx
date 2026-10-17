@@ -97,6 +97,33 @@ export default function DashboardScreen() {
             {data.overdue_count} charge(s) · {formatMoney(data.overdue_amount)}
           </Text>
         </Card>
+        {data.due_this_week?.length ? (
+          <Card>
+            <Text variant="semibold">Due this week</Text>
+            {data.due_this_week.map((c) => (
+              <View
+                key={c.id}
+                style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}
+              >
+                <Text variant="muted">
+                  {c.tenant_name} · unit {c.unit_code}
+                </Text>
+                <Text variant="semibold" color={colors.navy}>
+                  {c.due_date} · {formatMoney(c.amount)}
+                </Text>
+              </View>
+            ))}
+          </Card>
+        ) : null}
+        <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Payments" variant="ghost" onPress={() => router.push("/(app)/payments")} />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Reports" variant="ghost" onPress={() => router.push("/(app)/reports")} />
+          </View>
+        </View>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           <View style={{ flexGrow: 1, minWidth: 140 }}>
             <Button

@@ -91,9 +91,27 @@ class PropertyDetailScreen extends ConsumerWidget {
                           ),
                           if (vacant) ...[
                             const SizedBox(height: 8),
-                            OutlinedButton(
-                              onPressed: () => context.push('/app/tenants/new?unitId=${u['id']}'),
-                              child: const Text('Assign tenant'),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: () => context.push('/app/tenants/new?unitId=${u['id']}'),
+                                    child: const Text('New tenant'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => context.push(
+                                      '/app/units/${u['id']}/assign'
+                                      '?propertyId=$id'
+                                      '&code=${Uri.encodeComponent('${u['code']}')}'
+                                      '&rent=${u['monthly_rent'] ?? ''}',
+                                    ),
+                                    child: const Text('Existing'),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ],

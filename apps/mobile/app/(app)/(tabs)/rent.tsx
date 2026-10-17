@@ -69,7 +69,18 @@ export default function RentScreen() {
 
   return (
     <Screen>
-      <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            title="History"
+            variant="ghost"
+            onPress={() => router.push("/(app)/payments")}
+          />
+        </View>
+      </View>
       <View style={{ flexDirection: "row", gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Stat label="Expected" value={formatMoney(expected)} />

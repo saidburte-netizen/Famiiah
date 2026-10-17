@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/errors/user_message.dart';
 import '../../core/money/money.dart';
@@ -116,6 +117,11 @@ class ReportsScreen extends ConsumerWidget {
                         )),
                 ],
               ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: () => context.push('/app/payments'),
+              child: const Text('View payment history'),
             ),
           ],
         ),

@@ -126,6 +126,23 @@ export const CreateTenantWithLeaseSchema = z.object({
 });
 export type CreateTenantWithLeaseInput = z.infer<typeof CreateTenantWithLeaseSchema>;
 
+/** Assign an existing tenant to a vacant unit (creates the active lease). */
+export const AssignTenantToUnitSchema = z.object({
+  unitId: UUID,
+  tenantId: UUID,
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "invalid_date"),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "invalid_date")
+    .nullable()
+    .optional(),
+  monthlyRent: NonNegativeMoney,
+  depositAmount: NonNegativeMoney.default("0"),
+  billingDay: z.number().int().min(1).max(28).default(1),
+  graceDays: z.number().int().min(0).max(60).default(5),
+});
+export type AssignTenantToUnitInput = z.infer<typeof AssignTenantToUnitSchema>;
+
 // ---- Payment ----
 export const RecordPaymentSchema = z.object({
   leaseId: UUID,

@@ -45,25 +45,30 @@ class DashboardScreen extends ConsumerWidget {
         error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(dashboardProvider)),
         data: (d) {
           final tiles = [
-            ('Collected', formatMoney(d['collected_month'])),
-            ('Expected', formatMoney(d['expected_month'])),
-            ('Occupancy', '${d['units_rented']}/${d['units_total']}'),
-            ('Overdue', '${d['overdue_count']}'),
+            ('Collected', formatMoney(d['collected_month']), '/app/payments'),
+            ('Expected', formatMoney(d['expected_month']), '/app/rent'),
+            ('Occupancy', '${d['units_rented']}/${d['units_total']}', '/app/properties'),
+            ('Overdue', '${d['overdue_count']}', '/app/rent'),
           ];
+          final due = (d['due_this_week'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
           return ListView(
             children: [
               Text('Dashboard', style: text.displayLarge?.copyWith(color: FamColors.midnight)),
               const SizedBox(height: 12),
-              FamCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Collection rate this month',
-                        style: text.bodyMedium?.copyWith(color: FamColors.textMuted)),
-                    Text('${d['collection_rate']}%',
-                        style: const TextStyle(
-                            fontSize: 28, fontWeight: FontWeight.w800, color: FamColors.navy)),
-                  ],
+              InkWell(
+                borderRadius: BorderRadius.circular(FamRadius.card),
+                onTap: () => context.push('/app/rent'),
+                child: FamCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Collection rate this month',
+                          style: text.bodyMedium?.copyWith(color: FamColors.textMuted)),
+                      Text('${d['collection_rate']}%',
+                          style: const TextStyle(
+                              fontSize: 28, fontWeight: FontWeight.w800, color: FamColors.navy)),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -73,15 +78,19 @@ class DashboardScreen extends ConsumerWidget {
                 children: tiles
                     .map((tile) => ConstrainedBox(
                           constraints: const BoxConstraints(minWidth: 140),
-                          child: FamCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(tile.$1, style: const TextStyle(color: FamColors.textMuted)),
-                                Text(tile.$2,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700, color: FamColors.navy)),
-                              ],
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(FamRadius.card),
+                            onTap: () => context.push(tile.$3),
+                            child: FamCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(tile.$1, style: const TextStyle(color: FamColors.textMuted)),
+                                  Text(tile.$2,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700, color: FamColors.navy)),
+                                ],
+                              ),
                             ),
                           ),
                         ))
@@ -97,6 +106,59 @@ class DashboardScreen extends ConsumerWidget {
                         style: const TextStyle(color: FamColors.textMuted)),
                   ],
                 ),
+              ),
+              if (due.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                FamCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Due this week', style: TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      ...due.map((c) => InkWell(
+                            onTap: () => context.push('/app/rent'),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text('${c['tenant_name']} · unit ${c['unit_code']}',
+                                        style: const TextStyle(color: FamColors.textMuted)),
+                                  ),
+                                  Text('${c['due_date']} · ${formatMoney(c['amount'])}',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600, color: FamColors.navy)),
+                                ],
+                              ),
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () => context.push('/app/payments/new'),
+                child: const Text('Record payment'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/app/payments'),
+                      child: const Text('Payments'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/app/reports'),
+                      child: const Text('Reports'),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Row(

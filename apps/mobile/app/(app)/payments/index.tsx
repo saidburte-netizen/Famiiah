@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, View } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { formatMoney } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -21,6 +21,7 @@ interface PaymentRow {
 
 export default function PaymentsScreen() {
   const { orgId, role } = useOrg();
+  const router = useRouter();
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PaymentRow | null>(null);
@@ -38,9 +39,18 @@ export default function PaymentsScreen() {
     load().finally(() => setLoading(false));
   }, [orgId, load]);
 
+  // Returning from "record payment" must show the new row, so refresh on focus.
+  useFocusEffect(
+    useCallback(() => {
+      if (!orgId) return;
+      void load();
+    }, [orgId, load]),
+  );
+
   return (
     <Screen>
       <Stack.Screen options={{ title: "Payments" }} />
+      <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
       {loading ? (
         <ActivityIndicator color={colors.royal} />
       ) : (
