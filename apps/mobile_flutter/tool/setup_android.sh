@@ -55,11 +55,10 @@ if [ -f "${manifest}" ]; then
     sed -i.bak 's/<application/<application android:allowBackup="false"/' "${manifest}"
   fi
   rm -f "${manifest}.bak"
-  # Fail here, with a clear message, rather than later inside the manifest
-  # merger if the rewrite ever produces malformed XML.
-  if command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import sys, xml.dom.minidom as m; m.parse(sys.argv[1])' "${manifest}"
-  fi
+  # Add the fam:// VIEW intent filter so the invite deep link reaches the app
+  # (go_router rewrites the link in lib/routing/deep_links.dart). The script also
+  # verifies the XML, so a malformed rewrite fails here rather than in Gradle.
+  python3 tool/patch_android_manifest.py "${manifest}"
 fi
 
 # flutter_secure_storage needs API 23+; pin the floor explicitly rather than

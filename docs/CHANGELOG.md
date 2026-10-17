@@ -143,6 +143,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `/auth/create-organization` (both clients), and the dashboard offers a
   "Create organization" action instead of a dead end. Creating an org (or
   accepting an invite) refreshes the active-org state before routing.
+- Invite deep links work on Android: `tool/setup_android.sh` adds the `fam://`
+  VIEW/BROWSABLE intent filter and `lib/routing/deep_links.dart` rewrites the
+  link (`fam://invite?token=…`, where `invite` is the URI host) to the `/invite`
+  route before the auth guard, so the invite screen is reachable from a link.
 
 ### Changed (mobile)
 
@@ -164,6 +168,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Removed the duplicate **Stock** quick action (it is already in the shell).
 - Removed the decorative owner/manager/staff role chips from login in both mobile
   clients — they looked selectable but changed nothing.
+- `tool/setup_android.sh` no longer emits a duplicate `android:allowBackup`
+  attribute (two sed expressions both matched), which had failed the release
+  Android build in the manifest merger; the manifest is now XML-validated.
+- The generated `android/` project and `pubspec.lock` are gitignored so a local
+  build cannot sweep them into a commit.
 
 ### Security
 
@@ -187,3 +196,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Mobile and admin app scaffolds follow in later phases.
 - `online_payments` and `maintenance_requests` are behind feature flags (off).
+- Password-reset links (`fam://reset-password`, sent by `resetPasswordForEmail`)
+  open both clients, but neither has a screen to set the new password yet, so the
+  link falls through to sign-in. Completing the recovery flow (and adding the
+  matching route to both clients) is follow-up work.

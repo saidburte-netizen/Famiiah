@@ -44,6 +44,9 @@ flutter test
 
 - Application id: **`com.fami.myapp`** (also the Play Console package name).
 - Launcher label: `Fam`.
+- `minSdk = 24` (required by `flutter_secure_storage`) and
+  `android:allowBackup="false"` (an encrypted store must not be restored without
+  its Keystore key), both applied by `tool/setup_android.sh`.
 - `--dart-define`s for the Supabase URL/key are `FAM_SUPABASE_URL` and
   `FAM_SUPABASE_ANON_KEY`.
 
@@ -81,10 +84,22 @@ keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 \
 
 ## Deep links
 
-The invite flow expects the `fam://invite?token=<rawToken>` scheme. After
-`setup_android.sh`, add the intent filter in `android/app/src/main/AndroidManifest.xml`
-and the URL scheme in `ios/Runner/Info.plist` (the RAW token is SHA-256 hashed
-in `lib/screens/auth/invite.dart` before being sent to `accept_invitation`).
+The invite flow uses `fam://invite?token=<rawToken>` — the raw token is SHA-256
+hashed in `lib/screens/auth/invite.dart` before it reaches `accept_invitation`.
+
+- **Android** is wired automatically: `tool/setup_android.sh` runs
+  `tool/patch_android_manifest.py`, which adds the `VIEW`/`BROWSABLE` intent
+  filter for the `fam` scheme to the generated manifest.
+- **iOS** is manual: add the `fam` URL scheme to `ios/Runner/Info.plist`
+  (`CFBundleURLTypes`).
+- Android hands the app the *full* URI, so the first segment (`invite`) is the
+  URI **host**, not a path. `lib/routing/deep_links.dart` rewrites
+  `fam://invite?token=…` to `/invite?token=…` before the router's auth guard
+  runs; `test/deep_links_test.dart` locks that in.
+
+Known gap: the password-reset link (`fam://reset-password`, from
+`resetPasswordForEmail`) opens the app on both clients, but neither has a screen
+to set the new password yet, so it falls through to sign-in.
 
 ## Structure
 

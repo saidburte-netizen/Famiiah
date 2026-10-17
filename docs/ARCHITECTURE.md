@@ -113,6 +113,11 @@ fam/
   Riverpod providers, an `authProvider` notifier, `core/errors/user_message.dart`
   for the same error mapping. Env is injected at build time with
   `--dart-define=FAM_SUPABASE_URL/FAM_SUPABASE_ANON_KEY/FAM_APP_ENV`.
+- Invite deep links (`fam://invite?token=…`) reach the invite screen on both
+  clients: Expo Router routes the scheme directly, and Flutter declares the
+  `fam` VIEW intent filter (`tool/patch_android_manifest.py`) and rewrites the
+  full URI — whose host is the first segment — to `/invite` in
+  `lib/routing/deep_links.dart` before the auth guard runs.
 - Both enforce the same first-run flow: sign up → (signed in, no membership) →
   create organization, and both keep that screen reachable while signed in.
 - Android application id for both mobile builds is `com.fami.myapp`.
@@ -127,7 +132,8 @@ fam/
   - `android/` is not committed (it carries a binary `gradle-wrapper.jar`);
     `tool/setup_android.sh` generates it with `flutter create`, rewrites the
     application id to `com.fami.myapp`, labels the app `Fam`, sets
-    `minSdk = 24` and `allowBackup="false"`.
+    `minSdk = 24` and `allowBackup="false"`, and adds the `fam://` invite
+    intent filter (`tool/patch_android_manifest.py`).
   - Release signing: when `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
     `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` are set, the script decodes the
     keystore into `android/key.properties` and `tool/patch_android_signing.py`

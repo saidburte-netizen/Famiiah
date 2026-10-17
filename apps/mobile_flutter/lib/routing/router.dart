@@ -28,6 +28,7 @@ import '../screens/tenants/new.dart';
 import '../screens/units/assign.dart';
 import '../screens/units/new.dart';
 import '../state/auth_notifier.dart';
+import 'deep_links.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
@@ -37,6 +38,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: refresh,
     redirect: (context, state) {
+      // Custom-scheme deep links (`fam://invite?token=…`) arrive as a full URI
+      // whose host is the first path segment; rewrite before auth routing.
+      final deepLink = deepLinkRedirect(state.uri);
+      if (deepLink != null) return deepLink;
+
       final auth = ref.read(authProvider);
       if (auth.isLoading) return null;
 
