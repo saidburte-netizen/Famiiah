@@ -19,7 +19,7 @@
       "usesAppleSignIn": false
     },
     "android": {
-      "package": "com.fam.app",
+      "package": "com.fami.myapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#061538"

@@ -143,7 +143,7 @@ begin
   -- ---- app versions ----
   insert into app_versions (platform, version, min_supported_version, force_update, store_url)
   values ('ios', '1.0.0', '1.0.0', false, 'https://apps.apple.com/app/id000000000'),
-         ('android', '1.0.0', '1.0.0', false, 'https://play.google.com/store/apps/details?id=com.fam.app'),
+         ('android', '1.0.0', '1.0.0', false, 'https://play.google.com/store/apps/details?id=com.fami.myapp'),
          ('web', '1.0.0', '1.0.0', false, 'https://admin.fam.app')
   on conflict (platform, version) do nothing;
 
