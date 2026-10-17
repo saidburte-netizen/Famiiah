@@ -13,10 +13,12 @@ Operational procedures for Fam. Environments: `local` (Supabase CLI), `staging`,
    → apply to staging (`supabase db push`), verify, then production.
 2. **Edge Functions**: `supabase functions deploy <name> --project-ref <ref>`.
    Set secrets with `supabase secrets set`.
-3. **Admin**: deploy the Next.js app to the hosting provider; set
-   `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `NEXT_PUBLIC_SENTRY_DSN`.
-4. **Mobile**: `eas build` + `eas submit`; publish an `app_versions` row via
-   `admin_publish_app_version`.
+3. **Admin** (not part of CD): deploy the Next.js app to the hosting provider;
+   set `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` /
+   `NEXT_PUBLIC_SENTRY_DSN`.
+4. **Mobile**: CD builds the Android/Play app via EAS; finish publishing with
+   `eas submit --platform android --profile production --latest` and publish an
+   `app_versions` row via `admin_publish_app_version`.
 
 ## Rollback
 

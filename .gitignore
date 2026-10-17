@@ -28,6 +28,10 @@ credentials.json
 *.keystore
 *.jks
 
+# Play Store submission service account (download from Google Cloud, never commit)
+play-service-account.json
+google-service-account*.json
+
 # logs / os
 *.log
 npm-debug.log*

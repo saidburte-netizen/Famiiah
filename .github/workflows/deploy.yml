@@ -1,8 +1,12 @@
 name: CD
 
 # Continuous deployment. Runs manually (choose the environment) or on a
-# version tag. Database migrations are forward-only and run before functions,
-# admin and mobile so the backend is never ahead of the clients.
+# version tag. Database migrations are forward-only and run before functions
+# and mobile so the backend is never ahead of the clients.
+#
+# Deploys: database, edge functions, mobile (Android/Play).
+# The admin web app is intentionally NOT deployed by CD — host it separately if
+# you need it. CI still typechecks and builds apps/admin on every push.
 
 on:
   workflow_dispatch:
@@ -13,7 +17,7 @@ on:
         options: [staging, production]
         default: staging
       components:
-        description: components to deploy — all | db,functions,admin,mobile
+        description: components to deploy — all | db,functions,mobile
         type: string
         default: all
   push:
@@ -64,54 +68,14 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - name: Deploy all functions
+      - name: Deploy Edge Functions
         run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_ID"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
 
-  admin:
-    name: Deploy admin (Vercel)
-    needs: [db]
-    if: >-
-      always() && (needs.db.result == 'success' || needs.db.result == 'skipped') &&
-      (github.event_name == 'push' ||
-       github.event.inputs.components == 'all' ||
-       contains(github.event.inputs.components, 'admin'))
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Pull Vercel project settings
-        run: npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-        working-directory: apps/admin
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      - name: Build
-        run: npx vercel build --prod --token="$VERCEL_TOKEN"
-        working-directory: apps/admin
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy prebuilt
-        run: npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
-        working-directory: apps/admin
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
   mobile:
-    name: Build & submit mobile (EAS)
+    name: Build mobile (EAS, Android)
     needs: [db]
     if: >-
       always() && (needs.db.result == 'success' || needs.db.result == 'skipped') &&
@@ -142,25 +106,45 @@ jobs:
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
             node scripts/write-android-credentials.mjs
             echo "profile=ci" >> "$GITHUB_OUTPUT"
-            echo "platform=android" >> "$GITHUB_OUTPUT"
           else
-            echo "No ANDROID_KEYSTORE_BASE64; using EAS-managed credentials."
+            echo "EAS-managed credentials will be used."
             echo "profile=production" >> "$GITHUB_OUTPUT"
-            echo "platform=all" >> "$GITHUB_OUTPUT"
           fi
-      - name: EAS build
-        run: eas build --platform "${{ steps.creds.outputs.platform }}" --profile "${{ steps.creds.outputs.profile }}" --non-interactive --no-wait
+      # The cloud build cannot see this runner's environment. Push the client's
+      # Supabase config into the EAS project's `production` environment, which
+      # the build profile loads (see the `environment` field in eas.json).
+      - name: Sync EAS environment variables
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+        run: |
+          set -e
+          : "${SUPABASE_URL:?SUPABASE_URL secret is required}"
+          : "${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY secret is required}"
+          eas env:set --name EXPO_PUBLIC_SUPABASE_URL \
+            --value "$SUPABASE_URL" --environment production --visibility plaintext
+          eas env:set --name EXPO_PUBLIC_SUPABASE_ANON_KEY \
+            --value "$SUPABASE_ANON_KEY" --environment production --visibility plaintext
+          eas env:set --name EXPO_PUBLIC_APP_ENV \
+            --value "production" --environment production --visibility plaintext
+          if [ -n "$SENTRY_DSN" ]; then
+            eas env:set --name EXPO_PUBLIC_SENTRY_DSN \
+              --value "$SENTRY_DSN" --environment production --visibility plaintext
+          fi
+      - name: Build Android (EAS)
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile "${{ steps.creds.outputs.profile }}" --no-wait --non-interactive
 
   release:
     name: GitHub release
     if: github.event_name == 'push'
-    needs: [db, functions, admin, mobile]
+    needs: [db, functions, mobile]
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
