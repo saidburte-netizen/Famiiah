@@ -65,7 +65,6 @@ returns public.organization_members
 language plpgsql security definer set search_path = public as $$
 declare v_member public.organization_members;
 begin
-begin
   if not has_org_role(p_org, array['owner','manager']::public.org_role[]) and not is_platform_admin() then
     raise exception 'forbidden' using errcode = '42501';
   end if;

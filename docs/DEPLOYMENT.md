@@ -50,3 +50,14 @@ to the stores from the EAS dashboard or by adding `eas submit` to the job.
 2. `pnpm --filter @fam/mobile exec eas init` to attach an EAS project ID
    (writes `extra.eas.projectId` into `app.json`).
 3. Create the Supabase projects and add the `SUPABASE_*` secrets.
+
+## Android signing & push
+
+- **Keystore**: run `eas credentials` (Android → production) once and either let
+  EAS generate a keystore or upload the existing one. If uploading, have these
+  ready: the keystore **file**, the **keystore password**, the **key alias** and
+  the **key password**. EAS stores them server-side; they are never committed.
+- **Push**: delivery needs FCM (Android) and APNs (iOS) credentials uploaded in
+  EAS. The app only stores its Expo token via `register_device_token`; there is
+  no sender key in this repo. `extra.eas.projectId` (step 2) is required for
+  `getExpoPushTokenAsync` — without it, token registration is skipped.
