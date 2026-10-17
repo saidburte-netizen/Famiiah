@@ -89,10 +89,6 @@ jobs:
       # The Gradle project is generated on demand and pointed at the Play id, so
       # no binary wrapper jar lives in the repository.
       - name: Prepare Android project
-        # The ANDROID_KEYSTORE_* secrets are optional: when present the release
-        # APK/AAB are signed with the upload keystore, otherwise the build falls
-        # back to Flutter's debug signing (fine for CI, rejected by Play).
-      - name: Prepare Android project
         # The keystore secrets are optional: when present the release APK/AAB are
         # signed with the upload keystore, otherwise the build falls back to
         # Flutter's debug signing (fine for CI, rejected by Play). Accept the
