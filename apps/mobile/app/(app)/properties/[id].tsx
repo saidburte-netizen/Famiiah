@@ -4,6 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { createUnit, getProperty, listUnits, type UnitRow } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 const KINDS = ["shop", "apartment", "office", "storage"] as const;
 
@@ -24,7 +25,7 @@ export default function PropertyDetailScreen() {
       setProperty(p as Record<string, unknown>);
       setUnits(u);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load property.");
+      setError(userMessage(e));
     }
   }, [id]);
 
@@ -157,7 +158,7 @@ function AddUnitModal({
       setFloorLabel("");
       await onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create unit.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

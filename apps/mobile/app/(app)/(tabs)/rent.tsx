@@ -1,58 +1,31 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { getSupabase } from "@/lib/supabase";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { rentOverview, sendReminder } from "@/features/api";
-import { Button, Card, Screen, Text } from "@/components/ui";
+import { Button, Card, ErrorState, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { formatMoney } from "@fam/shared";
-
-interface ChargeRow {
-  id: string;
-  amount: string;
-  amount_paid: string;
-  status: string;
-  due_date: string;
-  tenant_name: string;
-  unit_code: string;
-  lease_id: string;
-}
+import { useOrg } from "@/lib/org";
+import { queryKeys } from "@/lib/query";
+import { userMessage } from "@/lib/errors";
 
 export default function RentScreen() {
   const router = useRouter();
-  const [rows, setRows] = useState<ChargeRow[]>([]);
-  const [totals, setTotals] = useState({ expected: "0", collected: "0", outstanding: "0" });
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const { orgId, loading: orgLoading, error: orgError, refetch: refetchOrg } = useOrg();
   const month = new Date().toISOString().slice(0, 7) + "-01";
 
-  useEffect(() => {
-    const supabase = getSupabase();
-    supabase
-      .from("organization_members")
-      .select("org_id")
-      .eq("status", "active")
-      .limit(1)
-      .then(({ data }) => setOrgId(data?.[0]?.org_id ?? null));
-  }, []);
+  const rent = useQuery({
+    queryKey: queryKeys.rent(orgId ?? "none", month),
+    queryFn: () => rentOverview(orgId as string, month),
+    enabled: Boolean(orgId),
+  });
 
-  useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    rentOverview(orgId, month)
-      .then((d) => {
-        setRows(d.rows as ChargeRow[]);
-        setTotals({
-          expected: String(d.expected),
-          collected: String(d.collected),
-          outstanding: String(d.outstanding),
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [orgId, month]);
+  const reminder = useMutation({
+    mutationFn: (chargeId: string) => sendReminder(chargeId),
+    onError: (e) => Alert.alert("Couldn't send reminder", userMessage(e)),
+  });
 
-  if (loading) {
+  if (orgLoading) {
     return (
       <Screen>
         <ActivityIndicator color={colors.royal} />
@@ -60,57 +33,95 @@ export default function RentScreen() {
     );
   }
 
+  if (orgError) {
+    return (
+      <Screen>
+        <ErrorState message={userMessage(orgError)} onRetry={() => void refetchOrg()} />
+      </Screen>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <Screen>
+        <ErrorState message="No organization is linked to this account yet." />
+      </Screen>
+    );
+  }
+
+  if (rent.isLoading) {
+    return (
+      <Screen>
+        <ActivityIndicator color={colors.royal} />
+      </Screen>
+    );
+  }
+
+  if (rent.isError || !rent.data) {
+    return (
+      <Screen>
+        <ErrorState message={userMessage(rent.error)} onRetry={() => void rent.refetch()} />
+      </Screen>
+    );
+  }
+
+  const { rows, expected, collected, outstanding } = rent.data;
+
   return (
     <Screen>
       <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
-      <Button
-        title="Payment history"
-        variant="ghost"
-        onPress={() => router.push("/(app)/payments")}
-      />
-      <Card>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Stat label="Expected" value={formatMoney(totals.expected)} />
-          <Stat label="Collected" value={formatMoney(totals.collected)} />
-          <Stat label="Outstanding" value={formatMoney(totals.outstanding)} />
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Stat label="Expected" value={formatMoney(expected)} />
         </View>
-      </Card>
+        <View style={{ flex: 1 }}>
+          <Stat label="Collected" value={formatMoney(collected)} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Stat label="Outstanding" value={formatMoney(outstanding)} />
+        </View>
+      </View>
+
+      {rent.isFetching ? <ActivityIndicator color={colors.royal} /> : null}
+
       <FlatList
         data={rows}
         keyExtractor={(r) => r.id}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         ListEmptyComponent={<Text variant="muted">No charges this month.</Text>}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => router.push(`/(app)/payments/new?leaseId=${item.lease_id}`)}>
-            <Card>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text variant="bold" color={colors.navy}>
-                  {item.unit_code} · {item.tenant_name}
-                </Text>
-                <Text
-                  variant="semibold"
-                  color={item.status === "overdue" ? colors.danger : colors.textMuted}
-                >
-                  {item.status}
-                </Text>
-              </View>
-              <Text variant="muted">
-                {formatMoney(item.amount)} · due {item.due_date} · paid {formatMoney(item.amount_paid)}
-              </Text>
-              {item.status === "overdue" || item.status === "pending" || item.status === "partial" ? (
-                <View style={{ marginTop: 8 }}>
-                  <Button
-                    title="Send reminder"
-                    variant="ghost"
-                    onPress={() => {
-                      void sendReminder(item.id);
-                    }}
-                  />
+        renderItem={({ item }) => {
+          const owes = ["overdue", "pending", "partial"].includes(item.status);
+          return (
+            <Pressable onPress={() => router.push(`/(app)/payments/new?leaseId=${item.lease_id}`)}>
+              <Card>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text variant="bold" color={colors.navy}>
+                    {item.tenant_name}
+                  </Text>
+                  <Text variant="semibold" color={item.status === "overdue" ? colors.danger : colors.textMuted}>
+                    {item.status}
+                  </Text>
                 </View>
-              ) : null}
-            </Card>
-          </Pressable>
-        )}
+                <Text variant="muted">
+                  {item.unit_code} · due {item.due_date} · {formatMoney(item.amount)}
+                </Text>
+                <Text variant="muted">
+                  Paid {formatMoney(item.amount_paid)}
+                </Text>
+                {owes ? (
+                  <View style={{ marginTop: 8 }}>
+                    <Button
+                      title={reminder.isPending && reminder.variables === item.id ? "Sending…" : "Send reminder"}
+                      variant="ghost"
+                      disabled={reminder.isPending}
+                      onPress={() => reminder.mutate(item.id)}
+                    />
+                  </View>
+                ) : null}
+              </Card>
+            </Pressable>
+          );
+        }}
       />
     </Screen>
   );

@@ -6,6 +6,7 @@ import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { listPayments, voidPayment } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 interface PaymentRow {
   id: string;
@@ -118,7 +119,7 @@ function VoidModal({
       await voidPayment(payment.id, reason || "voided from app");
       await onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not void the payment.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

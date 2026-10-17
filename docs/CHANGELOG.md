@@ -108,6 +108,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Launch version gate is now wired in `app/_layout.tsx` (force-update screen);
   the `x-client-version` header now carries the real app version.
 
+### Added (mobile — state & errors)
+
+- `lib/auth.tsx` — single `AuthProvider`/`useAuth()` owning the Supabase session,
+  replacing the duplicated listener in the root layout.
+- `lib/errors.ts` — `userMessage()` maps Supabase/PostgREST/network failures to
+  localized copy via `@fam/shared` error keys (plus Supabase Auth codes), so raw
+  SQL never reaches the UI; `errorTag()` for logs.
+- `components/error-boundary.tsx`, exported from `app/_layout.tsx` as the router
+  `ErrorBoundary`, so render failures show a retry screen instead of a blank app.
+- `components/ui.tsx`: `ErrorState` (message + retry) and `EmptyState`.
+- `lib/query.tsx`: centralized `queryKeys`, retry that skips client errors,
+  `gcTime`, and mutations no longer retry.
+- `lib/supabase.ts`: `hasSupabaseEnv()`; `app/_layout.tsx` shows a config screen
+  instead of throwing when the build lacks its public Supabase env.
+- `i18n` catalogue now covers every shared error key plus auth/network/transport.
+
+### Changed (mobile)
+
+- Home / Properties / Tenants / Rent tabs now read through React Query against
+  the shared `useOrg()` org instead of each re-querying `organization_members`.
+- Auth and mutation screens surface errors with `userMessage()`; the rent tab's
+  "send reminder" is a tracked mutation that surfaces failures via Alert.
+- The Admin tab's visibility derives from `useOrg().role`.
+
 ### Notes
 
 - Mobile and admin app scaffolds follow in later phases.

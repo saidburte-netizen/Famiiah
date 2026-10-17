@@ -6,6 +6,7 @@ import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { createProperty } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 const TYPES = ["residential", "commercial", "mixed_use"] as const;
 
@@ -47,7 +48,7 @@ export default function NewPropertyScreen() {
       await createProperty(orgId, parsed.data);
       router.back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

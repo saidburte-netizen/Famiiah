@@ -7,6 +7,7 @@ import { colors } from "@/theme/tokens";
 import { getSupabase } from "@/lib/supabase";
 import { acceptInvitation } from "@/features/api";
 import { savePendingInvite } from "@/lib/invite";
+import { userMessage } from "@/lib/errors";
 
 /**
  * Accept an organization invitation from the deep link
@@ -34,7 +35,7 @@ export default function InviteScreen() {
         setState("done");
         setTimeout(() => router.replace("/(app)/(tabs)"), 800);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Could not accept the invitation.";
+        const message = userMessage(err);
         setError(
           message === "invalid_token"
             ? "This invitation is invalid or has already been used."

@@ -7,6 +7,7 @@ import { takePendingInvite } from "@/lib/invite";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { t } from "@/i18n";
+import { userMessage } from "@/lib/errors";
 
 const STEPS = ["Your details", "Password", "Terms"] as const;
 
@@ -52,7 +53,7 @@ export default function SignUpScreen() {
       }
       router.replace("/(auth)/create-organization");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("error.unknown"));
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

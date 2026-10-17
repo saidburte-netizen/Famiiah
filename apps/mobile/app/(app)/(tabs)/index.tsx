@@ -1,51 +1,25 @@
-import { useEffect, useState } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { getSupabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 import { dashboardSummary } from "@/features/api";
-import { Button, Card, Screen, Text } from "@/components/ui";
+import { Button, Card, ErrorState, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { formatMoney } from "@fam/shared";
-
-interface Summary {
-  collected_month: string;
-  expected_month: string;
-  collection_rate: number;
-  properties_count: number;
-  units_total: number;
-  units_rented: number;
-  units_vacant: number;
-  active_tenants: number;
-  overdue_count: number;
-  overdue_amount: string;
-  unread_notifications: number;
-}
+import { useOrg } from "@/lib/org";
+import { queryKeys } from "@/lib/query";
+import { userMessage } from "@/lib/errors";
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { orgId, loading: orgLoading, error: orgError, refetch: refetchOrg } = useOrg();
 
-  useEffect(() => {
-    const supabase = getSupabase();
-    supabase
-      .from("organization_members")
-      .select("org_id")
-      .eq("status", "active")
-      .limit(1)
-      .then(({ data }) => setOrgId(data?.[0]?.org_id ?? null));
-  }, []);
+  const summary = useQuery({
+    queryKey: queryKeys.dashboard(orgId ?? "none"),
+    queryFn: () => dashboardSummary(orgId as string),
+    enabled: Boolean(orgId),
+  });
 
-  useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    dashboardSummary(orgId)
-      .then((d) => setSummary(d as unknown as Summary))
-      .finally(() => setLoading(false));
-  }, [orgId]);
-
-  if (loading || !summary) {
+  if (orgLoading) {
     return (
       <Screen>
         <ActivityIndicator color={colors.royal} />
@@ -53,11 +27,44 @@ export default function DashboardScreen() {
     );
   }
 
+  if (orgError) {
+    return (
+      <Screen>
+        <ErrorState message={userMessage(orgError)} onRetry={() => void refetchOrg()} />
+      </Screen>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <Screen>
+        <ErrorState message="No organization is linked to this account yet." />
+      </Screen>
+    );
+  }
+
+  if (summary.isLoading) {
+    return (
+      <Screen>
+        <ActivityIndicator color={colors.royal} />
+      </Screen>
+    );
+  }
+
+  if (summary.isError || !summary.data) {
+    return (
+      <Screen>
+        <ErrorState message={userMessage(summary.error)} onRetry={() => void summary.refetch()} />
+      </Screen>
+    );
+  }
+
+  const data = summary.data;
   const tiles = [
-    { label: "Collected", value: formatMoney(summary.collected_month) },
-    { label: "Expected", value: formatMoney(summary.expected_month) },
-    { label: "Occupancy", value: `${summary.units_rented}/${summary.units_total}` },
-    { label: "Overdue", value: String(summary.overdue_count) },
+    { label: "Collected", value: formatMoney(data.collected_month) },
+    { label: "Expected", value: formatMoney(data.expected_month) },
+    { label: "Occupancy", value: `${data.units_rented}/${data.units_total}` },
+    { label: "Overdue", value: String(data.overdue_count) },
   ];
 
   return (
@@ -69,7 +76,7 @@ export default function DashboardScreen() {
         <Card>
           <Text variant="muted">Collection rate this month</Text>
           <Text variant="extrabold" style={{ fontSize: 28 }} color={colors.navy}>
-            {summary.collection_rate}%
+            {data.collection_rate}%
           </Text>
         </Card>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
@@ -87,13 +94,13 @@ export default function DashboardScreen() {
         <Card>
           <Text variant="semibold">Overdue</Text>
           <Text variant="muted">
-            {summary.overdue_count} charge(s) · {formatMoney(summary.overdue_amount)}
+            {data.overdue_count} charge(s) · {formatMoney(data.overdue_amount)}
           </Text>
         </Card>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           <View style={{ flexGrow: 1, minWidth: 140 }}>
             <Button
-              title={`Notifications${summary.unread_notifications ? ` (${summary.unread_notifications})` : ""}`}
+              title={`Notifications${data.unread_notifications ? ` (${data.unread_notifications})` : ""}`}
               variant="ghost"
               onPress={() => router.push("/(app)/notifications")}
             />

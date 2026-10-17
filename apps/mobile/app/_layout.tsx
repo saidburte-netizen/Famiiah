@@ -3,41 +3,41 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
 import { ActivityIndicator, Linking, Platform, Pressable, Text, View } from "react-native";
-import type { Session } from "@supabase/supabase-js";
 import { QueryProvider } from "@/lib/query";
-import { getSupabase, startAutoRefresh } from "@/lib/supabase";
+import { AuthProvider, useAuth } from "@/lib/auth";
+import { hasSupabaseEnv } from "@/lib/supabase";
 import { checkVersionGate, type GateDecision } from "@/lib/version-gate";
 import { colors } from "@/theme/tokens";
 
+// Render errors bubble here instead of white-screening the app.
+export { ErrorBoundary } from "@/components/error-boundary";
+
 export default function RootLayout() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
+  if (!hasSupabaseEnv()) return <ConfigErrorScreen />;
+  return (
+    <QueryProvider>
+      <StatusBar style="light" />
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </QueryProvider>
+  );
+}
+
+/**
+ * Owns the two app-wide gates: restore the session, then ask the backend
+ * whether this client version is still supported. Routing only happens once
+ * both are settled.
+ */
+function RootNavigator() {
+  const { session, loading } = useAuth();
   const [gate, setGate] = useState<GateDecision | null>(null);
   const router = useRouter();
   const segments = useSegments();
 
-  useEffect(() => {
-    const supabase = getSupabase();
-    const stopRefresh = startAutoRefresh();
-
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setReady(true);
-    });
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-    });
-
-    return () => {
-      sub.subscription.unsubscribe();
-      stopRefresh();
-    };
-  }, []);
-
   // Version gate: blocks the app when the backend requires an update.
   useEffect(() => {
-    if (!ready) return;
+    if (loading) return;
     let cancelled = false;
     const platform = Platform.OS === "ios" || Platform.OS === "android" ? Platform.OS : "web";
     const version = Constants.expoConfig?.version ?? "0.0.0";
@@ -47,11 +47,11 @@ export default function RootLayout() {
     return () => {
       cancelled = true;
     };
-  }, [ready]);
+  }, [loading]);
 
   // Route based on auth state once we know it.
   useEffect(() => {
-    if (!ready || gate?.kind === "force_update") return;
+    if (loading || gate?.kind === "force_update") return;
     const segs = segments as unknown as string[];
     const inAuthGroup = segs[0] === "(auth)";
     const onInvite = inAuthGroup && segs[1] === "invite";
@@ -60,11 +60,11 @@ export default function RootLayout() {
     } else if (session && inAuthGroup && !onInvite) {
       router.replace("/(app)/(tabs)");
     }
-  }, [ready, session, segments, router, gate]);
+  }, [loading, session, segments, router, gate]);
 
-  if (!ready || !gate) {
+  if (loading || !gate) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.midnight }}>
+      <View style={styles.center}>
         <ActivityIndicator color={colors.ice} />
       </View>
     );
@@ -72,16 +72,7 @@ export default function RootLayout() {
 
   if (gate.kind === "force_update") {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 16,
-          padding: 32,
-          backgroundColor: colors.midnight,
-        }}
-      >
+      <View style={[styles.center, { gap: 16, padding: 32 }]}>
         <Text style={{ color: colors.ice, fontSize: 22, fontWeight: "700", textAlign: "center" }}>
           Update required
         </Text>
@@ -105,10 +96,28 @@ export default function RootLayout() {
     );
   }
 
+  return <Slot />;
+}
+
+/** Shown when the build was not given its public Supabase config. */
+function ConfigErrorScreen() {
   return (
-    <QueryProvider>
-      <StatusBar style="light" />
-      <Slot />
-    </QueryProvider>
+    <View style={[styles.center, { gap: 12, padding: 32 }]}>
+      <Text style={{ color: colors.ice, fontSize: 20, fontWeight: "700", textAlign: "center" }}>
+        Configuration missing
+      </Text>
+      <Text style={{ color: colors.ice, textAlign: "center", opacity: 0.8 }}>
+        This build is missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.
+      </Text>
+    </View>
   );
 }
+
+const styles = {
+  center: {
+    flex: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: colors.midnight,
+  },
+};

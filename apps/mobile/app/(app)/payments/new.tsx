@@ -7,6 +7,7 @@ import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { getSupabase } from "@/lib/supabase";
 import { recordPayment } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 const METHODS = ["cash", "bank_transfer", "telebirr", "chapa", "cheque", "other"] as const;
 
@@ -92,7 +93,7 @@ export default function NewPaymentScreen() {
       await recordPayment(parsed.data);
       router.back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not record payment.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

@@ -6,6 +6,7 @@ import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { createTenantWithLease, listVacantUnits, type VacantUnit } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 export default function NewTenantScreen() {
   const router = useRouter();
@@ -85,7 +86,7 @@ export default function NewTenantScreen() {
       await createTenantWithLease(parsed.data);
       router.replace("/(app)/(tabs)/tenants");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create tenant.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

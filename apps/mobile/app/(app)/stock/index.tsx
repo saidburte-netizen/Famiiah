@@ -13,6 +13,7 @@ import {
   type StockItemRow,
   type TenantRow,
 } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 type AdjustTypeValue = "in" | "out" | "adjustment";
 
@@ -142,7 +143,7 @@ function AdjustModal({
       await stockAdjust(item.id, type, qty, reason || undefined);
       await onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not adjust stock.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }
@@ -243,7 +244,7 @@ function RentModal({
       });
       await onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not rent out the item.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

@@ -9,6 +9,7 @@ import {
   inviteMember,
   listMembers,
 } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 const ROLES = ["owner", "manager", "staff", "viewer"] as const;
 const STATUSES = ["active", "suspended", "pending"] as const;
@@ -36,7 +37,7 @@ export default function AdminScreen() {
     try {
       setRows((await listMembers(orgId)) as MemberRow[]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load members.");
+      setError(userMessage(e));
     }
   }, [orgId]);
 
@@ -151,7 +152,7 @@ function InviteModal({
       );
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create the invitation.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }
@@ -230,7 +231,7 @@ function ManageModal({
       if (status !== member.status) await adminSetMemberStatus(orgId, member.user_id, status);
       await onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update the member.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

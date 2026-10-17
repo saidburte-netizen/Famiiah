@@ -16,6 +16,11 @@ const SecureStorageAdapter = {
 
 let client: SupabaseClient<Database> | null = null;
 
+/** False when the build is missing its public Supabase config. */
+export function hasSupabaseEnv(): boolean {
+  return Boolean(process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 export function getSupabase(): SupabaseClient<Database> {
   if (client) return client;
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL;

@@ -112,6 +112,23 @@ export function Button({
   );
 }
 
+/** Inline failure card with an optional retry, used for query errors. */
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <Card>
+      <Text variant="semibold" color={colors.danger}>
+        Something went wrong
+      </Text>
+      <Text variant="muted">{message}</Text>
+      {onRetry ? <Button title="Try again" variant="ghost" onPress={onRetry} /> : null}
+    </Card>
+  );
+}
+
+export function EmptyState({ message }: { message: string }) {
+  return <Text variant="muted">{message}</Text>;
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   card: {

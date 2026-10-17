@@ -6,6 +6,7 @@ import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { listStockRentals, returnStockItem, type StockRentalRow } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 type RentalRow = StockRentalRow & {
   stock_items?: { name?: string } | null;
@@ -105,7 +106,7 @@ function ReturnModal({
       await returnStockItem(rental.id);
       await onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not return the item.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

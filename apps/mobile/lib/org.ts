@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getSupabase } from "./supabase";
+import { queryKeys } from "./query";
 
 export interface ActiveOrg {
   orgId: string;
@@ -10,12 +11,13 @@ export interface ActiveOrg {
 /**
  * Resolves the signed-in user's active organization and role.
  *
- * A user may belong to several orgs; v1 picks the first active membership and
- * exposes `switchOrg` for later multi-org support.
+ * A user may belong to several orgs; v1 picks the first active membership.
+ * Because it goes through React Query, every screen that calls `useOrg()`
+ * shares one network request and a single refresh.
  */
 export function useOrg() {
   const query = useQuery<ActiveOrg | null>({
-    queryKey: ["active-org"],
+    queryKey: queryKeys.activeOrg,
     staleTime: 60_000,
     queryFn: async () => {
       const supabase = getSupabase();
@@ -36,7 +38,7 @@ export function useOrg() {
     orgId: query.data?.orgId ?? null,
     role: query.data?.role ?? null,
     loading: query.isLoading,
-    error: query.error as Error | null,
+    error: (query.error as Error | null) ?? null,
     refetch: query.refetch,
   };
 }

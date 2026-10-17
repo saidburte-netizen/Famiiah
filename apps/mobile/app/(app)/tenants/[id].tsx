@@ -12,6 +12,7 @@ import {
   terminateLease,
   type ChargeRow,
 } from "@/features/api";
+import { userMessage } from "@/lib/errors";
 
 interface TenantDetail {
   id: string;
@@ -204,7 +205,7 @@ function LeaseModal({
       }
       await onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update the lease.");
+      setError(userMessage(err));
     } finally {
       setBusy(false);
     }

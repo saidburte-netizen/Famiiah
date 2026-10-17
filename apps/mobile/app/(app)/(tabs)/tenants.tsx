@@ -1,48 +1,50 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { getSupabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 import { listTenantsWithStatus } from "@/features/api";
-import { Button, Card, Screen, Text } from "@/components/ui";
+import { Button, Card, ErrorState, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
+import { useOrg } from "@/lib/org";
+import { queryKeys } from "@/lib/query";
+import { userMessage } from "@/lib/errors";
 
 const FILTERS = ["all", "active", "overdue", "expiring"] as const;
 
-interface TenantRow {
-  id: string;
-  full_name: string;
-  phone: string | null;
-  unit_code: string | null;
-  monthly_rent: string | null;
-  lease_end: string | null;
-  overdue_days: number;
-  status: string;
-}
-
 export default function TenantsScreen() {
   const router = useRouter();
-  const [rows, setRows] = useState<TenantRow[]>([]);
+  const { orgId, loading: orgLoading, error: orgError, refetch: refetchOrg } = useOrg();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const supabase = getSupabase();
-    supabase
-      .from("organization_members")
-      .select("org_id")
-      .eq("status", "active")
-      .limit(1)
-      .then(({ data }) => setOrgId(data?.[0]?.org_id ?? null));
-  }, []);
+  const tenants = useQuery({
+    queryKey: queryKeys.tenants(orgId ?? "none", filter),
+    queryFn: () => listTenantsWithStatus(orgId as string, filter),
+    enabled: Boolean(orgId),
+  });
 
-  useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    listTenantsWithStatus(orgId, filter)
-      .then((d) => setRows(d as TenantRow[]))
-      .finally(() => setLoading(false));
-  }, [orgId, filter]);
+  if (orgLoading) {
+    return (
+      <Screen>
+        <ActivityIndicator color={colors.royal} />
+      </Screen>
+    );
+  }
+
+  if (orgError) {
+    return (
+      <Screen>
+        <ErrorState message={userMessage(orgError)} onRetry={() => void refetchOrg()} />
+      </Screen>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <Screen>
+        <ErrorState message="No organization is linked to this account yet." />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -54,11 +56,13 @@ export default function TenantsScreen() {
           </View>
         ))}
       </View>
-      {loading ? (
+      {tenants.isLoading ? (
         <ActivityIndicator color={colors.royal} />
+      ) : tenants.isError ? (
+        <ErrorState message={userMessage(tenants.error)} onRetry={() => void tenants.refetch()} />
       ) : (
         <FlatList
-          data={rows}
+          data={tenants.data ?? []}
           keyExtractor={(r) => r.id}
           ListEmptyComponent={<Text variant="muted">No tenants.</Text>}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
