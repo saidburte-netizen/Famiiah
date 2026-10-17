@@ -200,7 +200,7 @@ create or replace function public.report_collections(
 returns table (bucket text, expected numeric, collected numeric, outstanding numeric)
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) then
+  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) and not is_platform_admin() then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   if p_group_by = 'property' then
@@ -229,7 +229,7 @@ create or replace function public.report_occupancy(p_org uuid, p_from date, p_to
 returns table (bucket text, total_units bigint, rented_units bigint, occupancy_pct numeric)
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) then
+  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) and not is_platform_admin() then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   return query
@@ -249,7 +249,7 @@ create or replace function public.report_overdue_ageing(p_org uuid)
 returns table (ageing text, charges bigint, amount numeric)
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) then
+  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) and not is_platform_admin() then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   return query

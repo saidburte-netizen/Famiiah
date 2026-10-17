@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -20,10 +21,10 @@ export default async function MembersPage() {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {(orgs ?? []).map((o) => (
-          <div key={o.id} className="card p-5">
+          <Link key={o.id} href={`/members/${o.id}`} className="card p-5 hover:border-royal">
             <p className="font-semibold text-navy">{o.name}</p>
             <p className="text-xs text-text-muted mt-1">{o.id}</p>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

@@ -9,7 +9,7 @@ returns table (user_id uuid, full_name text, phone text, email text,
                role public.org_role, status text, created_at timestamptz)
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) then
+  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) and not is_platform_admin() then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   return query
@@ -65,7 +65,8 @@ returns public.organization_members
 language plpgsql security definer set search_path = public as $$
 declare v_member public.organization_members;
 begin
-  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) then
+begin
+  if not has_org_role(p_org, array['owner','manager']::public.org_role[]) and not is_platform_admin() then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   if p_status not in ('pending','active','suspended') then

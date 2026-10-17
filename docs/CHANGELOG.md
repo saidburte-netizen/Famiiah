@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Phase 2 — Mobile: remaining screens**: payment history + void, stock
   rentals (rent out / return), reports (collections, occupancy, overdue
   ageing), and admin member management (invite, role, status).
+- **Phase 2 — Admin console**: org member drilldown (`/members/[id]`) and
+  per-org reports (`/reports/[id]`). `admin_list_members` and the
+  `report_*` RPCs now also authorise platform admins.
 
 ### Changed
 
