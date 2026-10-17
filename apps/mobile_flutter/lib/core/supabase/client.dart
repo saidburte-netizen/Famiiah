@@ -20,7 +20,7 @@ Future<void> initSupabase() async {
   }
   await Supabase.initialize(
     url: const String.fromEnvironment(_kSupabaseUrl),
-    anonKey: const String.fromEnvironment(_kSupabaseAnonKey),
+    publishableKey: const String.fromEnvironment(_kSupabaseAnonKey),
     authOptions: const FlutterAuthClientOptions(
       autoRefreshToken: true,
       persistSession: true,
