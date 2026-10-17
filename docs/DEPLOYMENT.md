@@ -23,17 +23,26 @@ for the components you deploy are needed.
 | `SUPABASE_DB_PASSWORD` | db | Database password for the target project. |
 | `SUPABASE_PROJECT_ID` | db, functions | Project ref (e.g. `abcdefghijklmnop`). |
 | `EXPO_TOKEN` | mobile | Expo access token (needs `eas init` once per project). |
-| `SUPABASE_URL` | mobile | Project URL — becomes `EXPO_PUBLIC_SUPABASE_URL`. |
-| `SUPABASE_ANON_KEY` | mobile | Anon/public key — becomes `EXPO_PUBLIC_SUPABASE_ANON_KEY`. |
+| `SUPABASE_URL` | mobile, Flutter CI | Project URL — becomes `EXPO_PUBLIC_SUPABASE_URL` (EAS) and the Flutter `FAM_SUPABASE_URL` `--dart-define`. |
+| `SUPABASE_ANON_KEY` | mobile, Flutter CI | Anon/public key — becomes `EXPO_PUBLIC_SUPABASE_ANON_KEY` and the Flutter `FAM_SUPABASE_ANON_KEY` `--dart-define`. |
 | `EXPO_PUBLIC_SENTRY_DSN` | mobile (optional) | Sentry DSN for the mobile bundle. |
 | `ANDROID_KEYSTORE_BASE64` | mobile | Base64 of the Android upload keystore (PKCS#12 `.keystore`/`.jks`). |
 | `ANDROID_KEYSTORE_PASSWORD` | mobile | Keystore (store) password. |
 | `ANDROID_KEY_ALIAS` | mobile | Key alias inside the keystore. |
 | `ANDROID_KEY_PASSWORD` | mobile | Key password (usually the same as the store password). |
 
-The mobile job accepts either naming for the four signing secrets — `ANDROID_*`
-or `KEYSTORE_*` (`ANDROID_KEYSTORE_BASE64 || KEYSTORE_BASE64`, etc.) — so an
-existing `KEYSTORE_*` set works unchanged.
+The mobile job accepts either naming for the four signing secrets —
+`ANDROID_*` or `KEYSTORE_*` (`ANDROID_KEYSTORE_BASE64 || KEYSTORE_BASE64 ||
+KEYSTORE_BASE`, etc.) — so an existing `KEYSTORE_*` set works unchanged. The
+Flutter CI workflow reads the same names.
+
+The Flutter CI workflow (`.github/workflows/flutter.yml`) compiles
+`SUPABASE_URL` / `SUPABASE_ANON_KEY` into the release APK/AAB with
+`--dart-define` (the `FAM_SUPABASE_*` names are accepted too). Unlike the CD
+jobs it is **not** scoped to a GitHub *environment*, so it reads **repository**
+secrets or variables — environment secrets are not visible to it. It fails with
+a `Missing Supabase config` error instead of uploading an app that cannot reach
+the backend.
 
 Edge Function *config* (URLs, provider keys) is set with
 `supabase secrets set --project-ref <ref> KEY=value`, not in CI. Relevant keys:

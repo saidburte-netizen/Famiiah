@@ -171,6 +171,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `tool/setup_android.sh` no longer emits a duplicate `android:allowBackup`
   attribute (two sed expressions both matched), which had failed the release
   Android build in the manifest merger; the manifest is now XML-validated.
+- The release APK/AAB were built without the Supabase URL/anon key, so an
+  installed build showed a configuration screen and could not sign in.
+  `flutter.yml` now passes both with `--dart-define` (and an app-env define) and
+  fails with a clear error when they are missing, so a keyless artifact is never
+  published.
+- The missing-config screen is now a plain "can't reach the server" message for
+  users; the `--dart-define` instructions are debug-only.
+- The Flutter CI read only `ANDROID_KEYSTORE_*`, so an existing `KEYSTORE_*`
+  keystore (including the `KEYSTORE_BASE` shorthand) was ignored and release
+  builds stayed debug-signed; both workflows now accept either naming, and a
+  keystore that fails to decode or open is reported with a clear error.
 - The generated `android/` project and `pubspec.lock` are gitignored so a local
   build cannot sweep them into a commit.
 

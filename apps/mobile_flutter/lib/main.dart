@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/supabase/client.dart';
 import 'routing/router.dart';
 import 'theme/app_theme.dart';
+import 'theme/tokens.dart';
 import 'widgets/version_gate.dart';
 
 Future<void> main() async {
@@ -40,6 +42,14 @@ class FamApp extends ConsumerWidget {
   }
 }
 
+/// Shown when the app was compiled without usable Supabase configuration.
+///
+/// `String.fromEnvironment` resolves at *compile* time, so this cannot be
+/// repaired at runtime — the values have to be present when the build runs. CI
+/// enforces that ("Verify Supabase config" in `.github/workflows/flutter.yml`),
+/// so only an old or mis-built install reaches here, and the wording is aimed
+/// at the person holding the phone rather than at a developer. The technical
+/// detail is kept behind `kDebugMode`.
 class ConfigMissingApp extends StatelessWidget {
   const ConfigMissingApp({super.key});
 
@@ -48,24 +58,43 @@ class ConfigMissingApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fam',
       theme: buildFamTheme(),
-      home: const Scaffold(
-        backgroundColor: Color(0xFF061538),
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: FamColors.midnight,
         body: Center(
           child: Padding(
-            padding: EdgeInsets.all(32),
+            padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Configuration missing',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+                const Text(
+                  'Fam',
+                  style: TextStyle(
+                    color: FamColors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Missing FAM_SUPABASE_URL / FAM_SUPABASE_ANON_KEY.\nPass --dart-define for both.',
+                const SizedBox(height: 12),
+                const Text(
+                  "This app can't reach the server yet.\n"
+                  'Please update to the latest version and try again.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(
+                    color: FamColors.ice,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
                 ),
+                if (kDebugMode) ...[
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Developer build without config: pass --dart-define='
+                    'FAM_SUPABASE_URL and --dart-define=FAM_SUPABASE_ANON_KEY.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white38, fontSize: 12),
+                  ),
+                ],
               ],
             ),
           ),

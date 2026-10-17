@@ -77,10 +77,23 @@ fi
 # materialise it and point the release build at it.
 STORE_B64="${ANDROID_KEYSTORE_BASE64:-${KEYSTORE_BASE64:-}}"
 if [ -n "${STORE_B64}" ]; then
-  printf '%s' "${STORE_B64}" | tr -d '\r\n ' | base64 -d > android/app/upload-keystore.jks
+  STORE_PASSWORD="${ANDROID_KEYSTORE_PASSWORD:-${KEYSTORE_PASSWORD:-}}"
+  if ! printf '%s' "${STORE_B64}" | tr -d '\r\n ' | base64 -d > android/app/upload-keystore.jks; then
+    echo "Error: the keystore secret is not valid base64. Store it as" >&2
+    echo "  base64 -w0 <upload-keystore.jks>  (a single line, no headers)." >&2
+    exit 1
+  fi
+  # Fail with a readable message instead of a cryptic Gradle signing error.
+  if command -v keytool >/dev/null 2>&1 \
+    && ! keytool -list -keystore android/app/upload-keystore.jks -storepass "${STORE_PASSWORD}" >/dev/null 2>&1; then
+    echo "Error: the keystore secret did not decode to a keystore that the store" >&2
+    echo "password opens. Check KEYSTORE_BASE / KEYSTORE_PASSWORD (and that the" >&2
+    echo "base64 is of the .jks/.keystore file itself)." >&2
+    exit 1
+  fi
   cat > android/key.properties <<EOF
 storeFile=upload-keystore.jks
-storePassword=${ANDROID_KEYSTORE_PASSWORD:-${KEYSTORE_PASSWORD:-}}
+storePassword=${STORE_PASSWORD}
 keyAlias=${ANDROID_KEY_ALIAS:-${KEY_ALIAS:-}}
 keyPassword=${ANDROID_KEY_PASSWORD:-${KEY_PASSWORD:-}}
 EOF

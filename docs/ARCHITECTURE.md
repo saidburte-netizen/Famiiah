@@ -129,6 +129,11 @@ fam/
   `rls`/`rpc`/`security`), `supabase db lint`.
 - `flutter.yml` (push to `apps/mobile_flutter/**` or manual): `flutter analyze`,
   `flutter test`, then a release **APK** and **AAB**.
+  - The Supabase URL and anon key are baked in with `--dart-define` from the
+    `SUPABASE_URL` / `SUPABASE_ANON_KEY` repository secrets or variables
+    (`FAM_SUPABASE_*` also accepted). A verification step fails the build when
+    they are missing, so a keyless APK that cannot reach the backend is never
+    published.
   - `android/` is not committed (it carries a binary `gradle-wrapper.jar`);
     `tool/setup_android.sh` generates it with `flutter create`, rewrites the
     application id to `com.fami.myapp`, labels the app `Fam`, sets

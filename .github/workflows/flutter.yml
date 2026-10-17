@@ -48,8 +48,24 @@ jobs:
     defaults:
       run:
         working-directory: apps/mobile_flutter
+    env:
+      # Compiled into the app. `SUPABASE_*` is the repo-wide naming (see
+      # docs/DEPLOYMENT.md); `FAM_SUPABASE_*` matches the client's --dart-define
+      # keys. Stored values are read whether they live in Actions *secrets* or
+      # *variables*, so either works.
+      FAM_SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.FAM_SUPABASE_URL || vars.SUPABASE_URL || vars.FAM_SUPABASE_URL }}
+      FAM_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.FAM_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || vars.FAM_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Supabase config
+        # Without these the release APK/AAB cannot reach the backend and shows
+        # the "can't reach the server" screen, so fail here instead of uploading
+        # a dead artifact. Fork PRs receive no secrets and fail here by design.
+        run: |
+          if [ -z "${FAM_SUPABASE_URL}" ] || [ -z "${FAM_SUPABASE_ANON_KEY}" ]; then
+            echo "::error title=Missing Supabase config::Add SUPABASE_URL and SUPABASE_ANON_KEY under Settings -> Secrets and variables -> Actions (repository secrets or variables; the FAM_SUPABASE_* names work too). This workflow is not scoped to an environment, so Environment secrets are not visible here. A release build without them cannot reach the backend."
+            exit 1
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -76,16 +92,30 @@ jobs:
         # The ANDROID_KEYSTORE_* secrets are optional: when present the release
         # APK/AAB are signed with the upload keystore, otherwise the build falls
         # back to Flutter's debug signing (fine for CI, rejected by Play).
+      - name: Prepare Android project
+        # The keystore secrets are optional: when present the release APK/AAB are
+        # signed with the upload keystore, otherwise the build falls back to
+        # Flutter's debug signing (fine for CI, rejected by Play). Accept the
+        # ANDROID_* or the shorter KEYSTORE_* naming, as deploy.yml does, so an
+        # existing set is picked up rather than silently ignored.
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 || secrets.KEYSTORE_BASE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         run: bash tool/setup_android.sh
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release \
+            --dart-define=FAM_SUPABASE_URL="$FAM_SUPABASE_URL" \
+            --dart-define=FAM_SUPABASE_ANON_KEY="$FAM_SUPABASE_ANON_KEY" \
+            --dart-define=FAM_APP_ENV=production
       - name: Build release App Bundle
-        run: flutter build appbundle --release
+        run: |
+          flutter build appbundle --release \
+            --dart-define=FAM_SUPABASE_URL="$FAM_SUPABASE_URL" \
+            --dart-define=FAM_SUPABASE_ANON_KEY="$FAM_SUPABASE_ANON_KEY" \
+            --dart-define=FAM_APP_ENV=production
       - name: Upload APK / AAB
         uses: actions/upload-artifact@v4
         with:

@@ -15,8 +15,16 @@ The build reads compile-time values (never commit them):
 --dart-define=FAM_APP_ENV=production   # optional, defaults to local
 ```
 
-Without the first two the app shows a "configuration missing" screen instead
-of crashing.
+Without the first two the app cannot reach the backend, so it shows a friendly
+"can't reach the server" screen instead of crashing or white-screening. Because
+`String.fromEnvironment` is resolved at compile time, that screen can only be
+fixed by installing a build that carries the values.
+
+CI therefore **fails the Android build** when they are absent, so a keyless APK
+is never published. `.github/workflows/flutter.yml` reads them from the
+repository secrets/variables `SUPABASE_URL` and `SUPABASE_ANON_KEY` (the same
+ones CD uses; `FAM_SUPABASE_URL` / `FAM_SUPABASE_ANON_KEY` are accepted too) —
+see [`docs/DEPLOYMENT.md`](../../docs/DEPLOYMENT.md).
 
 ## First-time setup
 
