@@ -99,7 +99,10 @@ export default function DashboardScreen() {
         </Card>
         {data.due_this_week?.length ? (
           <Card>
-            <Text variant="semibold">Due this week</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text variant="semibold">Due this week</Text>
+              <Button title="See all" variant="ghost" onPress={() => router.push("/(app)/(tabs)/rent")} />
+            </View>
             {data.due_this_week.map((c) => (
               <View
                 key={c.id}
@@ -115,6 +118,25 @@ export default function DashboardScreen() {
             ))}
           </Card>
         ) : null}
+        <Text variant="semibold">Quick actions</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button
+              title="Property"
+              variant="ghost"
+              onPress={() => router.push("/(app)/properties/new")}
+            />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Unit" variant="ghost" onPress={() => router.push("/(app)/units/new")} />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Tenant" variant="ghost" onPress={() => router.push("/(app)/tenants/new")} />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Stock" variant="ghost" onPress={() => router.push("/(app)/stock")} />
+          </View>
+        </View>
         <Button title="Record payment" onPress={() => router.push("/(app)/payments/new")} />
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           <View style={{ flexGrow: 1, minWidth: 140 }}>

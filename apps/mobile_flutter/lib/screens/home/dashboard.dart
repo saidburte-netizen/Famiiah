@@ -113,7 +113,16 @@ class DashboardScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Due this week', style: TextStyle(fontWeight: FontWeight.w600)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Due this week', style: TextStyle(fontWeight: FontWeight.w600)),
+                          TextButton(
+                            onPressed: () => context.push('/app/rent'),
+                            child: const Text('See all'),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
                       ...due.map((c) => InkWell(
                             onTap: () => context.push('/app/rent'),
@@ -137,6 +146,44 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              const Text('Quick actions', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/app/properties/new'),
+                      child: const Text('Property'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/app/units/new'),
+                      child: const Text('Unit'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/app/tenants/new'),
+                      child: const Text('Tenant'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.push('/app/stock'),
+                      child: const Text('Stock'),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => context.push('/app/payments/new'),

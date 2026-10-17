@@ -16,6 +16,7 @@ export default function PropertyDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "rented" | "vacant" | "overdue">("all");
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -42,6 +43,22 @@ export default function PropertyDetailScreen() {
     );
   }
 
+  const rented = units.filter((u) => u.status === "rented").length;
+  const vacant = units.filter((u) => u.status === "vacant").length;
+  const overdue = units.filter((u) => u.overdue === true).length;
+  const counts: Record<typeof filter, number> = {
+    all: units.length,
+    rented,
+    vacant,
+    overdue,
+  };
+  const visible = units.filter((u) => {
+    if (filter === "rented") return u.status === "rented";
+    if (filter === "vacant") return u.status === "vacant";
+    if (filter === "overdue") return u.overdue === true;
+    return true;
+  });
+
   return (
     <Screen>
       <Stack.Screen options={{ title: String(property?.name ?? "Property") }} />
@@ -58,16 +75,32 @@ export default function PropertyDetailScreen() {
           {String(property?.type ?? "")} · {String(property?.city ?? "—")}
         </Text>
         <Text variant="muted">
-          {units.filter((u) => u.status === "rented").length}/{units.length} units rented
+          {rented} rented · {vacant} vacant · {units.length} units
         </Text>
         <Button title="Add unit" onPress={() => setModal(true)} />
       </Card>
 
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {(["all", "rented", "vacant", "overdue"] as const).map((f) => (
+          <View key={f} style={{ minWidth: 90, flexGrow: 1 }}>
+            <Button
+              title={`${f[0].toUpperCase()}${f.slice(1)} (${counts[f]})`}
+              variant={filter === f ? "primary" : "ghost"}
+              onPress={() => setFilter(f)}
+            />
+          </View>
+        ))}
+      </View>
+
       <FlatList
-        data={units}
+        data={visible}
         keyExtractor={(u) => u.id}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListEmptyComponent={<Text variant="muted">No units yet.</Text>}
+        ListEmptyComponent={
+          <Text variant="muted">
+            {filter === "all" ? "No units yet." : "No units match this filter."}
+          </Text>
+        }
         renderItem={({ item }) => (
           <Card>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -85,6 +118,11 @@ export default function PropertyDetailScreen() {
               {item.kind ?? "—"} · {item.monthly_rent ? `${item.monthly_rent} ETB` : "no rent"}
               {item.tenant_name ? ` · ${item.tenant_name}` : ""}
             </Text>
+            {item.overdue ? (
+              <Text variant="semibold" color={colors.danger}>
+                Rent overdue
+              </Text>
+            ) : null}
             {item.status === "vacant" ? (
               <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
                 <View style={{ flex: 1 }}>

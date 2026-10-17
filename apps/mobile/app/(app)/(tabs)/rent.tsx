@@ -1,7 +1,7 @@
 import { ActivityIndicator, Alert, FlatList, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { rentOverview, sendReminder } from "@/features/api";
+import { rentOverview, sendReminder, sendRemindersBulk } from "@/features/api";
 import { Button, Card, ErrorState, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { formatMoney } from "@fam/shared";
@@ -23,6 +23,15 @@ export default function RentScreen() {
   const reminder = useMutation({
     mutationFn: (chargeId: string) => sendReminder(chargeId),
     onError: (e) => Alert.alert("Couldn't send reminder", userMessage(e)),
+  });
+
+  const bulkReminders = useMutation({
+    mutationFn: () => sendRemindersBulk(orgId as string, month),
+    onSuccess: (sent) => {
+      Alert.alert("Reminders queued", `${sent} reminder(s) queued.`);
+      void rent.refetch();
+    },
+    onError: (e) => Alert.alert("Couldn't send reminders", userMessage(e)),
   });
 
   if (orgLoading) {
@@ -81,6 +90,12 @@ export default function RentScreen() {
           />
         </View>
       </View>
+      <Button
+        title={bulkReminders.isPending ? "Queueing…" : "Remind unpaid"}
+        variant="ghost"
+        disabled={bulkReminders.isPending}
+        onPress={() => bulkReminders.mutate()}
+      />
       <View style={{ flexDirection: "row", gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Stat label="Expected" value={formatMoney(expected)} />

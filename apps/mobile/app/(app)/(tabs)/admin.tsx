@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Modal, ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
@@ -22,6 +23,7 @@ interface MemberRow {
 }
 
 export default function AdminScreen() {
+  const router = useRouter();
   const { orgId, role } = useOrg();
   const [rows, setRows] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,31 @@ export default function AdminScreen() {
         </Text>
       ) : null}
       {isOwner ? <Button title="Invite teammate" onPress={() => setInviting(true)} /> : null}
+      <Card>
+        <Text variant="semibold" color={colors.navy}>
+          Manage
+        </Text>
+        <Text variant="muted">Reports, stock and every property in one place.</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button
+              title="Reports"
+              variant="ghost"
+              onPress={() => router.push("/(app)/reports")}
+            />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button title="Stock" variant="ghost" onPress={() => router.push("/(app)/stock")} />
+          </View>
+          <View style={{ flexGrow: 1, minWidth: 140 }}>
+            <Button
+              title="Properties"
+              variant="ghost"
+              onPress={() => router.push("/(app)/(tabs)/properties")}
+            />
+          </View>
+        </View>
+      </Card>
       {loading ? (
         <ActivityIndicator color={colors.royal} />
       ) : (

@@ -594,6 +594,17 @@ export async function sendReminder(chargeId: string, channel = "in_app") {
   return data;
 }
 
+/** Queue in-app reminders for every unpaid charge in the month; returns the count. */
+export async function sendRemindersBulk(orgId: string, month: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("send_reminders_bulk", {
+    p_org: orgId,
+    p_month: month,
+  });
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
+
 // -------------------------------------------------------------------- Reports
 
 export async function reportCollections(orgId: string, from: string, to: string, groupBy = "month") {

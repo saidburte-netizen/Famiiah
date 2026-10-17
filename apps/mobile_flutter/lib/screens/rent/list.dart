@@ -66,6 +66,11 @@ class RentScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () => _remindUnpaid(context, ref),
+                      child: const Text('Remind unpaid'),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(child: _stat(context, 'Expected', formatMoney(data['expected']))),
@@ -94,6 +99,20 @@ class RentScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _remindUnpaid(BuildContext context, WidgetRef ref) async {
+    final orgId = ref.read(orgProvider).orgId;
+    if (orgId == null) return;
+    final month = '${DateTime.now().toIso8601String().substring(0, 7)}-01';
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final sent = await sendRemindersBulk(orgId, month);
+      messenger.showSnackBar(SnackBar(content: Text('Queued $sent reminder(s).')));
+      ref.invalidate(rentProvider);
+    } catch (err) {
+      messenger.showSnackBar(SnackBar(content: Text(userMessage(err))));
+    }
   }
 
   Widget _stat(BuildContext context, String label, String value) {

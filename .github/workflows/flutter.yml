@@ -16,8 +16,14 @@ concurrency:
   group: flutter-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Play Store application id for the Flutter client.
+  APPLICATION_ID: com.fami.myapp
+  APP_NAME: Fam
+  FLUTTER_CHANNEL: stable
+
 jobs:
-  flutter:
+  analyze-test:
     name: Analyze & test
     runs-on: ubuntu-latest
     defaults:
@@ -27,10 +33,63 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
       - run: flutter pub get
       # Only real errors should fail the build; lint infos/warnings are reported
       # as annotations without blocking (the const/prefer lints are noisy).
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
+
+  build-android:
+    name: Build Android (APK + AAB)
+    runs-on: ubuntu-latest
+    needs: analyze-test
+    defaults:
+      run:
+        working-directory: apps/mobile_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile_flutter/pubspec.yaml') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - run: flutter pub get
+      - name: Toolchain check
+        run: flutter doctor -v
+      # The Gradle project is generated on demand and pointed at the Play id, so
+      # no binary wrapper jar lives in the repository.
+      - name: Prepare Android project
+        run: bash tool/setup_android.sh
+      - name: Build release APK
+        run: flutter build apk --release
+      - name: Build release App Bundle
+        run: flutter build appbundle --release
+      - name: Upload APK / AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: fam-android-release
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            apps/mobile_flutter/build/app/outputs/flutter-apk/app-release.apk
+            apps/mobile_flutter/build/app/outputs/bundle/release/app-release.aab
+      # Handy for committing the platform project once (contains gradle-wrapper.jar).
+      - name: Upload generated android/ project
+        uses: actions/upload-artifact@v4
+        with:
+          name: fam-android-project
+          retention-days: 7
+          path: apps/mobile_flutter/android

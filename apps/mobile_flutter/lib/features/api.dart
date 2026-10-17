@@ -342,6 +342,13 @@ Future<void> sendReminder(String chargeId, {String channel = 'in_app'}) async {
   await _db.rpc('send_reminder', params: {'p_charge': chargeId, 'p_channel': channel});
 }
 
+/// Queue reminders for every unpaid charge in [month] (YYYY-MM-01).
+/// Returns how many reminders were queued.
+Future<int> sendRemindersBulk(String orgId, String month) async {
+  final data = await _db.rpc('send_reminders_bulk', params: {'p_org': orgId, 'p_month': month});
+  return (data as num?)?.toInt() ?? 0;
+}
+
 // -------------------------------------------------------------------- Reports
 
 Future<List<Map<String, dynamic>>> reportCollections(

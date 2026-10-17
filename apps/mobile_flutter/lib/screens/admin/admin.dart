@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
@@ -42,6 +43,30 @@ class AdminScreen extends ConsumerWidget {
               onPressed: () => _showInvite(context, ref),
               child: const Text('Invite teammate'),
             ),
+          const SizedBox(height: 12),
+          FamCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('Manage', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => context.push('/app/reports'),
+                  child: const Text('Reports'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => context.push('/app/stock'),
+                  child: const Text('Stock'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => context.go('/app/properties'),
+                  child: const Text('Properties'),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: members.when(
