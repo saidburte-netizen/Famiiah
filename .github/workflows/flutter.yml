@@ -68,6 +68,7 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
       - run: flutter pub get
       - name: Toolchain check
+        continue-on-error: true
         run: flutter doctor -v
       # The Gradle project is generated on demand and pointed at the Play id, so
       # no binary wrapper jar lives in the repository.

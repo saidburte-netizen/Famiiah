@@ -24,22 +24,40 @@ This folder contains only `lib/` and `test/`. Generate the native platform
 folders once, then run:
 
 ```
-flutter create --platforms=android,ios --org com.fam .
+# Android (also sets the Play application id — see below)
+bash tool/setup_android.sh
+
+# iOS (macOS only)
+flutter create --platforms=ios --org com.fami .
+
 flutter pub get
 flutter analyze
 flutter test
-flutter run \
-  --dart-define=FAM_SUPABASE_URL=… \
-  --dart-define=FAM_SUPABASE_ANON_KEY=…
 ```
 
-> `flutter create` only adds the missing `android/` and `ios/` folders; it does
-> not overwrite `lib/` or `test/`.
+> The repo intentionally ships **no** `android/` folder, because it would
+> contain a binary `gradle-wrapper.jar`. `tool/setup_android.sh` runs
+> `flutter create` into a temp dir, copies `android/` in, and rewrites the
+> application id to the Play package `com.fami.myapp`.
+
+## Android / Play Store
+
+- Application id: **`com.fami.myapp`** (also the Play Console package name).
+- Launcher label: `Fam`.
+- `--dart-define`s for the Supabase URL/key are `FAM_SUPABASE_URL` and
+  `FAM_SUPABASE_ANON_KEY`.
+
+CI (`.github/workflows/flutter.yml`) runs `flutter analyze`, `flutter test`
+and then a real Android release build (APK + AAB) with Java 17, using the
+application id above. The APK/AAB are uploaded as the `fam-android-release`
+artifact. Add a real upload keystore (`android/key.properties` +
+`signingConfigs.release`) before submitting to the Play Console; the release
+build currently uses Flutter's default debug signing so it always compiles.
 
 ## Deep links
 
 The invite flow expects the `fam://invite?token=<rawToken>` scheme. After
-`flutter create`, add the intent filter in `android/app/src/main/AndroidManifest.xml`
+`setup_android.sh`, add the intent filter in `android/app/src/main/AndroidManifest.xml`
 and the URL scheme in `ios/Runner/Info.plist` (the RAW token is SHA-256 hashed
 in `lib/screens/auth/invite.dart` before being sent to `accept_invitation`).
 
