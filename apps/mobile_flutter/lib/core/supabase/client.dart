@@ -24,7 +24,7 @@ Future<void> initSupabase() async {
     authOptions: const FlutterAuthClientOptions(
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUri: false,
     ),
     realtimeClientOptions: const RealtimeClientOptions(eventsPerSecond: 10),
   );

@@ -29,9 +29,9 @@ final reportsProvider = FutureProvider.autoDispose<_Reports>((ref) async {
     reportOverdueAgeing(org.orgId!),
   ]);
   return _Reports(
-    results[0] as List<Map<String, dynamic>>,
-    results[1] as List<Map<String, dynamic>>,
-    results[2] as List<Map<String, dynamic>>,
+    results[0],
+    results[1],
+    results[2],
   );
 });
 

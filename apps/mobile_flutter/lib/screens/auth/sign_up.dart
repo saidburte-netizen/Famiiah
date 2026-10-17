@@ -141,7 +141,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: _busy ? null : _submit,
-                    child: Text('Create account'),
+                    child: const Text('Create account'),
                   ),
                 ],
               ],

@@ -85,7 +85,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                             ],
                           ),
                           Text(
-                            '${u['kind'] ?? '—'} · ${u['monthly_rent'] != null ? '${formatMoney(u['monthly_rent'])}' : 'no rent'}'
+                            '${u['kind'] ?? '—'} · ${u['monthly_rent'] != null ? formatMoney(u['monthly_rent']) : 'no rent'}'
                             '${u['tenant_name'] != null ? ' · ${u['tenant_name']}' : ''}',
                             style: const TextStyle(color: FamColors.textMuted),
                           ),

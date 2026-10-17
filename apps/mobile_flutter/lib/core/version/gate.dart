@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../supabase/client.dart';
 
 enum GateKind { ok, updateAvailable, forceUpdate }

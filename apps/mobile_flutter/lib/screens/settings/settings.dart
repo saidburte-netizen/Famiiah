@@ -26,9 +26,9 @@ class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Signed in as', style: TextStyle(color: FamColors.textMuted)),
-                Text('${name ?? '—'}',
+                Text(name ?? '—',
                     style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                Text('${user?.email ?? '—'}', style: const TextStyle(color: FamColors.textMuted)),
+                Text(user?.email ?? '—', style: const TextStyle(color: FamColors.textMuted)),
                 if (org.role != null)
                   Text('Role: ${org.role}', style: const TextStyle(color: FamColors.textMuted)),
               ],
