@@ -49,6 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Push delivery**: `send-reminders` now also dispatches queued push
   notifications to recipients' devices via the Expo push API and marks them
   `sent`/`failed` (no-device ones fail rather than retry forever).
+- **CD**: the mobile job can sign Android builds with a keystore supplied as
+  environment secrets (`ANDROID_KEYSTORE_BASE64` + password/alias/key
+  password); it writes a gitignored `credentials.json` and builds with the
+  `ci` EAS profile (`credentialsSource: local`). Without the secret it falls
+  back to EAS-managed credentials.
 - **Mobile push**: `lib/push.ts` registers the Expo push token on launch
   (permission prompt → `register_device_token`); tapping a notification
   routes to the Notifications screen.

@@ -23,6 +23,11 @@ supabase/.branches/
 .vercel/
 .eas/
 
+# android signing — CI materialises these from environment secrets, never commit
+credentials.json
+*.keystore
+*.jks
+
 # logs / os
 *.log
 npm-debug.log*

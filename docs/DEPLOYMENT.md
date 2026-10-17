@@ -22,6 +22,10 @@ for the components you deploy are needed.
 | `VERCEL_ORG_ID` | admin | From `apps/admin/.vercel/project.json`. |
 | `VERCEL_PROJECT_ID` | admin | From `apps/admin/.vercel/project.json`. |
 | `EXPO_TOKEN` | mobile | Expo access token (needs `eas init` once per project). |
+| `ANDROID_KEYSTORE_BASE64` | mobile | Base64 of the Android upload keystore (PKCS#12 `.keystore`/`.jks`). |
+| `ANDROID_KEYSTORE_PASSWORD` | mobile | Keystore (store) password. |
+| `ANDROID_KEY_ALIAS` | mobile | Key alias inside the keystore. |
+| `ANDROID_KEY_PASSWORD` | mobile | Key password (usually the same as the store password). |
 
 Edge Function *config* (URLs, provider keys) is set with
 `supabase secrets set --project-ref <ref> KEY=value`, not in CI. Relevant keys:
@@ -55,10 +59,24 @@ to the stores from the EAS dashboard or by adding `eas submit` to the job.
 
 ## Android signing & push
 
-- **Keystore**: run `eas credentials` (Android → production) once and either let
-  EAS generate a keystore or upload the existing one. If uploading, have these
-  ready: the keystore **file**, the **keystore password**, the **key alias** and
-  the **key password**. EAS stores them server-side; they are never committed.
+Two supported paths; the mobile job picks automatically:
+
+- **CI-managed (used when `ANDROID_KEYSTORE_BASE64` is set)** — the job decodes
+  the keystore and writes `credentials.json` (both gitignored) via
+  `apps/mobile/scripts/write-android-credentials.mjs`, then builds with the `ci`
+  profile (`credentialsSource: local`, Android only). Add the four
+  `ANDROID_*` secrets above to the target environment. This is the path to use
+  when you hold the upload key yourself.
+- **EAS-managed**: with no keystore secret present the job builds
+  `--profile production --platform all`, using credentials EAS holds. Seed them
+  once with `eas credentials` (Android → production) — have the keystore
+  **file**, **store password**, **key alias** and **key password** ready. They
+  are stored server-side and never committed.
+
+Either way the signing key is created once and must be kept: Play rejects a
+released app signed with a different key unless you use Play App Signing / key
+reset.
+
 - **Push**: delivery needs FCM (Android) and APNs (iOS) credentials uploaded in
   EAS. The app only stores its Expo token via `register_device_token`; there is
   no sender key in this repo. `extra.eas.projectId` (step 2) is required for

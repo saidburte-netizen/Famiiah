@@ -126,8 +126,29 @@ jobs:
         with:
           node-version: 22
       - run: npm install --global eas-cli
+      # When the Android upload keystore is provided as secrets, write it and a
+      # credentials.json locally and build with the `ci` profile
+      # (credentialsSource: local). Otherwise build with EAS-managed credentials.
+      - name: Prepare Android credentials
+        id: creds
+        working-directory: apps/mobile
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            node scripts/write-android-credentials.mjs
+            echo "profile=ci" >> "$GITHUB_OUTPUT"
+            echo "platform=android" >> "$GITHUB_OUTPUT"
+          else
+            echo "No ANDROID_KEYSTORE_BASE64; using EAS-managed credentials."
+            echo "profile=production" >> "$GITHUB_OUTPUT"
+            echo "platform=all" >> "$GITHUB_OUTPUT"
+          fi
       - name: EAS build
-        run: eas build --platform all --profile production --non-interactive --no-wait
+        run: eas build --platform "${{ steps.creds.outputs.platform }}" --profile "${{ steps.creds.outputs.profile }}" --non-interactive --no-wait
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
