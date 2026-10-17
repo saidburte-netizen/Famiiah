@@ -7,4 +7,9 @@ build/
 *.iml
 .idea/
 .vscode/
-# Keep pubspec.lock checked in for the application.
+# Resolved fresh in CI (the workflow runs `flutter pub get`), so the lock is not
+# committed — keep it out of commits made with `git add -A`.
+pubspec.lock
+# Generated on demand by tool/setup_android.sh; it carries a binary
+# gradle-wrapper.jar, so the platform project is deliberately not committed.
+android/
