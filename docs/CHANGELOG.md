@@ -137,7 +137,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `ANDROID_KEYSTORE_*` secrets are present.
 - Secure session storage: `flutter_secure_storage` behind a custom
   `SecureLocalStorage` adapter, matching the Expo app's `expo-secure-store`; the
-  pending invitation token uses the same store.
+  pending invitation token uses the same store. `package_info_plus` moved to
+  `^10.2.2` so it and `flutter_secure_storage` resolve the same `win32` major.
 - First-run flow: a signed-in user with no membership can reach
   `/auth/create-organization` (both clients), and the dashboard offers a
   "Create organization" action instead of a dead end. Creating an org (or

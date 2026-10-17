@@ -60,7 +60,7 @@ resolved versions here at build time.
 | go_router | ^14.6.2 | routing |
 | supabase_flutter | ^2.8.4 | resolves to the newest 2.x |
 | google_fonts | ^6.2.1 | Manrope / Playfair, fetched at runtime with a fallback |
-| package_info_plus | ^8.1.2 | version gate |
+| package_info_plus | ^10.2.2 | version gate |
 | intl | ^0.19.0 | money / dates |
 
 ## Tooling

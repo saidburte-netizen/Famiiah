@@ -16,10 +16,8 @@ class SecureLocalStorage extends LocalStorage {
 
   static const String _sessionKey = 'supabase.auth.token';
 
-  // `static final`, not `const`: the plugin may change its constructor shape
-  // between majors and a non-const constructor would break the build. The
-  // default already uses Keystore-backed encryption on Android and the Keychain
-  // on iOS.
+  // One shared instance: the default options already use Keystore-backed
+  // encryption on Android and the Keychain on iOS, which is what we want.
   static final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   @override
