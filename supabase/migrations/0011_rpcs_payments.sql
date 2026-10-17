@@ -13,7 +13,9 @@ declare
 begin
   select * into v_lease from leases where id = p_lease for update;
   if not found then raise exception 'lease_not_found' using errcode = 'P0002'; end if;
-  if not has_org_role(v_lease.org_id, array['owner','manager','staff']::public.org_role[]) then
+  -- allow the service role (online-payment webhook) as well as org staff
+  if not has_org_role(v_lease.org_id, array['owner','manager','staff']::public.org_role[])
+     and coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   if p_amount is null or p_amount <= 0 then

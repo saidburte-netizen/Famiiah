@@ -73,7 +73,8 @@ create policy "managers write lease docs" on storage.objects
     and public.has_org_role(((storage.foldername(name))[1])::uuid, array['owner','manager']::public.org_role[])
   );
 
--- ---- receipts (read for org members; written by generate-receipt edge fn via service role) ----
+-- ---- receipts (read for org members; written by generate-receipt under the
+--      caller's JWT, so the {org_id} path segment is checked against their role) ----
 create policy "org members read receipts" on storage.objects
   for select to authenticated
   using (
@@ -83,6 +84,12 @@ create policy "org members read receipts" on storage.objects
 create policy "managers write receipts" on storage.objects
   for insert to authenticated
   with check (
+    bucket_id = 'receipts'
+    and public.has_org_role(((storage.foldername(name))[1])::uuid, array['owner','manager','staff']::public.org_role[])
+  );
+create policy "managers update receipts" on storage.objects
+  for update to authenticated
+  using (
     bucket_id = 'receipts'
     and public.has_org_role(((storage.foldername(name))[1])::uuid, array['owner','manager','staff']::public.org_role[])
   );

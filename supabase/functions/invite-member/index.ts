@@ -1,8 +1,9 @@
 // invite-member — called by the app.
 // Verifies the caller's role, creates an invitation row (hashed token), and
-// emails the deep link. Uses the service key server-side only.
-import { serviceClient, userClient } from "../_shared/supabase.ts";
-import { corsHeaders, preflight } from "../_shared/cors.ts";
+// emails the deep link. Runs with the caller's JWT so the RPC's own role check
+// sees the user; the RPC is SECURITY DEFINER, so it can write the row.
+import { userClient } from "../_shared/supabase.ts";
+import { preflight } from "../_shared/cors.ts";
 import { json, error } from "../_shared/response.ts";
 import { log, newRequestId } from "../_shared/log.ts";
 
@@ -43,8 +44,9 @@ Deno.serve(async (req) => {
     const rawToken = crypto.randomUUID() + crypto.randomUUID();
     const tokenHash = await sha256Hex(rawToken);
 
-    const admin = serviceClient();
-    const { data: inv, error: insErr } = await admin.rpc("invite_member", {
+    // Call the RPC as the authenticated user so its has_org_role() check sees
+    // them. The function is SECURITY DEFINER, so it can insert despite RLS.
+    const { data: inv, error: insErr } = await asUser.rpc("invite_member", {
       p_org: body.org_id,
       p_email: body.email ?? null,
       p_phone: body.phone ?? null,

@@ -2,7 +2,7 @@
 -- RLS matrix: a user from org A must not read or write org B.
 -- Run with: supabase test db
 begin;
-select plan(12);
+select plan(11);
 
 -- ---- fixtures (created as postgres, RLS bypassed) ----
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -22,16 +22,16 @@ insert into organization_members (org_id, user_id, role, status) values
  ('00000000-0000-0000-0000-0000000000bb','00000000-0000-0000-0000-0000000000b1','owner','active');
 
 insert into properties (id, org_id, name, type) values
- ('00000000-0000-0000-0000-00000000paa1','00000000-0000-0000-0000-0000000000aa','Prop A','residential'),
- ('00000000-0000-0000-0000-00000000pbb1','00000000-0000-0000-0000-0000000000bb','Prop B','residential');
+ ('00000000-0000-0000-0000-00000000aaa1','00000000-0000-0000-0000-0000000000aa','Prop A','residential'),
+ ('00000000-0000-0000-0000-00000000bbb1','00000000-0000-0000-0000-0000000000bb','Prop B','residential');
 
 -- ---- act as user A ----
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal1"}';
 
-select is((select count(*)::int from properties where id = '00000000-0000-0000-0000-00000000paa1'), 1,
+select is((select count(*)::int from properties where id = '00000000-0000-0000-0000-00000000aaa1'), 1,
   'A can read its own org property');
-select is((select count(*)::int from properties where id = '00000000-0000-0000-0000-00000000pbb1'), 0,
+select is((select count(*)::int from properties where id = '00000000-0000-0000-0000-00000000bbb1'), 0,
   'A cannot read org B property');
 select is((select count(*)::int from organizations where id = '00000000-0000-0000-0000-0000000000bb'), 0,
   'A cannot read org B organization');
@@ -63,7 +63,7 @@ insert into organization_members (org_id, user_id, role, status) values
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","aal":"aal1"}';
 
-select is((select count(*)::int from properties where id = '00000000-0000-0000-0000-00000000paa1'), 1,
+select is((select count(*)::int from properties where id = '00000000-0000-0000-0000-00000000aaa1'), 1,
   'staff can read org A property');
 select throws_ok($$ insert into properties (org_id, name, type)
   values ('00000000-0000-0000-0000-0000000000aa','X','residential') $$,

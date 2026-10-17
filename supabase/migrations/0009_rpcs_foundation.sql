@@ -128,7 +128,7 @@ begin
     raise exception 'forbidden' using errcode = '42501';
   end if;
 
-  select email into v_email from profiles where id = v_uid;
+  select au.email::text into v_email from auth.users au where au.id = v_uid;
 
   select * into v_inv from invitations
    where token_hash = p_token_hash and accepted_at is null

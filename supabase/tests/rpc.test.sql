@@ -3,7 +3,7 @@
 -- charge generation idempotency, unit status sync, negative stock guard,
 -- last-owner protection.
 begin;
-select plan(18);
+select plan(20);
 
 -- ---- fixtures ----
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -15,9 +15,9 @@ insert into organizations (id, name, slug, created_by)
 insert into organization_members (org_id, user_id, role, status)
   values ('00000000-0000-0000-0000-0000000000cc','00000000-0000-0000-0000-0000000000c1','owner','active');
 insert into properties (id, org_id, name, type)
-  values ('00000000-0000-0000-0000-00000000pcc1','00000000-0000-0000-0000-0000000000cc','Prop C','residential');
+  values ('00000000-0000-0000-0000-00000000ccc1','00000000-0000-0000-0000-0000000000cc','Prop C','residential');
 insert into units (id, org_id, property_id, code, monthly_rent)
-  values ('00000000-0000-0000-0000-00000000ucc1','00000000-0000-0000-0000-0000000000cc','00000000-0000-0000-0000-00000000pcc1','C-01', 1000);
+  values ('00000000-0000-0000-0000-00000000ddd1','00000000-0000-0000-0000-0000000000cc','00000000-0000-0000-0000-00000000ccc1','C-01', 1000);
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal1"}';
@@ -26,16 +26,16 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","r
 select lives_ok($$ select public.create_tenant_with_lease(
   '00000000-0000-0000-0000-0000000000cc',
   '{"fullName":"Tenant C","phone":"+251911000000"}'::jsonb,
-  '00000000-0000-0000-0000-00000000ucc1',
+  '00000000-0000-0000-0000-00000000ddd1',
   current_date, (current_date + interval '6 months')::date, 1000, 1000, 5, 5) $$,
   'create_tenant_with_lease succeeds');
 
-select is((select status::text from units where id = '00000000-0000-0000-0000-00000000ucc1'), 'rented',
+select is((select status::text from units where id = '00000000-0000-0000-0000-00000000ddd1'), 'rented',
   'unit becomes rented after lease');
 
 -- a second active lease on the same unit fails
 select throws_ok($$ select public.assign_tenant_to_unit(
-  '00000000-0000-0000-0000-00000000ucc1',
+  '00000000-0000-0000-0000-00000000ddd1',
   (select id from tenants limit 1), current_date, null, 1000, 0, 5, 5) $$,
   '23505', 'unit_not_vacant', 'cannot double-book an occupied unit');
 

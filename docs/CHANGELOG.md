@@ -54,6 +54,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **SQL**: `check_app_version` declared `v rec;` (not a type); changed to
   `v record;`. This broke `supabase db reset` / `db push` at migration `0009`.
+- **SQL**: `accept_invitation` read `email` from `profiles` (no such column);
+  now reads it from `auth.users`.
+- **SQL**: `list_units` had an ambiguous `id` (`select org_id from properties
+  where id = p_property`); qualified with a table alias.
+- **SQL**: `record_payment` now also authorises the `service_role`, so the
+  online-payment webhook (no user session) can record payments.
+- **SQL**: added the missing `storage.objects` update policy for the `receipts`
+  bucket (needed by `generate-receipt`'s `upsert`).
+- **Edge**: `invite-member` calls `invite_member` as the user (not service role)
+  so its `has_org_role` check sees the caller.
+- **Edge**: `send-reminders` read `tenant_id`/`user_id`/`name` as flat fields
+  instead of nested under `leases`; corrected, and widened the reminder window
+  (due today, +3 days, overdue 1/7/14 days).
+- **Tests**: pgTAP fixtures used non-hex UUID literals; corrected them and made
+  `plan(N)` match the assertion counts.
 - **CI**: admin job now builds `@fam/shared` before `next build` (the admin
   build script runs `pnpm --filter @fam/shared build` first), fixing
   "Cannot find module '@fam/shared'" on CI.

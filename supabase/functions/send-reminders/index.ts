@@ -1,6 +1,7 @@
 // send-reminders — cron daily.
-// Finds charges due in 3 days, due today, and overdue 1/7/14 days.
-// Idempotent per charge + day. Sends push (Expo) and optional SMS/email.
+// Reminds for charges due today, due in 3 days, and overdue by 1/7/14 days.
+// Idempotent per charge + day. Notifications are inserted with the service role
+// (no user session in a cron context).
 import { serviceClient } from "../_shared/supabase.ts";
 import { log, newRequestId } from "../_shared/log.ts";
 
@@ -10,10 +11,10 @@ interface ChargeRow {
   lease_id: string;
   amount: number;
   due_date: string;
-  tenant_id: string;
-  tenant_user_id: string | null;
-  tenant_name: string;
-  tenant_phone: string | null;
+  leases: {
+    tenant_id: string;
+    tenants: { id: string; user_id: string | null; full_name: string; phone: string | null };
+  };
 }
 
 Deno.serve(async (req) => {
@@ -22,40 +23,40 @@ Deno.serve(async (req) => {
   const supabase = serviceClient();
 
   try {
-    // window: overdue 1/7/14 days, due today, due in 3 days
-    const targets = [1, 7, 14];
+    const today = new Date().toISOString().slice(0, 10);
+    // days relative to today: overdue 1/7/14, due today, due in 3 days
+    const offsets = [-14, -7, -1, 0, 3];
+    const dueFilter = offsets.map((d) => `due_date.eq.${addDays(d)}`).join(",");
+
     const { data: charges, error: qErr } = await supabase
       .from("rent_charges")
       .select(
         "id, org_id, lease_id, amount, due_date, leases!inner(tenant_id, tenants!inner(id, user_id, full_name, phone))",
       )
       .in("status", ["pending", "partial", "overdue"])
-      .or(
-        "due_date.eq." +
-          new Date().toISOString().slice(0, 10) +
-          ",due_date.eq." +
-          addDays(3),
-      );
+      .or(dueFilter);
 
     if (qErr) throw qErr;
 
     let sent = 0;
-    for (const c of charges ?? []) {
-      const row = c as unknown as ChargeRow & { leases: { tenants: unknown } };
+    for (const row of (charges ?? []) as unknown as ChargeRow[]) {
+      const tenant = row.leases?.tenants;
+      const tenantId = row.leases?.tenant_id;
+      if (!tenantId) continue;
+
       // idempotency: skip if a reminder for this charge was already queued today
-      const today = new Date().toISOString().slice(0, 10);
       const { count } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
-        .eq("tenant_id", row.tenant_id)
+        .eq("tenant_id", tenantId)
         .gte("created_at", `${today}T00:00:00Z`)
         .contains("data", { charge_id: row.id });
       if ((count ?? 0) > 0) continue;
 
       const { error: insErr } = await supabase.from("notifications").insert({
         org_id: row.org_id,
-        user_id: row.tenant_user_id,
-        tenant_id: row.tenant_id,
+        user_id: tenant?.user_id ?? null,
+        tenant_id: tenantId,
         channel: "push",
         title: "Rent reminder",
         body: `Rent of ${row.amount} is due on ${row.due_date}.`,
@@ -63,13 +64,16 @@ Deno.serve(async (req) => {
         status: "queued",
       });
       if (insErr) {
-        log("error", "notification insert failed", { function: "send-reminders", request_id, outcome: "insert_failed" });
+        log("error", "notification insert failed", {
+          function: "send-reminders",
+          request_id,
+          outcome: "insert_failed",
+        });
         continue;
       }
       sent++;
     }
 
-    void targets;
     log("info", "reminders processed", {
       function: "send-reminders",
       request_id,
@@ -79,7 +83,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, sent }), {
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e) {
+  } catch {
     log("error", "send-reminders failed", {
       function: "send-reminders",
       request_id,

@@ -94,7 +94,7 @@ returns table (
 language plpgsql stable security definer set search_path = public as $$
 declare v_org uuid;
 begin
-  select org_id into v_org from properties where id = p_property;
+  select pr.org_id into v_org from properties pr where pr.id = p_property;
   if v_org is null or not is_org_member(v_org) then
     raise exception 'forbidden' using errcode = '42501';
   end if;
