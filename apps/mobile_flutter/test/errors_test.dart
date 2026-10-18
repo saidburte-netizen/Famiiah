@@ -14,6 +14,22 @@ void main() {
       expect(userMessage(err), 'Incorrect phone/email or password.');
     });
 
+    test('parses the toString format gotrue 2.27 actually produces', () {
+      final err = Exception(
+          'AuthApiException(message: Phone signups are disabled, statusCode: 400, code: phone_provider_disabled)');
+      expect(userMessage(err), 'Phone sign-up is not enabled for this app.');
+
+      final other = Exception(
+          'AuthApiException(message: Invalid login credentials, statusCode: 401, code: invalid_credentials)');
+      expect(userMessage(other), 'Incorrect phone/email or password.');
+    });
+
+    test('names a weak password even though gotrue omits its code', () {
+      final err = Exception(
+          'AuthWeakPasswordException(message: Password should contain at least one uppercase letter, statusCode: 422, reasons: [uppercase])');
+      expect(userMessage(err), 'Choose a stronger password.');
+    });
+
     test('names a rejected sign-up address instead of the generic message', () {
       final err = Exception(
           'AuthApiException: Email address "x@example.com" is invalid (code: email_address_invalid)');

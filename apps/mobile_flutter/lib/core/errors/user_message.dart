@@ -77,7 +77,8 @@ String userMessage(dynamic err) {
   final raw = err.toString();
   final msg = raw;
 
-  // Supabase/Auth-like: "AuthApiException: message (code: x)"
+  // Supabase/Auth-like: "AuthApiException: message (code: x)" — and gotrue's
+  // newer "AuthApiException(message: …, statusCode: …, code: x)" form.
   if (msg.contains('code: ')) {
     final m = RegExp(r'code:\s*([^\)\s]+)').firstMatch(msg);
     if (m != null) {
@@ -85,6 +86,9 @@ String userMessage(dynamic err) {
       if (_authCodes.containsKey(code)) return t(_authCodes[code]!);
     }
   }
+  // AuthWeakPasswordException prints `reasons:` but not its `code`, so the
+  // parser above never sees `weak_password`.
+  if (msg.contains('AuthWeakPasswordException')) return t('error.weakPassword');
   // PostgREST/Supabase errors often have `code: ...`
   final mcode = RegExp(r'"code"\s*:\s*"([^\"]+)"').firstMatch(msg);
   if (mcode != null) {

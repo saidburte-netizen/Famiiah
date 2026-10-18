@@ -183,6 +183,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed (Flutter mobile)
 
+- `userMessage()` maps `AuthWeakPasswordException` (gotrue prints `reasons:`
+  instead of `code:` for it) to the weak-password message, and tests now lock
+  in the `AuthApiException(message: …, statusCode: …, code: …)` shape that
+  gotrue 2.27 actually prints, so auth failures never fall back to the generic
+  message.
+
 - Forgot-password swallowed failures (`try/finally` with no `catch`), leaking an
   unhandled async error; network failures now surface via `userMessage()`.
 - Stock adjust/rent now invalidates the low-stock provider as well as the
