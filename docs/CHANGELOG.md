@@ -121,6 +121,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   across sign-in/sign-up via `lib/invite.ts`.
 - Launch version gate is now wired in `app/_layout.tsx` (force-update screen);
   the `x-client-version` header now carries the real app version.
+- **Unique @handle** (migration `0018`): `profiles.handle` (lowercase
+  `[a-z][a-z0-9_]{2,23}`, unique index + format check) and
+  `profiles.accept_terms_at`. The anon-callable `handle_available()` RPC lets
+  the unauthenticated sign-up form check a handle before creating the account;
+  `handle_new_user()` stores the handle, falls back to `@handle` for the
+  display name and records the terms timestamp (defensive against malformed
+  metadata). Shared `Handle` schema (`packages/shared/src/schemas.ts`) and
+  `normalizeHandle` (`apps/mobile_flutter/lib/core/handle.dart`) apply the same
+  rule as the database; pgTAP coverage in `supabase/tests/handle.test.sql`
+  (uniqueness, format, normalisation, legacy sign-ups unaffected).
 
 ### Added (mobile — state & errors)
 
@@ -168,17 +178,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the shared `useOrg()` org instead of each re-querying `organization_members`.
 - Auth and mutation screens surface errors with `userMessage()`; the rent tab's
   "send reminder" is a tracked mutation that surfaces failures via Alert.
-- Sign-up is a **single** form in both clients — username, phone number and
-  password on one screen (email and the terms toggle removed). The phone is now
+- Sign-up is a **single** form in both clients — @handle, phone number and
+  password on one screen, behind a terms toggle that must be ticked to submit
+  (email stays out of the payload entirely). The phone is now
   the GoTrue identifier, so sign-up/sign-in need **Providers → Phone** enabled;
   when the project asks for SMS confirmation the clients show a "confirm your
   phone" code step (`verifyOtp`, type `sms`) instead of a "confirm your email"
   screen. The sign-in field accepts a phone number **or** an email, so accounts
-  created before this change still sign in.
+  created before this change still sign in. Handle availability is checked via
+  `handle_available()` before the account is created, with the shared error
+  copy (`error.handleTaken`, `error.handleInvalid`, `error.acceptTerms`).
 - Phone numbers are normalised to E.164 by a shared `toE164()` helper
   (`packages/shared/src/phone.ts` + `apps/mobile_flutter/lib/core/phone.dart`),
   so `09…`, `251…` and `+251…` all reach GoTrue in one shape.
-- Flutter release bumped `1.1.1+3` → `1.1.2+4` (the phone sign-up build).
+- Flutter release bumped `1.1.1+3` → `1.1.3+5` (phone + @handle sign-up).
 - The Admin tab's visibility derives from `useOrg().role`.
 
 ### Fixed (Flutter mobile)

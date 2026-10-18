@@ -53,19 +53,34 @@ export const LoginSchema = z.object({
 export type LoginInput = z.infer<typeof LoginSchema>;
 
 /**
- * Sign-up collects a display name ("username"), the phone number and a
- * password. The phone is the sign-in identifier (GoTrue `phone` + password);
- * there is no email field. `fullName` is stored on `profiles.full_name` via
- * `handle_new_user()`.
+ * A profile handle is the account's public name: people type `@Abebe`, the
+ * database stores `abebe`. 3-24 characters, starting with a letter, then
+ * letters, digits or underscores — the same rule as `profiles_handle_format`
+ * and `handle_available()` in migration `0018`. Mirrored by `normalizeHandle`
+ * in `apps/mobile_flutter/lib/core/handle.dart`.
+ */
+export const Handle = z
+  .string()
+  .min(1, "required")
+  .transform((v) => v.trim().replace(/^@+/, "").toLowerCase())
+  .pipe(z.string().regex(/^[a-z][a-z0-9_]{2,23}$/, "invalid_handle"));
+
+/**
+ * Sign-up collects the @handle, the phone number and a password, and the terms
+ * have to be ticked. The phone is the sign-in identifier (GoTrue `phone` +
+ * password); there is no email field. The handle and the terms acceptance
+ * travel in the sign-up metadata, where `handle_new_user()` (migration `0018`)
+ * stores them on `profiles.handle` / `profiles.accept_terms_at`.
  */
 export const SignUpSchema = z.object({
-  fullName: z.string().min(2, "required"),
+  handle: Handle,
   phone: EthiopianPhone,
   password: z
     .string()
     .min(8, "password_too_short")
     .regex(/[A-Z]/, "password_needs_upper")
     .regex(/[0-9]/, "password_needs_digit"),
+  acceptTerms: z.literal(true, { errorMap: () => ({ message: "must_accept_terms" }) }),
 });
 export type SignUpInput = z.infer<typeof SignUpSchema>;
 

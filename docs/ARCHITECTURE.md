@@ -75,13 +75,20 @@ fam/
 
 ## Auth and roles
 
-- **Phone + password** is the account. Sign-up is one screen — username, phone
-  number, password — and the phone (E.164) is GoTrue's identifier; the name
-  travels in the sign-up metadata (`options.data.full_name`) where
-  `handle_new_user()` stores it on `profiles.full_name` (and the phone on
-  `profiles.phone` — migration `0017` accepts either `auth.users.phone` or a
-  phone left in the metadata). GoTrue accepts exactly one identifier per
-  sign-up, so an email can never be sent alongside the phone number.
+- **Phone + password** is the account. Sign-up is one screen — @handle, phone
+  number, password — with a terms toggle that has to be ticked before the form
+  submits. The phone (E.164) is GoTrue's identifier; the handle and the terms
+  acceptance travel in the sign-up metadata (`options.data.handle`,
+  `options.data.accept_terms_at`) where `handle_new_user()` (migration `0018`)
+  stores them on `profiles.handle` / `profiles.accept_terms_at`. The handle is
+  the account's public name: lowercase `[a-z][a-z0-9_]{2,23}`, **unique**
+  project-wide — both clients check `handle_available()` (an anon-callable
+  `security definer` RPC that normalises exactly like the trigger) before
+  submitting, the unique index is what guarantees it, and the display name
+  falls back to `@handle`. The phone lands on `profiles.phone` (migration
+  `0017` accepts either `auth.users.phone` or a phone left in the metadata).
+  GoTrue accepts exactly one identifier per sign-up, so an email can never be
+  sent alongside the phone number.
 - The sign-in field takes a phone **or** an email: a value containing `@` goes
   as `email`, anything else is normalised to E.164 by `toE164`
   (`packages/shared/src/phone.ts`, `lib/core/phone.dart`) and goes as `phone`.
@@ -143,8 +150,8 @@ fam/
 ## CI/CD
 
 - `ci.yml` (push/PR): Node — lint, typecheck, unit tests, admin build; Supabase —
-  `supabase db reset` (applies `0001..0017`), `supabase test db` (pgTAP,
-  `rls`/`rpc`/`security`/`signup`), `supabase db lint`.
+  `supabase db reset` (applies `0001..0018`), `supabase test db` (pgTAP,
+  `rls`/`rpc`/`security`/`signup`/`handle`), `supabase db lint`.
 - `flutter.yml` (push to `apps/mobile_flutter/**` or manual): `flutter analyze`,
   `flutter test`, then a release **APK** and **AAB**.
   - The Supabase URL and anon key are baked in with `--dart-define` from the

@@ -46,7 +46,7 @@ erDiagram
 
 | Table | Purpose | Soft delete |
 |---|---|---|
-| `profiles` | 1-1 with `auth.users`; name/phone/locale/`is_platform_admin` | no |
+| `profiles` | 1-1 with `auth.users`; name, unique `@handle`, phone, terms acceptance, locale, `is_platform_admin` | no |
 | `organizations` | tenant root; currency, timezone, billing defaults | yes |
 | `organization_members` | role + status per user per org (composite PK) | no |
 | `invitations` | pending invites; stores `token_hash` only | no |
@@ -87,7 +87,7 @@ erDiagram
 
 | Table | Read | Write |
 |---|---|---|
-| profiles | own row; co-members' name/phone | own row (column-granted; cannot self-set `is_platform_admin`) |
+| profiles | own row; co-members' name/`@handle`/phone | own row (column-granted: `full_name`, `phone`, `avatar_url`, `locale` — never `handle`, `accept_terms_at` or `is_platform_admin`) |
 | organizations | members | owner |
 | organization_members | members | `admin_*` RPC only |
 | properties, units | members | owner, manager |

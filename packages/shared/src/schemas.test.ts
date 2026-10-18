@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   AssignTenantToUnitSchema,
   CreateTenantWithLeaseSchema,
+  Handle,
+  SignUpSchema,
 } from "./schemas";
 
 const UNIT = "11111111-1111-4111-8111-111111111111";
@@ -84,5 +86,64 @@ describe("CreateTenantWithLeaseSchema", () => {
         tenant: { fullName: "Abebe Bikila", phone: "0912345678" },
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("Handle", () => {
+  it("normalises what people actually type", () => {
+    expect(Handle.parse("@Abebe")).toBe("abebe");
+    expect(Handle.parse("  Abebe  ")).toBe("abebe");
+    expect(Handle.parse("@@abebe")).toBe("abebe");
+    expect(Handle.parse("abe_be1")).toBe("abe_be1");
+    expect(Handle.parse("a1b2c3")).toBe("a1b2c3");
+  });
+
+  it("rejects handles the database would reject", () => {
+    for (const bad of ["", "   ", "ab", "1abe", "ab-cd", "ab cd", "abe.be", "a".repeat(25), "@"]) {
+      expect(Handle.safeParse(bad).success, bad).toBe(false);
+    }
+  });
+});
+
+describe("SignUpSchema", () => {
+  const valid = { handle: "@Abebe", phone: "0912345678", password: "Password1", acceptTerms: true };
+
+  it("accepts a handle sign-up with the terms ticked", () => {
+    const parsed = SignUpSchema.safeParse(valid);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.handle).toBe("abebe");
+    expect(parsed.data.phone).toBe("0912345678");
+  });
+
+  it("requires the terms to be ticked", () => {
+    const parsed = SignUpSchema.safeParse({ ...valid, acceptTerms: false });
+    expect(parsed.success).toBe(false);
+    if (parsed.success) return;
+    expect(parsed.error.issues[0]?.message).toBe("must_accept_terms");
+  });
+
+  it("names the field that is wrong", () => {
+    const empty = SignUpSchema.safeParse({ ...valid, handle: "" });
+    expect(empty.success).toBe(false);
+    if (!empty.success) return;
+    expect(empty.error.issues[0]?.message).toBe("required");
+
+    const missing = SignUpSchema.safeParse({ ...valid, handle: "1bad" });
+    expect(missing.success).toBe(false);
+    if (missing.success) return;
+    expect(missing.error.issues[0]?.message).toBe("invalid_handle");
+
+    const weak = SignUpSchema.safeParse({ ...valid, password: "short" });
+    expect(weak.success).toBe(false);
+    if (weak.success) return;
+    expect(weak.error.issues[0]?.message).toBe("password_too_short");
+  });
+
+  it("keeps an email out of the payload entirely", () => {
+    const parsed = SignUpSchema.safeParse({ ...valid, email: "someone@example.com" });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect("email" in parsed.data).toBe(false);
   });
 });

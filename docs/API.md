@@ -13,6 +13,12 @@ The shared package maps keys to i18n messages; never leak SQL internals to the U
 |---|---|---|---|
 | `check_app_version` | `p_platform text, p_version text` | `{status, latest, min_supported, store_url, notes}` | anon + authenticated |
 
+## Sign-up
+
+| RPC | Args | Returns | Allowed |
+|---|---|---|---|
+| `handle_available` | `p_handle text` | `boolean` — `true` while the @handle is free | anon + authenticated |
+
 ## Organizations
 
 | RPC | Args | Returns | Allowed |

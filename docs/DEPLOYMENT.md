@@ -115,8 +115,8 @@ path is referenced by the `submit` profile in `eas.json` and is gitignored.
      project team members (strict hourly limit). Either configure **custom SMTP**
      for production, or turn *Confirm email* off.
    - Apply migrations (CD → Run workflow → `components: db`) so
-     `handle_new_user()` stores the username and phone from the sign-up
-     metadata (`0017`).
+     `handle_new_user()` stores the handle, terms acceptance and phone from
+     the sign-up metadata (`0017`–`0018`).
    - Password reset: the reset screen still sends an **email** link, so it only
      helps legacy email accounts — phone accounts have no self-service reset
      until SMS OTP recovery is added.
