@@ -170,8 +170,11 @@ fam/
   - `android/` is not committed (it carries a binary `gradle-wrapper.jar`);
     `tool/setup_android.sh` generates it with `flutter create`, rewrites the
     application id to `com.fami.myapp`, labels the app `Fam`, sets
-    `minSdk = 24` and `allowBackup="false"`, and adds the `fam://` invite
-    intent filter (`tool/patch_android_manifest.py`).
+    `minSdk = 24` and `allowBackup="false"`, and patches the manifest
+    (`tool/patch_android_manifest.py`, XML-validated): adds
+    `android.permission.INTERNET` — the `flutter create` template puts it only
+    in the debug/profile manifests, so a release build without it can open no
+    sockets at all — and the `fam://` invite intent filter.
   - Release signing: when `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
     `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` are set, the script decodes the
     keystore into `android/key.properties` and `tool/patch_android_signing.py`

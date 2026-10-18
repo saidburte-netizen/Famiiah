@@ -206,6 +206,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed (Flutter mobile)
 
+- Release builds had **no `android.permission.INTERNET`**: `flutter create`
+  puts it only in the debug/profile manifests, never in the main one, so every
+  API call on an installed release APK failed with a socket error ("No
+  connection. Check your network and try again.") while the phone's browser
+  reached the same Supabase host fine. `tool/patch_android_manifest.py` (run by
+  `tool/setup_android.sh`) now adds the permission to the main manifest —
+  idempotent, XML-validated, flows into the CI-built APK/AAB.
+- Flutter release bumped `1.1.4+6` → `1.1.5+7` (release INTERNET permission).
 - `userMessage()` maps `AuthWeakPasswordException` (gotrue prints `reasons:`
   instead of `code:` for it) to the weak-password message, and tests now lock
   in the `AuthApiException(message: …, statusCode: …, code: …)` shape that

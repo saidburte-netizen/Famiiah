@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Add the `fam://` invite deep link to a generated AndroidManifest.xml.
+"""Patch a generated AndroidManifest.xml for release use.
 
 `flutter create` only emits the LAUNCHER intent filter, so without this the
-invite link never reaches the app and the invite screen is unreachable. The
-patch is idempotent and always re-validates the XML, so a bad rewrite fails here
-with a clear message instead of later inside Gradle's manifest merger.
+invite link never reaches the app and the invite screen is unreachable. It also
+puts `android.permission.INTERNET` only in the *debug* and *profile* manifests,
+never in the main one — a release build therefore has no permission to open
+sockets and every API call fails with a network error while the phone's
+browser reaches the same host fine. Both patches are idempotent, and the file
+is always re-validated, so a bad rewrite fails here with a clear message
+instead of later inside Gradle's manifest merger.
 
 Usage: python3 tool/patch_android_manifest.py <path/to/AndroidManifest.xml>
 """
@@ -17,6 +21,10 @@ import xml.dom.minidom
 # in Dart (lib/routing/deep_links.dart).
 SCHEME = "fam"
 
+# Normal permission, granted at install time — required for release builds,
+# because `flutter create` adds it only to the debug/profile manifests.
+INTERNET_PERMISSION = '    <uses-permission android:name="android.permission.INTERNET"/>\n'
+
 
 INTENT_FILTER = """            <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -27,13 +35,34 @@ INTENT_FILTER = """            <intent-filter>
 """.format(scheme=SCHEME)
 
 
+def _insert_after_manifest_tag(source, fragment):
+    """Insert `fragment` on its own line directly after the <manifest …> tag."""
+    start = source.find("<manifest")
+    if start == -1:
+        raise SystemExit("no <manifest> element found")
+    end = source.find(">", start)
+    if end == -1:
+        raise SystemExit("unterminated <manifest> tag")
+    # Insert after the newline that follows the manifest opening tag.
+    line_end = source.find("\n", end)
+    if line_end == -1:
+        line_end = len(source) - 1
+    return source[: line_end + 1] + fragment + source[line_end + 1 :]
+
+
 def patch(path):
-    """Insert the VIEW intent filter once, then validate the document."""
+    """Add the INTERNET permission and VIEW intent filter once, then validate."""
     with open(path, encoding="utf-8") as handle:
         source = handle.read()
 
-    already_present = 'android:scheme="{0}"'.format(SCHEME) in source
-    if not already_present:
+    changed = False
+
+    if 'android.permission.INTERNET' not in source:
+        source = _insert_after_manifest_tag(source, INTERNET_PERMISSION)
+        changed = True
+        print("Added android.permission.INTERNET to {0}".format(path))
+
+    if 'android:scheme="{0}"'.format(SCHEME) not in source:
         marker = "</activity>"
         index = source.find(marker)
         if index == -1:
@@ -41,9 +70,12 @@ def patch(path):
         # Insert on its own line, indented as a sibling of the LAUNCHER filter.
         line_start = source.rfind("\n", 0, index) + 1
         source = source[:line_start] + INTENT_FILTER + source[line_start:]
+        changed = True
+        print("Added the {0}:// invite deep link to {1}".format(SCHEME, path))
+
+    if changed:
         with open(path, "w", encoding="utf-8") as handle:
             handle.write(source)
-        print("Added the {0}:// invite deep link to {1}".format(SCHEME, path))
 
     # Raises xml.parsers.expat.ExpatError when the result is not valid XML.
     xml.dom.minidom.parse(path)
