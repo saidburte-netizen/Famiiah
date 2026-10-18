@@ -23,6 +23,7 @@ const en = {
   "auth.verify": "Verify",
   "auth.resendCode": "Send a new code",
   "auth.codeSent": "A new code is on its way.",
+  "auth.confirmEmail": "Check your email — we sent a confirmation link to finish signing up.",
   "auth.changeNumber": "Use a different number",
   "nav.home": "Home",
   "nav.properties": "Properties",

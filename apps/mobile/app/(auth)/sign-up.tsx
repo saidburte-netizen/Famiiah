@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { SignUpSchema, toE164 } from "@fam/shared";
+import { SignUpSchema } from "@fam/shared";
 import { getSupabase } from "@/lib/supabase";
 import { takePendingInvite } from "@/lib/invite";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
@@ -10,21 +10,27 @@ import { t } from "@/i18n";
 import { userMessage } from "@/lib/errors";
 
 /**
- * One form: @handle, phone number and password together, plus the terms that
- * have to be ticked. The phone is the GoTrue identifier, so the account signs
- * in with phone + password. If the project requires SMS code verification,
- * GoTrue returns no session and we ask for the OTP.
+ * One form: @handle, email and password together, plus the terms that have to
+ * be ticked. Email is the GoTrue identifier — the one provider every Supabase
+ * project has enabled, so sign-up works without a paid SMS gateway. If the
+ * project requires email confirmation, GoTrue returns no session and we tell
+ * the user to open the emailed link. The phone/OTP step below stays dormant
+ * until Providers → Phone is enabled.
  */
 export default function SignUpScreen() {
   const router = useRouter();
   const [handle, setHandle] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  /** E.164 number waiting for the SMS code to be verified. */
+  /**
+   * DORMANT: E.164 number waiting for the SMS code to be verified. Only set
+   * once Providers → Phone is on; email sign-up takes the confirm-email
+   * branch instead.
+   */
   const [pendingPhone, setPendingPhone] = useState<string | null>(null);
   const [code, setCode] = useState("");
 
@@ -35,8 +41,8 @@ export default function SignUpScreen() {
         return t("error.handleInvalid");
       case "must_accept_terms":
         return t("error.acceptTerms");
-      case "invalid_phone":
-        return t("error.invalidPhone");
+      case "invalid_email":
+        return t("error.emailInvalid");
       case "password_too_short":
         return "Use at least 8 characters.";
       case "password_needs_upper":
@@ -53,12 +59,7 @@ export default function SignUpScreen() {
   async function submit() {
     setError(null);
     setNotice(null);
-    const e164 = toE164(phone);
-    if (!e164) {
-      setError(t("error.invalidPhone"));
-      return;
-    }
-    const parsed = SignUpSchema.safeParse({ handle, phone: e164, password, acceptTerms: acceptedTerms });
+    const parsed = SignUpSchema.safeParse({ handle, email, password, acceptTerms: acceptedTerms });
     if (!parsed.success) {
       setError(fieldMessage(parsed.error.issues[0]?.message ?? "required"));
       return;
@@ -77,7 +78,7 @@ export default function SignUpScreen() {
         return;
       }
       const { data, error: e } = await supabase.auth.signUp({
-        phone: e164,
+        email: parsed.data.email,
         password,
         options: {
           data: { handle: parsed.data.handle, accept_terms_at: new Date().toISOString() },
@@ -85,7 +86,10 @@ export default function SignUpScreen() {
       });
       if (e) throw e;
       if (!data.session) {
-        setPendingPhone(e164);
+        // The project has confirmations on: the account exists, the email
+        // carries the link. With confirmations off (the free setup) a session
+        // comes back immediately and this branch never runs.
+        setNotice(t("auth.confirmEmail"));
         return;
       }
       await afterAuth();
@@ -96,6 +100,7 @@ export default function SignUpScreen() {
     }
   }
 
+  /** DORMANT: confirm the SMS code GoTrue sent during a phone sign-up. */
   async function verify() {
     if (!pendingPhone) return;
     setError(null);
@@ -116,6 +121,7 @@ export default function SignUpScreen() {
     }
   }
 
+  /** DORMANT: ask GoTrue for a fresh SMS code. */
   async function resend() {
     if (!pendingPhone) return;
     setError(null);
@@ -141,6 +147,8 @@ export default function SignUpScreen() {
     router.replace("/(auth)/create-organization");
   }
 
+  // DORMANT — the phone-OTP confirmation screen: only reachable once the
+  // project enables Providers → Phone and a phone sign-up returns no session.
   if (pendingPhone) {
     return (
       <Screen>
@@ -199,6 +207,11 @@ export default function SignUpScreen() {
               {error}
             </Text>
           ) : null}
+          {notice ? (
+            <Text variant="medium" color={colors.navy}>
+              {notice}
+            </Text>
+          ) : null}
           <Field
             label={t("auth.handle")}
             value={handle}
@@ -207,11 +220,12 @@ export default function SignUpScreen() {
             autoCorrect={false}
           />
           <Field
-            label={t("auth.phone")}
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
+            label={t("auth.email")}
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
             autoCapitalize="none"
+            autoCorrect={false}
           />
           <Field label={t("auth.password")} secureTextEntry value={password} onChangeText={setPassword} />
           <Text variant="muted">At least 8 characters, with an uppercase letter and a number.</Text>

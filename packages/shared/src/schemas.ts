@@ -66,15 +66,22 @@ export const Handle = z
   .pipe(z.string().regex(/^[a-z][a-z0-9_]{2,23}$/, "invalid_handle"));
 
 /**
- * Sign-up collects the @handle, the phone number and a password, and the terms
- * have to be ticked. The phone is the sign-in identifier (GoTrue `phone` +
- * password); there is no email field. The handle and the terms acceptance
- * travel in the sign-up metadata, where `handle_new_user()` (migration `0018`)
- * stores them on `profiles.handle` / `profiles.accept_terms_at`.
+ * Sign-up collects the @handle, an email address and a password, and the terms
+ * have to be ticked. Email is the sign-in identifier (GoTrue `email` +
+ * password): it is the one provider every Supabase project has enabled with no
+ * paid SMS gateway behind it, so sign-up works on the free tier. The phone/OTP
+ * sign-up path stays dormant in both clients until Providers → Phone is turned
+ * on. The handle and the terms acceptance travel in the sign-up metadata,
+ * where `handle_new_user()` (migration `0018`) stores them on
+ * `profiles.handle` / `profiles.accept_terms_at`.
  */
 export const SignUpSchema = z.object({
   handle: Handle,
-  phone: EthiopianPhone,
+  email: z
+    .string()
+    .min(1, "required")
+    .transform((v) => v.trim())
+    .pipe(Email),
   password: z
     .string()
     .min(8, "password_too_short")

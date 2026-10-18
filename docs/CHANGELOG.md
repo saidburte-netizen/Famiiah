@@ -193,6 +193,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   so `09…`, `251…` and `+251…` all reach GoTrue in one shape.
 - Flutter release bumped `1.1.1+3` → `1.1.3+5` (phone + @handle sign-up).
 - The Admin tab's visibility derives from `useOrg().role`.
+- **Sign-up switched to email** so new accounts work on the free tier: the
+  phone identifier needed **Providers → Phone**, which requires a paid SMS
+  gateway. The form is now @handle + email + password (+ the terms toggle);
+  login still accepts a phone **or** an email, so existing accounts are
+  unaffected, and the phone/OTP sign-up path stays dormant in both clients to
+  switch back on when SMS is funded. With **Confirm email** off (free, no SMTP
+  needed) `signUp` returns a session and users get in straight away; if
+  confirmations are ever on, the form shows a "check your email" notice
+  (`auth.confirmEmail`) instead of routing into the app.
+- Flutter release bumped `1.1.3+5` → `1.1.4+6` (email sign-up).
 
 ### Fixed (Flutter mobile)
 

@@ -18,7 +18,7 @@ changes.
 | A10 | Soft delete | Properties/units/tenants use `deleted_at`; archive only, no hard delete via client. | Spec section 4. |
 | A11 | Stock adjustment | `adjustment` sets an **absolute** balance (from a stock count); `in`/`out` are relative. | Common inventory pattern. |
 | A12 | Invitations | Raw token is only sent to the user; DB stores SHA-256 `token_hash`. | Security. |
-| A13 | Phone sign-in | Sign-up is **@handle + phone + password** (plus a terms toggle that must be ticked; the phone is the GoTrue identifier, in E.164). Email sign-in stays enabled so accounts created earlier keep working. An SMS code step appears only when the project has phone confirmations on. | Ethiopia is phone-first; GoTrue accepts exactly one identifier per sign-up. |
+| A13 | Sign-up identifier | Sign-up is **@handle + email + password** (plus a terms toggle that must be ticked; the email is the GoTrue identifier). Email is the only identifier that needs no paid gateway, so sign-up works on the free tier; the phone/OTP sign-up path is **dormant** until Providers → Phone is enabled (billed SMS, deferred). The sign-in field keeps accepting a phone **or** an email, so accounts created earlier keep working. | SMS auth costs per message (skipped for now); GoTrue accepts exactly one identifier per sign-up. |
 | A14 | MFA | Platform-admin RPCs require AAL2; `ADMIN_REQUIRE_MFA=false` can disable for local dev. | Spec admin gate. |
 | A15 | First platform admin | Promoted manually (seed or migration) — no client path. | Spec section 9. |
 | A16 | Online payments | `online_payments` flag off by default; webhook verifies HMAC signature. | Spec. |

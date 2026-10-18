@@ -75,32 +75,40 @@ fam/
 
 ## Auth and roles
 
-- **Phone + password** is the account. Sign-up is one screen — @handle, phone
-  number, password — with a terms toggle that has to be ticked before the form
-  submits. The phone (E.164) is GoTrue's identifier; the handle and the terms
-  acceptance travel in the sign-up metadata (`options.data.handle`,
-  `options.data.accept_terms_at`) where `handle_new_user()` (migration `0018`)
-  stores them on `profiles.handle` / `profiles.accept_terms_at`. The handle is
-  the account's public name: lowercase `[a-z][a-z0-9_]{2,23}`, **unique**
-  project-wide — both clients check `handle_available()` (an anon-callable
-  `security definer` RPC that normalises exactly like the trigger) before
-  submitting, the unique index is what guarantees it, and the display name
-  falls back to `@handle`. The phone lands on `profiles.phone` (migration
-  `0017` accepts either `auth.users.phone` or a phone left in the metadata).
-  GoTrue accepts exactly one identifier per sign-up, so an email can never be
-  sent alongside the phone number.
+- **Email + password** is the account. Sign-up is one screen — @handle, email
+  address, password — with a terms toggle that has to be ticked before the form
+  submits. The email is GoTrue's identifier: the one provider every Supabase
+  project has enabled with no paid SMS gateway behind it, so sign-up works on
+  the free tier. The handle and the terms acceptance travel in the sign-up
+  metadata (`options.data.handle`, `options.data.accept_terms_at`) where
+  `handle_new_user()` (migration `0018`) stores them on `profiles.handle` /
+  `profiles.accept_terms_at`. The handle is the account's public name:
+  lowercase `[a-z][a-z0-9_]{2,23}`, **unique** project-wide — both clients
+  check `handle_available()` (an anon-callable `security definer` RPC that
+  normalises exactly like the trigger) before submitting, the unique index is
+  what guarantees it, and the display name falls back to `@handle`. A phone
+  sign-up would land on `profiles.phone` (migration `0017` accepts either
+  `auth.users.phone` or a phone left in the metadata). GoTrue accepts exactly
+  one identifier per sign-up, so an email and a phone number can never travel
+  together.
 - The sign-in field takes a phone **or** an email: a value containing `@` goes
   as `email`, anything else is normalised to E.164 by `toE164`
   (`packages/shared/src/phone.ts`, `lib/core/phone.dart`) and goes as `phone`.
   Pre-existing email accounts keep working.
-- Requires **Authentication → Providers → Phone enabled** on the project. With
-  phone confirmations **on**, GoTrue returns no session and sends an SMS code;
-  both clients then render a "confirm your phone" step
-  (`verifyOtp` with type `sms`) before routing into the app. With confirmations
-  off (`sms.autoconfirm`) `signUp` returns the session immediately and no SMS
-  gateway is needed. See `docs/DEPLOYMENT.md`.
+- Sign-up needs only **Authentication → Providers → Email enabled** (the
+  default) with **Confirm email off**: with confirmations on, `signUp` returns
+  no session until the user opens an emailed link that the built-in mailer
+  cannot deliver outside the team, and the form then shows a "check your
+  email" notice instead of routing into the app. The phone/OTP sign-up path is
+  **dormant** until the project enables **Providers → Phone** (paid SMS
+  gateway): with phone confirmations on, GoTrue returns no session and sends
+  an SMS code, and both clients render a "confirm your phone" step
+  (`verifyOtp` with type `sms`) before routing into the app; with confirmations
+  off (`sms.autoconfirm`) a phone `signUp` returns the session immediately and
+  no SMS gateway is needed. See `docs/DEPLOYMENT.md`.
 - Password reset for phone accounts needs SMS OTP and is not wired yet: the
-  reset screen still takes an email address (legacy accounts).
+  reset screen still takes an email address, and without custom SMTP the
+  emailed link only reaches team addresses (see `docs/DEPLOYMENT.md`).
 - Session storage on mobile: the platform secure store via a custom adapter —
   `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
   token never lands in plain preferences.

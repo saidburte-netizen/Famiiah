@@ -5,17 +5,18 @@ import 'package:supabase_flutter/supabase_flutter.dart' show OtpType;
 import '../../core/errors/user_message.dart';
 import '../../core/handle.dart';
 import '../../core/invite_store.dart';
-import '../../core/phone.dart';
 import '../../core/supabase/client.dart';
 import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/ui.dart';
 
-/// Sign-up is one form — @handle, phone number and password all on screen,
-/// plus the terms toggle that has to be ticked. The phone number is the
-/// account's sign-in identifier, so it goes to GoTrue as `phone` (in E.164)
-/// while the handle and the terms acceptance travel in the metadata, where
-/// `handle_new_user()` (migration `0018`) stores them on the profile.
+/// Sign-up is one form — @handle, email and password all on screen, plus the
+/// terms toggle that has to be ticked. Email is GoTrue's identifier: the one
+/// provider every Supabase project has enabled, so sign-up works without a
+/// paid SMS gateway. The handle and the terms acceptance travel in the
+/// metadata, where `handle_new_user()` (migration `0018`) stores them on the
+/// profile. The phone/OTP step stays dormant until the project turns on
+/// Providers → Phone.
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -25,7 +26,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _handle = TextEditingController();
-  final _phone = TextEditingController();
+  final _email = TextEditingController();
   final _password = TextEditingController();
   final _code = TextEditingController();
   bool _busy = false;
@@ -33,16 +34,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _error;
   String? _notice;
 
-  /// E.164 number waiting for its SMS code. Only set when the project has
-  /// phone confirmations enabled: GoTrue then creates the account, sends a
-  /// code and returns no session, so there is nothing to sign in with until
-  /// the code is verified.
+  /// Loose client-side shape check — GoTrue is the real gate
+  /// (`email_address_invalid` maps to friendly copy in `userMessage`).
+  static final RegExp _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
+  /// DORMANT: E.164 number waiting for its SMS code. Only set when the project
+  /// has phone confirmations enabled (Providers → Phone on): GoTrue then
+  /// creates the account, sends a code and returns no session, so there is
+  /// nothing to sign in with until the code is verified. Email sign-up takes
+  /// the confirm-email branch instead.
   String? _pendingPhone;
 
   @override
   void dispose() {
     _handle.dispose();
-    _phone.dispose();
+    _email.dispose();
     _password.dispose();
     _code.dispose();
     super.dispose();
@@ -56,14 +62,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
       };
 
   /// Mirrors `SignUpSchema` in `@fam/shared` (Flutter has no zod).
-  String? _validate({String? handle, String? phone}) {
+  String? _validate({String? handle, String? email}) {
     if (handle == null) {
       // an empty field and a malformed one deserve different words
       return _handle.text.trim().isEmpty
           ? 'Fill in every field.'
           : t('error.handleInvalid');
     }
-    if (phone == null) return 'Enter a valid phone (09… or +251…).';
+    if (email == null) {
+      return _email.text.trim().isEmpty
+          ? 'Fill in every field.'
+          : t('error.emailInvalid');
+    }
     if (_password.text.length < 8) return 'Use at least 8 characters.';
     if (!RegExp(r'[A-Z]').hasMatch(_password.text)) return 'Include an uppercase letter.';
     if (!RegExp(r'[0-9]').hasMatch(_password.text)) return 'Include a number.';
@@ -73,8 +83,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _submit() async {
     final handle = normalizeHandle(_handle.text);
-    final phone = toE164(_phone.text);
-    final invalid = _validate(handle: handle, phone: phone);
+    final email = _email.text.trim();
+    final invalid = _validate(
+      handle: handle,
+      email: _emailRe.hasMatch(email) ? email : null,
+    );
     if (invalid != null) {
       setState(() => _error = invalid);
       return;
@@ -96,13 +109,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         return;
       }
       final res = await getSupabase().auth.signUp(
-            phone: phone!,
+            email: email,
             password: _password.text,
             data: _metadata(handle!),
           );
       if (!mounted) return;
       if (res.session == null) {
-        setState(() => _pendingPhone = phone);
+        // The project has confirmations on: the account exists, the email
+        // carries the link. With confirmations off (the free setup) a session
+        // comes back immediately and this branch never runs.
+        setState(() => _notice = t('auth.confirmEmail'));
         return;
       }
       await _afterAuth();
@@ -113,7 +129,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  /// Confirm the SMS code GoTrue sent during sign-up.
+  /// DORMANT: confirm the SMS code GoTrue sent during a phone sign-up.
   Future<void> _verify() async {
     final phone = _pendingPhone;
     if (phone == null) return;
@@ -138,9 +154,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  /// Ask GoTrue for a fresh code. The Dart SDK has no `resend` endpoint, but
-  /// signing up again with an unconfirmed phone number re-sends the same OTP
-  /// (GoTrue's `UserRepeatedSignUp` path) instead of creating a second user.
+  /// DORMANT: ask GoTrue for a fresh code. The Dart SDK has no `resend`
+  /// endpoint, but signing up again with an unconfirmed phone number
+  /// re-sends the same OTP (GoTrue's `UserRepeatedSignUp` path) instead of
+  /// creating a second user.
   Future<void> _resend() async {
     final phone = _pendingPhone;
     if (phone == null) return;
@@ -212,6 +229,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final pendingPhone = _pendingPhone;
+    // DORMANT — the phone-OTP confirmation screen: only reachable once the
+    // project enables Providers → Phone and a phone sign-up returns no session.
     if (pendingPhone != null) return _confirmationScreen(pendingPhone);
 
     return FamScreen(
@@ -227,6 +246,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Text(_error!, style: const TextStyle(color: FamColors.danger)),
                   const SizedBox(height: 12),
                 ],
+                if (_notice != null) ...[
+                  Text(_notice!, style: const TextStyle(color: FamColors.royal)),
+                  const SizedBox(height: 12),
+                ],
                 FamField(
                   label: t('auth.handle'),
                   controller: _handle,
@@ -234,9 +257,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 12),
                 FamField(
-                  label: t('auth.phone'),
-                  controller: _phone,
-                  keyboardType: TextInputType.phone,
+                  label: t('auth.email'),
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 12),
                 FamField(label: t('auth.password'), controller: _password, obscureText: true),
@@ -271,8 +294,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  /// Shown when the account exists but the phone number still needs the code
-  /// GoTrue sent by SMS.
+  /// DORMANT: shown when a phone account exists but the number still needs
+  /// the code GoTrue sent by SMS.
   Widget _confirmationScreen(String phone) {
     return FamScreen(
       child: ListView(

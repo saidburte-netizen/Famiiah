@@ -99,27 +99,33 @@ path is referenced by the `submit` profile in `eas.json` and is gitignored.
 3. Add the mobile secrets (`EXPO_TOKEN`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
    the signing secrets). The CD job syncs the EAS environment variables for you.
 4. Check the project's **Auth** settings (dashboard → Authentication):
-   - **Providers → Phone must be enabled.** The phone number on the sign-up
-     form is the sign-in identifier, so sign-up and sign-in fail with
-     `phone_provider_disabled` until this switch is on.
-   - **Phone confirmations**: turn them **on** only when an SMS provider is
-     configured (Twilio / MessageBird / Textlocal / Vonage, or a Send-SMS Auth
-     hook) — the app then shows a "confirm your phone" code step after sign-up.
-     With no SMS provider, turn phone confirmations **off**: `signUp` then
-     returns a session and users get in straight away, without any SMS. The
-     trade-off is that numbers are not verified.
-   - **Providers → Email** stays enabled so older email accounts still sign in;
-     the sign-in field accepts an email address or a phone number.
-   - **Confirm email**: with confirmation on, `signUp` issues no session until
-     the user opens the emailed link, and the built-in mailer only delivers to
-     project team members (strict hourly limit). Either configure **custom SMTP**
-     for production, or turn *Confirm email* off.
-   - Apply migrations (CD → Run workflow → `components: db`) so
-     `handle_new_user()` stores the handle, terms acceptance and phone from
-     the sign-up metadata (`0017`–`0018`).
-   - Password reset: the reset screen still sends an **email** link, so it only
-     helps legacy email accounts — phone accounts have no self-service reset
-     until SMS OTP recovery is added.
+   - **Providers → Email** must stay enabled (it is by default): email is the
+     sign-up identifier — @handle + email + password — so sign-up needs no paid
+     gateway, and the sign-in field accepts an email **or** a phone number.
+   - **Confirm email: OFF** (the free setup). With confirmation on, `signUp`
+     issues no session until the user opens an emailed link, and the built-in
+     mailer only delivers to project team members (strict hourly limit), so
+     real users would be stuck. Off means `signUp` returns a session
+     immediately and no email is sent at all; addresses are simply unverified.
+     Configure **custom SMTP** if you later want verified emails.
+   - **Providers → Phone**: leave **off** until there is budget for an SMS
+     gateway (Twilio / MessageBird / Textlocal / Vonage, or a Send-SMS Auth
+     hook) — phone auth is billed per message and neither sign-up nor
+     sign-in needs it today (no phone accounts exist). The phone/OTP sign-up
+     step stays dormant in both clients and switches on by enabling this
+     provider; with phone confirmations off it then returns a session without
+     sending any SMS.
+   - **Phone confirmations**: only relevant once the phone provider is on —
+     **on** shows the "confirm your phone" code step after sign-up (and needs a
+     working SMS provider), **off** signs users in instantly with unverified
+     numbers.
+   - Apply migrations (CD → Run workflow → `components: db`, or paste
+     `supabase/migrations/0017` + `0018` into the dashboard SQL Editor) so
+     `handle_new_user()` stores the handle and terms acceptance from the
+     sign-up metadata.
+   - Password reset: the reset screen still sends an **email** link, which
+     without custom SMTP only reaches team addresses — phone accounts have no
+     self-service reset until SMS OTP recovery is added.
 
 The admin app is not deployed by CD; if you host it, set
 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` /

@@ -106,14 +106,26 @@ describe("Handle", () => {
 });
 
 describe("SignUpSchema", () => {
-  const valid = { handle: "@Abebe", phone: "0912345678", password: "Password1", acceptTerms: true };
+  const valid = {
+    handle: "@Abebe",
+    email: "someone@example.com",
+    password: "Password1",
+    acceptTerms: true,
+  };
 
   it("accepts a handle sign-up with the terms ticked", () => {
     const parsed = SignUpSchema.safeParse(valid);
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
     expect(parsed.data.handle).toBe("abebe");
-    expect(parsed.data.phone).toBe("0912345678");
+    expect(parsed.data.email).toBe("someone@example.com");
+  });
+
+  it("trims the email the way the handle is trimmed", () => {
+    const parsed = SignUpSchema.safeParse({ ...valid, email: "  someone@example.com " });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.email).toBe("someone@example.com");
   });
 
   it("requires the terms to be ticked", () => {
@@ -138,12 +150,22 @@ describe("SignUpSchema", () => {
     expect(weak.success).toBe(false);
     if (weak.success) return;
     expect(weak.error.issues[0]?.message).toBe("password_too_short");
+
+    const noEmail = SignUpSchema.safeParse({ ...valid, email: "" });
+    expect(noEmail.success).toBe(false);
+    if (noEmail.success) return;
+    expect(noEmail.error.issues[0]?.message).toBe("required");
+
+    const badEmail = SignUpSchema.safeParse({ ...valid, email: "abebe(at)example" });
+    expect(badEmail.success).toBe(false);
+    if (badEmail.success) return;
+    expect(badEmail.error.issues[0]?.message).toBe("invalid_email");
   });
 
-  it("keeps an email out of the payload entirely", () => {
-    const parsed = SignUpSchema.safeParse({ ...valid, email: "someone@example.com" });
+  it("keeps a phone number out of the payload entirely", () => {
+    const parsed = SignUpSchema.safeParse({ ...valid, phone: "0912345678" });
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
-    expect("email" in parsed.data).toBe(false);
+    expect("phone" in parsed.data).toBe(false);
   });
 });
