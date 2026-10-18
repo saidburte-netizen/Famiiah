@@ -26,31 +26,48 @@ export default function SignUpScreen() {
   const [pendingPhone, setPendingPhone] = useState<string | null>(null);
   const [code, setCode] = useState("");
 
+  /** Maps a zod issue message to something a person can act on. */
+  function fieldMessage(message: string): string {
+    switch (message) {
+      case "invalid_phone":
+        return t("error.invalidPhone");
+      case "password_too_short":
+        return "Use at least 8 characters.";
+      case "password_needs_upper":
+        return "Include an uppercase letter.";
+      case "password_needs_digit":
+        return "Include a number.";
+      case "required":
+        return "Fill in every field.";
+      default:
+        return t("error.unknown");
+    }
+  }
+
   async function submit() {
     setError(null);
     setNotice(null);
     const e164 = toE164(phone);
-    const parsed = SignUpSchema.safeParse({
-      fullName,
-      phone: e164 ?? phone,
-      password,
-    });
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? t("error.unknown"));
+    if (!e164) {
+      setError(t("error.invalidPhone"));
       return;
     }
-    const normalized = e164!;
+    const parsed = SignUpSchema.safeParse({ fullName, phone: e164, password });
+    if (!parsed.success) {
+      setError(fieldMessage(parsed.error.issues[0]?.message ?? "required"));
+      return;
+    }
     setBusy(true);
     try {
       const supabase = getSupabase();
       const { data, error: e } = await supabase.auth.signUp({
-        phone: normalized,
+        phone: e164,
         password,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName.trim() } },
       });
       if (e) throw e;
       if (!data.session) {
-        setPendingPhone(normalized);
+        setPendingPhone(e164);
         return;
       }
       await afterAuth();

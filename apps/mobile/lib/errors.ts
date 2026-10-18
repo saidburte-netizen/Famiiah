@@ -6,7 +6,6 @@ const NETWORK_RE =
 
 /** Supabase *auth* error codes (distinct from SQLSTATE) → i18n keys. */
 const AUTH_CODES: Record<string, string> = {
-const AUTH_CODES: Record<string, string> = {
   invalid_credentials: "error.invalidCredentials",
   email_not_confirmed: "error.emailNotConfirmed",
   phone_not_confirmed: "error.phoneNotConfirmed",

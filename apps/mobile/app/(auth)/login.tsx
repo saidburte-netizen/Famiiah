@@ -21,13 +21,18 @@ export default function LoginScreen() {
     try {
       const supabase = getSupabase();
       const id = identifier.trim();
-      const email = id.includes("@") ? id : undefined;
-      const phone = email ? undefined : toE164(id) || undefined;
+      const email = id.includes("@") ? id : null;
+      const phone = email ? null : toE164(id);
       if (!email && !phone) {
         setError(t("error.invalidPhone"));
         return;
       }
-      const { error: e } = await supabase.auth.signInWithPassword({ email, phone, password });
+      // GoTrue takes one identifier per request: a verified email account or
+      // a phone account. Both shapes are supported so older email accounts
+      // still sign in.
+      const { error: e } = email
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signInWithPassword({ phone: phone!, password });
       if (e) throw e;
       const pendingInvite = await takePendingInvite();
       if (pendingInvite) {

@@ -111,6 +111,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  /// Ask GoTrue for a fresh code. The Dart SDK has no `resend` endpoint, but
+  /// signing up again with an unconfirmed phone number re-sends the same OTP
+  /// (GoTrue's `UserRepeatedSignUp` path) instead of creating a second user.
   Future<void> _resend() async {
     final phone = _pendingPhone;
     if (phone == null) return;
@@ -120,8 +123,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _busy = true;
     });
     try {
-      await getSupabase().auth.resend(phone: phone, type: OtpType.sms);
-      if (mounted) setState(() => _notice = t('auth.codeSent'));
+      final res = await getSupabase().auth.signUp(
+            phone: phone,
+            password: _password.text,
+            data: {'full_name': _username.text.trim()},
+          );
+      if (!mounted) return;
+      // The account is still unconfirmed, so no session comes back; only the
+      // code is re-sent. A session would mean it was confirmed meanwhile.
+      setState(() => _notice = res.session == null ? t('auth.codeSent') : null);
+      if (res.session != null) await _afterAuth();
     } catch (err) {
       if (mounted) setState(() => _error = userMessage(err));
     } finally {

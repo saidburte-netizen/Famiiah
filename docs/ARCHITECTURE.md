@@ -75,16 +75,25 @@ fam/
 
 ## Auth and roles
 
-- Email + password (required); phone OTP optional (flag).
-- Sign-up sends **one** identifier to GoTrue. The phone number typed on the form
-  is profile data, so it travels in the sign-up metadata
-  (`options.data.phone`) and `handle_new_user()` stores it on `profiles.phone`
-  (migration `0017`); passing it as GoTrue's `phone` is rejected with
-  `Only an email address or phone number should be provided on signup` unless
-  phone sign-in is enabled for the project.
-- When the project requires email confirmation (`mailer_autoconfirm = false`)
-  `signUp` returns no session: both clients then show a "confirm your email"
-  screen instead of routing into the app.
+- **Phone + password** is the account. Sign-up is one screen — username, phone
+  number, password — and the phone (E.164) is GoTrue's identifier; the name
+  travels in the sign-up metadata (`options.data.full_name`) where
+  `handle_new_user()` stores it on `profiles.full_name` (and the phone on
+  `profiles.phone` — migration `0017` accepts either `auth.users.phone` or a
+  phone left in the metadata). GoTrue accepts exactly one identifier per
+  sign-up, so an email can never be sent alongside the phone number.
+- The sign-in field takes a phone **or** an email: a value containing `@` goes
+  as `email`, anything else is normalised to E.164 by `toE164`
+  (`packages/shared/src/phone.ts`, `lib/core/phone.dart`) and goes as `phone`.
+  Pre-existing email accounts keep working.
+- Requires **Authentication → Providers → Phone enabled** on the project. With
+  phone confirmations **on**, GoTrue returns no session and sends an SMS code;
+  both clients then render a "confirm your phone" step
+  (`verifyOtp` with type `sms`) before routing into the app. With confirmations
+  off (`sms.autoconfirm`) `signUp` returns the session immediately and no SMS
+  gateway is needed. See `docs/DEPLOYMENT.md`.
+- Password reset for phone accounts needs SMS OTP and is not wired yet: the
+  reset screen still takes an email address (legacy accounts).
 - Session storage on mobile: the platform secure store via a custom adapter —
   `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
   token never lands in plain preferences.

@@ -23,7 +23,6 @@ const en = {
   "auth.resendCode": "Send a new code",
   "auth.codeSent": "A new code is on its way.",
   "auth.changeNumber": "Use a different number",
-  "auth.changeNumber": "Use a different number",
   "nav.home": "Home",
   "nav.properties": "Properties",
   "nav.tenants": "Tenants",

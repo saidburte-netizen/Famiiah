@@ -168,9 +168,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the shared `useOrg()` org instead of each re-querying `organization_members`.
 - Auth and mutation screens surface errors with `userMessage()`; the rent tab's
   "send reminder" is a tracked mutation that surfaces failures via Alert.
-- Sign-up is a **single** form in both clients — full name, email, phone,
-  password and the terms toggle on one screen (the three-step wizard hid the
-  password behind a "Continue" button and made the details hard to review).
+- Sign-up is a **single** form in both clients — username, phone number and
+  password on one screen (email and the terms toggle removed). The phone is now
+  the GoTrue identifier, so sign-up/sign-in need **Providers → Phone** enabled;
+  when the project asks for SMS confirmation the clients show a "confirm your
+  phone" code step (`verifyOtp`, type `sms`) instead of a "confirm your email"
+  screen. The sign-in field accepts a phone number **or** an email, so accounts
+  created before this change still sign in.
+- Phone numbers are normalised to E.164 by a shared `toE164()` helper
+  (`packages/shared/src/phone.ts` + `apps/mobile_flutter/lib/core/phone.dart`),
+  so `09…`, `251…` and `+251…` all reach GoTrue in one shape.
+- Flutter release bumped `1.1.1+3` → `1.1.2+4` (the phone sign-up build).
 - The Admin tab's visibility derives from `useOrg().role`.
 
 ### Fixed (Flutter mobile)
