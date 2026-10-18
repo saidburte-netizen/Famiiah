@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/errors/user_message.dart';
 import '../../core/invite_store.dart';
+import '../../core/phone.dart';
 import '../../core/supabase/client.dart';
 import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
@@ -17,26 +18,36 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController();
+  final _identifier = TextEditingController();
   final _password = TextEditingController();
   String? _error;
   bool _busy = false;
 
   @override
   void dispose() {
-    _email.dispose();
+    _identifier.dispose();
     _password.dispose();
     super.dispose();
   }
 
   Future<void> _signIn() async {
+    // Accounts created from the sign-up form sign in with their phone number;
+    // the field still accepts an email so pre-existing email accounts work.
+    final identifier = _identifier.text.trim();
+    final email = looksLikeEmail(identifier) ? identifier : null;
+    final phone = email == null ? toE164(identifier) : null;
+    if (email == null && phone == null) {
+      setState(() => _error = t('error.invalidPhone'));
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
       await getSupabase().auth.signInWithPassword(
-            email: _email.text.trim(),
+            email: email,
+            phone: phone,
             password: _password.text,
           );
       final pending = await takePendingInvite();
@@ -72,8 +83,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
                 const SizedBox(height: 12),
                 FamField(
-                  label: t('auth.email'),
-                  controller: _email,
+                  label: t('auth.phoneOrEmail'),
+                  controller: _identifier,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 12),

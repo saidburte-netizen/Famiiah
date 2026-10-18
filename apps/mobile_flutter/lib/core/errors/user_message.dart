@@ -5,10 +5,13 @@ import '../../i18n/strings.dart';
 const _authCodes = <String, String>{
   'invalid_credentials': 'error.invalidCredentials',
   'email_not_confirmed': 'error.emailNotConfirmed',
+  'phone_not_confirmed': 'error.phoneNotConfirmed',
   'email_exists': 'error.alreadyRegistered',
+  'phone_exists': 'error.alreadyRegistered',
   'user_already_exists': 'error.alreadyRegistered',
   'weak_password': 'error.weakPassword',
   'over_email_send_rate_limit': 'error.rateLimited',
+  'over_sms_send_rate_limit': 'error.rateLimited',
   'over_request_rate_limit': 'error.rateLimited',
   'session_not_found': 'error.sessionExpired',
   'refresh_token_not_found': 'error.sessionExpired',
@@ -19,7 +22,8 @@ const _authCodes = <String, String>{
   'email_address_invalid': 'error.emailInvalid',
   'signup_disabled': 'error.signupDisabled',
   'email_provider_disabled': 'error.signupDisabled',
-  'phone_provider_disabled': 'error.signupDisabled',
+  'phone_provider_disabled': 'error.phoneProviderDisabled',
+  'sms_send_failed': 'error.smsFailed',
   'validation_failed': 'error.invalidInput',
   'otp_expired': 'error.invalidToken',
 };

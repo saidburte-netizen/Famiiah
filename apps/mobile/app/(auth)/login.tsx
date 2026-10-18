@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { toE164 } from "@fam/shared";
 import { getSupabase } from "@/lib/supabase";
 import { takePendingInvite } from "@/lib/invite";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { t } from "@/i18n";
 import { userMessage } from "@/lib/errors";
+import { useState } from "react";
+import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,7 +20,14 @@ export default function LoginScreen() {
     setError(null);
     try {
       const supabase = getSupabase();
-      const { error: e } = await supabase.auth.signInWithPassword({ email: identifier, password });
+      const id = identifier.trim();
+      const email = id.includes("@") ? id : undefined;
+      const phone = email ? undefined : toE164(id) || undefined;
+      if (!email && !phone) {
+        setError(t("error.invalidPhone"));
+        return;
+      }
+      const { error: e } = await supabase.auth.signInWithPassword({ email, phone, password });
       if (e) throw e;
       const pendingInvite = await takePendingInvite();
       if (pendingInvite) {
@@ -49,7 +57,7 @@ export default function LoginScreen() {
         ) : null}
 
         <Field
-          label={t("auth.email")}
+          label={t("auth.phoneOrEmail")}
           autoCapitalize="none"
           keyboardType="email-address"
           value={identifier}

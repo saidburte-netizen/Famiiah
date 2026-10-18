@@ -11,7 +11,7 @@ void main() {
 
     test('maps a Supabase auth code', () {
       final err = Exception('AuthApiException: Invalid login credentials (code: invalid_credentials)');
-      expect(userMessage(err), 'Incorrect email or password.');
+      expect(userMessage(err), 'Incorrect phone/email or password.');
     });
 
     test('names a rejected sign-up address instead of the generic message', () {
@@ -20,9 +20,24 @@ void main() {
       expect(userMessage(err), 'That email address was rejected. Check it and try again.');
     });
 
-    test('names a disabled provider instead of the generic message', () {
+    test('names a disabled phone provider instead of the generic message', () {
       final err = Exception('AuthApiException: Phone signups are disabled (code: phone_provider_disabled)');
-      expect(userMessage(err), 'New sign-ups are turned off for this app.');
+      expect(userMessage(err), 'Phone sign-up is not enabled for this app.');
+    });
+
+    test('maps the phone sign-up codes to safe messages', () {
+      expect(
+        userMessage(Exception('AuthApiException: Phone not confirmed (code: phone_not_confirmed)')),
+        'Confirm your phone number before signing in.',
+      );
+      expect(
+        userMessage(Exception('AuthApiException: Phone already exists (code: phone_exists)')),
+        'That account already exists. Try signing in.',
+      );
+      expect(
+        userMessage(Exception('AuthApiException: Could not send SMS (code: sms_send_failed)')),
+        'We could not send the SMS. Please try again.',
+      );
     });
 
     test('maps a Postgres SQLSTATE from a JSON code field', () {

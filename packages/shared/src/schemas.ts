@@ -52,24 +52,21 @@ export const LoginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof LoginSchema>;
 
-export const SignUpSchema = z
-  .object({
-    fullName: z.string().min(2, "required"),
-    email: Email,
-    phone: EthiopianPhone,
-    password: z
-      .string()
-      .min(8, "password_too_short")
-      .regex(/[A-Z]/, "password_needs_upper")
-      .regex(/[0-9]/, "password_needs_digit"),
-    role: OrgRoleSchema,
-    acceptTerms: z.literal(true, { errorMap: () => ({ message: "must_accept_terms" }) }),
-  })
-  .superRefine((val, ctx) => {
-    if (val.role === "owner" && !val.email) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["email"], message: "required" });
-    }
-  });
+/**
+ * Sign-up collects a display name ("username"), the phone number and a
+ * password. The phone is the sign-in identifier (GoTrue `phone` + password);
+ * there is no email field. `fullName` is stored on `profiles.full_name` via
+ * `handle_new_user()`.
+ */
+export const SignUpSchema = z.object({
+  fullName: z.string().min(2, "required"),
+  phone: EthiopianPhone,
+  password: z
+    .string()
+    .min(8, "password_too_short")
+    .regex(/[A-Z]/, "password_needs_upper")
+    .regex(/[0-9]/, "password_needs_digit"),
+});
 export type SignUpInput = z.infer<typeof SignUpSchema>;
 
 // ---- Property / unit ----
