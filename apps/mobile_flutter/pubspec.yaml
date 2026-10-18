@@ -1,7 +1,7 @@
 name: fam_mobile
 description: Fam — rent control client (Flutter).
 publish_to: "none"
-version: 1.1.5+7
+version: 1.1.6+8
 
 environment:
   sdk: ^3.5.0
@@ -17,6 +17,7 @@ dependencies:
   google_fonts: ^6.2.1
   intl: ^0.19.0
   package_info_plus: ^10.2.2
+  shared_preferences: ^2.3.0
   supabase_flutter: ^2.8.4
   url_launcher: ^6.3.1
 

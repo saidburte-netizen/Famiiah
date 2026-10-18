@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:fam_mobile/core/errors/user_message.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// These tests lock in the contract that raw backend errors never reach the
@@ -69,6 +72,24 @@ void main() {
     test('maps a network failure', () {
       final err = Exception('SocketException: Failed host lookup: network is unreachable');
       expect(userMessage(err), contains('No connection'));
+    });
+
+    test('reads a TLS handshake failure as a connection problem', () {
+      // dart:io throws HandshakeException (a TlsException), not a
+      // SocketException, when HTTPS is broken in front of the API.
+      expect(
+        userMessage(const HandshakeException('Connection terminated during handshake')),
+        contains('No connection'),
+      );
+    });
+
+    test('never leaks a secure-storage failure for the session', () {
+      // A Keystore/platform-channel failure must stay behind friendly copy
+      // even if one ever escapes the storage fallback.
+      final err = PlatformException(code: 'BadPaddingException', message: 'Failed to encrypt');
+      final out = userMessage(err);
+      expect(out, isNot(contains('BadPadding')));
+      expect(out, contains('Something went wrong'));
     });
 
     test('never leaks the raw message for an unknown error', () {

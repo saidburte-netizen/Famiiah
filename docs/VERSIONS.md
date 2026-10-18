@@ -21,7 +21,7 @@ resolved versions here at build time.
 | App | Version | Source |
 |---|---|---|
 | Expo mobile | 1.0.0 | `apps/mobile/app.json` (`expo.version`) |
-| Flutter mobile | 1.1.5+7 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
+| Flutter mobile | 1.1.6+8 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
 | Android application id | `com.fami.myapp` | `.github/workflows/flutter.yml`, `tool/setup_android.sh` |
 
 ## Backend schema
@@ -55,7 +55,8 @@ resolved versions here at build time.
 
 | Package | Range | Notes |
 |---|---|---|
-| flutter_secure_storage | ^11.2.0 | session + invitation tokens (Keystore / Keychain) |
+| flutter_secure_storage | ^11.2.0 | session + invitation tokens (Keystore / Keychain), plain-prefs fallback when the Keystore throws |
+| shared_preferences | ^2.3.0 | session fallback store (same place `supabase_flutter` keeps it by default) |
 | flutter_riverpod | ^2.6.1 | state |
 | go_router | ^14.6.2 | routing |
 | supabase_flutter | ^2.8.4 | resolves to the newest 2.x |

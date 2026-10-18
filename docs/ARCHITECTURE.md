@@ -111,8 +111,14 @@ fam/
   emailed link only reaches team addresses (see `docs/DEPLOYMENT.md`).
 - Session storage on mobile: the platform secure store via a custom adapter —
   `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
-  token never lands in plain preferences.
-- Invitation deep-link tokens are held in the same secure store until accepted.
+  token normally never lands in plain preferences; when — and only when — the
+  secure store **throws** (a broken Keystore on some Android ROMs), the session
+  falls back to plain app-private storage — where each framework keeps it by
+  default — instead of failing sign-in/up *after* the account already exists
+  server-side, and the fallback copy is dropped on the next healthy write or on
+  sign-out (ASSUMPTIONS A14).
+- Invitation deep-link tokens are held in the same secure store until accepted;
+  reading or writing them is best-effort and can never block a sign-in.
 - Biometrics gate **opening an existing session**, never replace credentials.
 - Org roles: `owner`, `manager`, `staff`, `viewer`. A **tenant** is not a role —
   it is a `tenants` row linked to a user who then sees only their own data.

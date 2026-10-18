@@ -113,6 +113,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Sign-up no longer dead-ends when the project requires email confirmation
   (`mailer_autoconfirm = false`): `signUp` returns no session, so both clients
   show a "confirm your email" screen instead of routing into the app.
+- **Session storage (both mobile clients)**: a device whose Keystore throws no
+  longer fails sign-up *after* the account was created server-side — the
+  supabase-js storage adapter and the pending-invite helpers now degrade to
+  plain app-private storage (or "no pending invite") exactly like the Flutter
+  client, so an `expo-secure-store` error can't surface as "Something went
+  wrong" (ASSUMPTIONS A14).
 
 ### Added (mobile)
 
@@ -214,6 +220,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `tool/setup_android.sh`) now adds the permission to the main manifest —
   idempotent, XML-validated, flows into the CI-built APK/AAB.
 - Flutter release bumped `1.1.4+6` → `1.1.5+7` (release INTERNET permission).
+- A device whose Android Keystore throws turned **successful** sign-ups into the
+  generic "Something went wrong": the session is written inside
+  `auth.signUp()`/`signInWithPassword()`, so a broken Keystore failed the flow
+  *after* the account was created server-side (the backend accepts the app's
+  exact payload end to end — session returned, profile stored with the handle
+  and terms stamp). The session store now falls back to plain app-private
+  preferences — where `supabase_flutter` keeps the session by default — only
+  when the secure store throws, and clears that copy again on a healthy write
+  or sign-out; pending-invite reads/writes are best-effort for the same reason,
+  so an undecryptable invite token can never block a sign-in.
+- TLS handshake/certificate failures now read as a connection problem
+  (`error.network`) instead of the generic message.
+- Flutter release bumped `1.1.5+7` → `1.1.6+8` (resilient session storage).
 - `userMessage()` maps `AuthWeakPasswordException` (gotrue prints `reasons:`
   instead of `code:` for it) to the weak-password message, and tests now lock
   in the `AuthApiException(message: …, statusCode: …, code: …)` shape that

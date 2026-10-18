@@ -59,6 +59,10 @@ const _sharedKeyMap = <String, String>{
 
 bool _isNetwork(dynamic err) {
   if (err is SocketException) return true;
+  // TLS handshake / certificate failures never reach the app layer either —
+  // a carrier or captive network breaking HTTPS reads to the user as a
+  // connection problem, not as an account problem.
+  if (err is TlsException) return true;
   final msg = err.toString().toLowerCase();
   return msg.contains('network') ||
       msg.contains('timeout') ||
