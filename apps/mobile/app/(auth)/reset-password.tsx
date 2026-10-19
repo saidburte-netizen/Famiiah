@@ -8,12 +8,16 @@ import { userMessage } from "@/lib/errors";
 
 /**
  * Finish a password reset: the user arrives from the `fam://reset-password`
- * link GoTrue emails. supabase-js consumes the recovery tokens in the URI
- * fragment and creates a session before this screen renders, so we only ask for
- * the new password and call `updateUser`.
+ * link GoTrue emails. The root layout's `Linking` handler parses the recovery
+ * tokens out of the URI fragment (`@fam/shared/deep-links`) and calls
+ * `setSession`, which is what makes `hasSession` true here — supabase-js does
+ * not do this itself on native (`detectSessionInUrl` is a browser-only path).
  *
- * A link that expired or was already used carries no session — the screen says
- * so and offers the way back to sign-in rather than failing with a raw error.
+ * Because that exchange is asynchronous, we subscribe to auth state instead of
+ * reading the session once: otherwise a session that lands a moment after mount
+ * would be missed and a perfectly good link would look expired. If no session
+ * arrives shortly, the link really was expired or already used, and the screen
+ * says so and offers a fresh link rather than failing with a raw error.
  */
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -25,7 +29,21 @@ export default function ResetPasswordScreen() {
 
   useEffect(() => {
     const supabase = getSupabase();
-    supabase.auth.getSession().then(({ data }) => setHasSession(Boolean(data.session)));
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setHasSession(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) setHasSession(true);
+    });
+    // No session within this window means the token was expired or reused. The
+    // updater leaves an already-found session (`true`) untouched.
+    const timer = setTimeout(() => {
+      setHasSession((prev) => (prev === null ? false : prev));
+    }, 3000);
+    return () => {
+      clearTimeout(timer);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   async function submit() {

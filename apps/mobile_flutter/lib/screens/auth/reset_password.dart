@@ -49,9 +49,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (event.session != null && mounted) setState(() => _hasSession = true);
     });
     // If no session shows up shortly, treat the link as expired/used so the user
-    // is not left on a blank screen.
+    // is not left on a blank screen. `_hasSession` is still null here when the
+    // observer never delivered a session (the token was expired or already
+    // used), so flip it to false; a session that did arrive is left alone.
     Future<void>.delayed(const Duration(seconds: 3), () {
-      if (mounted && _hasSession == false) setState(() => _hasSession = false);
+      if (mounted && _hasSession == null) setState(() => _hasSession = false);
     });
   }
 
