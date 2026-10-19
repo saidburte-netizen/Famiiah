@@ -1,7 +1,7 @@
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../routing/deep_links.dart';
+import '../../routing/deep_links.dart';
 import 'secure_local_storage.dart';
 
 /// Compile-time configuration keys (pass via `--dart-define`).

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show AuthState, UserAttr
 import '../../core/errors/user_message.dart';
 import '../../core/supabase/client.dart';
 import '../../i18n/strings.dart';
+import '../../theme/tokens.dart';
 import '../../widgets/ui.dart';
 
 /// Finish a password reset: the user arrives from the `fam://reset-password`

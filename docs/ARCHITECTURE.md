@@ -110,13 +110,24 @@ fam/
   no SMS gateway is needed. See `docs/DEPLOYMENT.md`.
 - Password reset uses the `fam://reset-password` deep link GoTrue emails
   (`resetPasswordForEmail(..., redirectTo: 'fam://reset-password')` in both
-  clients). The link carries the recovery tokens in the URI fragment; the app
-  rewrites it to `/auth/reset-password` (keeping the fragment) and
-  `supabase_flutter` / supabase-js turn those tokens into a short-lived
-  recovery session, after which the screen calls `updateUser({password})`. A
-  link that expired or was already used arrives without tokens: the screen says
-  so and offers a fresh link instead of failing. Without custom SMTP the email
-  only reaches team addresses (see `docs/DEPLOYMENT.md`).
+  clients). The recovery tokens ride in the URI **fragment**
+  (`#access_token=…&type=recovery`), which no client library picks up on mobile
+  by default, so each client does it explicitly:
+  - **Flutter** enables `detectSessionInUri` with `isAuthCallbackLink` as its
+    predicate — `supabase_flutter` observes the incoming link through `app_links`
+    and `getSessionFromUrl` turns the fragment into a session.
+  - **Expo/RN** parses the fragment with `@fam/shared/deep-links`
+    (`parseRecoveryTokens`) and calls `auth.setSession`, because supabase-js is
+    configured `detectSessionInUrl: false` (its URL detection is browser-only).
+  - The predicate/parser only match links carrying auth parameters, so the
+    invitation link (`fam://invite?token=…`) is never mistaken for a callback.
+
+  Both clients route to `/auth/reset-password` (exempt from the signed-in
+  redirect, since a recovery session *is* signed in) and call
+  `updateUser({password})`. A link that expired or was already used arrives
+  without tokens: the screen says so and offers a fresh link instead of failing.
+  Without custom SMTP the email only reaches team addresses (see
+  `docs/DEPLOYMENT.md`).
 - Session storage on mobile: the platform secure store via a custom adapter —
   `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
   token normally never lands in plain preferences; when — and only when — the
