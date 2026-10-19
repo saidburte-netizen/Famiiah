@@ -61,13 +61,22 @@ export type LoginInput = z.infer<typeof LoginSchema>;
  */
 export const Handle = z
   .string()
-  .min(1, "required")
-  .transform((v) => v.trim().replace(/^@+/, "").toLowerCase())
-  .pipe(z.string().regex(/^[a-z][a-z0-9_]{2,23}$/, "invalid_handle"));
+  // A blank field means "no handle" (sign-up no longer requires one); anything
+  // typed at all must be a real handle, exactly as the database requires.
+  .transform((v) => (v.trim() === "" ? undefined : v.trim().replace(/^@+/, "").toLowerCase()))
+  .pipe(
+    z
+      .string()
+      .regex(/^[a-z][a-z0-9_]{2,23}$/, "invalid_handle")
+      .optional(),
+  );
 
 /**
- * Sign-up collects the @handle, an email address and a password, and the terms
- * have to be ticked. Email is the sign-in identifier (GoTrue `email` +
+ * Sign-up collects an email address and a password, and the terms have to be
+ * ticked. The @handle is optional: when provided it is the account's public
+ * name and must be unique (enforced by `profiles_handle_key` in migration
+ * `0018`); when left blank the profile keeps `handle = null` and the account
+ * works exactly the same. Email is the sign-in identifier (GoTrue `email` +
  * password): it is the one provider every Supabase project has enabled with no
  * paid SMS gateway behind it, so sign-up works on the free tier. The phone/OTP
  * sign-up path stays dormant in both clients until Providers → Phone is turned
@@ -76,7 +85,16 @@ export const Handle = z
  * `profiles.handle` / `profiles.accept_terms_at`.
  */
 export const SignUpSchema = z.object({
-  handle: Handle,
+  handle: z
+    .string()
+    .optional()
+    .transform((v) => {
+      if (!v) return undefined;
+      const trimmed = v.trim().replace(/^@+/, "");
+      if (!trimmed) return undefined;
+      return trimmed.toLowerCase();
+    })
+    .refine((s) => s === undefined || /^[a-z][a-z0-9_]{2,23}$/.test(s), { message: "invalid_handle" }),
   email: z
     .string()
     .min(1, "required")

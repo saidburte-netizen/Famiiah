@@ -10,8 +10,10 @@ import { t } from "@/i18n";
 import { userMessage } from "@/lib/errors";
 
 /**
- * One form: @handle, email and password together, plus the terms that have to
- * be ticked. Email is the GoTrue identifier — the one provider every Supabase
+ * One form: email and password, plus the terms that have to be ticked. The
+ * @handle is optional — a valid one is checked for uniqueness before the
+ * account is created, a blank field simply leaves the profile without a
+ * handle. Email is the GoTrue identifier — the one provider every Supabase
  * project has enabled, so sign-up works without a paid SMS gateway. If the
  * project requires email confirmation, GoTrue returns no session and we tell
  * the user to open the emailed link. The phone/OTP step below stays dormant
@@ -70,19 +72,23 @@ export default function SignUpScreen() {
       // Handles are unique project-wide: ask before creating the account so
       // the user can pick another one; profiles.handle's unique index is what
       // actually guarantees it.
-      const { data: available } = await supabase.rpc("handle_available", {
-        p_handle: parsed.data.handle,
-      });
-      if (available === false) {
-        setError(t("error.handleTaken"));
-        return;
+      if (parsed.data.handle) {
+        const { data: available } = await supabase.rpc("handle_available", {
+          p_handle: parsed.data.handle,
+        });
+        if (available === false) {
+          setError(t("error.handleTaken"));
+          return;
+        }
       }
+      const metadata: Record<string, string> = {
+        accept_terms_at: new Date().toISOString(),
+      };
+      if (parsed.data.handle) metadata.handle = parsed.data.handle;
       const { data, error: e } = await supabase.auth.signUp({
         email: parsed.data.email,
         password,
-        options: {
-          data: { handle: parsed.data.handle, accept_terms_at: new Date().toISOString() },
-        },
+        options: { data: metadata },
       });
       if (e) throw e;
       if (!data.session) {

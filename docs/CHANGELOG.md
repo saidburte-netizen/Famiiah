@@ -233,6 +233,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - TLS handshake/certificate failures now read as a connection problem
   (`error.network`) instead of the generic message.
 - Flutter release bumped `1.1.5+7` → `1.1.6+8` (resilient session storage).
+- **Sign-up: @handle is now optional**. The shared `SignUpSchema`, both clients'
+  sign-up forms, and `normalizeHandle()` in Flutter all accept a blank handle;
+  when provided it must match the format and is checked for uniqueness via
+  `handle_available()` before creating the account; when omitted, no `handle` is
+  sent in the `auth.signUp()` metadata and the profile's `handle` remains NULL
+  (the unique index on `profiles.handle` treats NULLs as distinct). This removes
+  the create-account failure for users who never set a handle. (Flutter bumped
+  `1.1.6+8` → `1.1.7+9`.)
 - `userMessage()` maps `AuthWeakPasswordException` (gotrue prints `reasons:`
   instead of `code:` for it) to the weak-password message, and tests now lock
   in the `AuthApiException(message: …, statusCode: …, code: …)` shape that

@@ -10,13 +10,16 @@ import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/ui.dart';
 
-/// Sign-up is one form — @handle, email and password all on screen, plus the
-/// terms toggle that has to be ticked. Email is GoTrue's identifier: the one
-/// provider every Supabase project has enabled, so sign-up works without a
-/// paid SMS gateway. The handle and the terms acceptance travel in the
-/// metadata, where `handle_new_user()` (migration `0018`) stores them on the
-/// profile. The phone/OTP step stays dormant until the project turns on
-/// Providers → Phone.
+/// Sign-up now collects a unique @handle (optional) and a terms toggle that has
+/// to be ticked before the account is created.
+///
+/// The handle is the account's public name and, when supplied, must be unique
+/// across the whole project, so the database owns the rule:
+/// `handle_available()` lets the unauthenticated sign-up form ask whether a
+/// handle is free, and the unique index is what actually guarantees it. A blank
+/// handle leaves `profiles.handle` NULL (the index treats NULLs as distinct).
+/// Handles are stored lowercase without the leading '@', matching `Handle` in
+/// packages/shared/src/schemas.ts.
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -56,18 +59,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   /// The handle and the terms acceptance travel in the sign-up metadata, where
   /// `handle_new_user()` (migration `0018`) stores them on the profile.
-  Map<String, String> _metadata(String handle) => {
-        'handle': handle,
-        'accept_terms_at': DateTime.now().toUtc().toIso8601String(),
-      };
+  Map<String, String> _metadata(String? handle) {
+    final ts = DateTime.now().toUtc().toIso8601String();
+    final h = handle?.trim() ?? '';
+    if (h.isEmpty) {
+      return {'accept_terms_at': ts};
+    }
+    return {'handle': h, 'accept_terms_at': ts};
+  }
 
   /// Mirrors `SignUpSchema` in `@fam/shared` (Flutter has no zod).
   String? _validate({String? handle, String? email}) {
-    if (handle == null) {
-      // an empty field and a malformed one deserve different words
-      return _handle.text.trim().isEmpty
-          ? 'Fill in every field.'
-          : t('error.handleInvalid');
+    // Handle is now optional; if provided, it must be valid.
+    final handleRaw = _handle.text.trim();
+    if (handleRaw.isNotEmpty && handle == null) {
+      return t('error.handleInvalid');
     }
     if (email == null) {
       return _email.text.trim().isEmpty
@@ -98,20 +104,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _busy = true;
     });
     try {
-      // Handles are unique project-wide. The form asks before creating the
-      // account so the user can pick another one; the unique index on
-      // profiles.handle is what actually guarantees it.
-      final available =
-          await getSupabase().rpc('handle_available', params: {'p_handle': handle});
-      if (!mounted) return;
-      if (available != true) {
-        setState(() => _error = t('error.handleTaken'));
-        return;
+      // Handles are unique project-wide. Only check availability if one was provided.
+      if (handle != null) {
+        final available =
+            await getSupabase().rpc('handle_available', params: {'p_handle': handle});
+        if (!mounted) return;
+        if (available != true) {
+          setState(() => _error = t('error.handleTaken'));
+          return;
+        }
       }
       final res = await getSupabase().auth.signUp(
             email: email,
             password: _password.text,
-            data: _metadata(handle!),
+            data: _metadata(handle),
           );
       if (!mounted) return;
       if (res.session == null) {
@@ -169,10 +175,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     try {
       // Re-sending keeps the same handle; a missing one degrades to a plain
       // sign-up attempt, which GoTrue answers with the same OTP request.
+      final h = normalizeHandle(_handle.text);
       final res = await getSupabase().auth.signUp(
             phone: phone,
             password: _password.text,
-            data: _metadata(normalizeHandle(_handle.text) ?? ''),
+            data: _metadata(h),
           );
       if (!mounted) return;
       // The account is still unconfirmed, so no session comes back; only the
