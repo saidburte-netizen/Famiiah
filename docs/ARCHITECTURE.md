@@ -75,14 +75,16 @@ fam/
 
 ## Auth and roles
 
-- **Email + password** is the account. Sign-up is one screen — @handle, email
-  address, password — with a terms toggle that has to be ticked before the form
-  submits. The email is GoTrue's identifier: the one provider every Supabase
-  project has enabled with no paid SMS gateway behind it, so sign-up works on
-  the free tier. The handle and the terms acceptance travel in the sign-up
-  metadata (`options.data.handle`, `options.data.accept_terms_at`) where
-  `handle_new_user()` (migration `0018`) stores them on `profiles.handle` /
-  `profiles.accept_terms_at`. The handle is the account's public name:
+- **Email + password** is the account. Sign-up is one screen — email address,
+  password, and an optional @handle — with a terms toggle that has to be ticked
+  before the form submits. The email is GoTrue's identifier: the one provider
+  every Supabase project has enabled with no paid SMS gateway behind it, so
+  sign-up works on the free tier. The handle and the terms acceptance travel in
+  the sign-up metadata (`options.data.handle` when provided,
+  `options.data.accept_terms_at`) where `handle_new_user()` (migration `0018`)
+  stores them on `profiles.handle` / `profiles.accept_terms_at`. A blank handle
+  is allowed: the profile keeps `handle = null` and no handle is shown in place
+  of the display name. When supplied, the handle is the account's public name:
   lowercase `[a-z][a-z0-9_]{2,23}`, **unique** project-wide — both clients
   check `handle_available()` (an anon-callable `security definer` RPC that
   normalises exactly like the trigger) before submitting, the unique index is
