@@ -6,3 +6,4 @@ export type { Database } from "./types/database.types";
 
 export * from "./schemas";
 export * from "./phone";
+export * from "./deep-links";

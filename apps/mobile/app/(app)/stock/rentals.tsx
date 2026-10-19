@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, View } from "react-native";
 import { Stack } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatMoney } from "@fam/shared";
 import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -15,6 +16,7 @@ type RentalRow = StockRentalRow & {
 
 export default function StockRentalsScreen() {
   const { orgId } = useOrg();
+  const queryClient = useQueryClient();
   const [rows, setRows] = useState<RentalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<RentalRow | null>(null);
@@ -76,6 +78,8 @@ export default function StockRentalsScreen() {
         onDone={async () => {
           setSelected(null);
           await load();
+          // Returning stock restores the item's quantity and closes the rental.
+          await queryClient.invalidateQueries({ queryKey: ["stock-low"] });
         }}
       />
     </Screen>

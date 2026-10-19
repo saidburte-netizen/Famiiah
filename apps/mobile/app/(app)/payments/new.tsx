@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { RecordPaymentSchema } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -19,6 +20,7 @@ interface LeaseOption {
 
 export default function NewPaymentScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ leaseId?: string }>();
   const { orgId } = useOrg();
 
@@ -91,6 +93,11 @@ export default function NewPaymentScreen() {
     setBusy(true);
     try {
       await recordPayment(parsed.data);
+      // A payment changes the payments list, the rent overview (paid/outstanding),
+      // the dashboard totals and the tenant's charge list.
+      await queryClient.invalidateQueries({ queryKey: ["payments"] });
+      await queryClient.invalidateQueries({ queryKey: ["rent-overview"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       router.back();
     } catch (err) {
       setError(userMessage(err));

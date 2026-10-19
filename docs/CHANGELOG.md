@@ -241,6 +241,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (the unique index on `profiles.handle` treats NULLs as distinct). This removes
   the create-account failure for users who never set a handle. (Flutter bumped
   `1.1.6+8` → `1.1.7+9`.)
+- **Password reset is now reachable end to end.** The `fam://reset-password`
+  link GoTrue emails was previously a dead end (no screen, no route). Both
+  clients now rewrite the link to a reset screen (keeping the recovery tokens in
+  the URI fragment), turn them into a session and call `updateUser`; an expired
+  or reused link shows a friendly message plus a fresh-link action. The Flutter
+  deep-link rewriter handles both `invite` and `reset-password`. (Flutter bumped
+  `1.1.7+9` → `1.1.8+10`.)
+- **Two runtime bugs fixed**: the RN login button stayed spinning forever on a
+  rejected identifier (validation ran after `setBusy(true)`, so the early
+  `return` skipped the `finally` that clears it); the RN invite screen compared
+  already-translated text against raw error keys, so its invalid/expired-copy
+  branches never fired (now matches on the normalized error key).
+- **Flutter push registration seam** (`lib/core/push.dart`): the same
+  `register_device_token` contract the Expo client uses, wired into launch and
+  sign-in, as a no-op until an FCM-backed `PushTokenSource` is supplied (no
+  provider is committed, since Android push needs a `google-services.json`).
+- **React Query cache invalidation after every mutation.** The Expo client set
+  `staleTime: 30s` and only invalidated the cache in one place, so creating a
+  property/unit/tenant, recording or voiding a payment, adjusting/renting/
+  returning stock, renewing/terminating a lease or assigning a tenant returned
+  the user to a tab that still showed the old data for up to 30 s. Every
+  mutation now invalidates the queries it affects (`properties`, `units`,
+  `tenants`, `payments`, `rent-overview`, `dashboard`, `stock-low`,
+  `stock-rentals`), so lists and totals update immediately.
+- Flutter i18n catalogue gained the shared action labels (New, Save, Cancel,
+  Manage, Refresh, History, …) and the reset-screen strings; both catalogues
+  now define every key the screens reference.
 - `userMessage()` maps `AuthWeakPasswordException` (gotrue prints `reasons:`
   instead of `code:` for it) to the weak-password message, and tests now lock
   in the `AuthApiException(message: …, statusCode: …, code: …)` shape that

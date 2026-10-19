@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Modal, ScrollView, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatMoney } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -21,6 +22,7 @@ type AdjustTypeValue = "in" | "out" | "adjustment";
 export default function StockScreen() {
   const { orgId } = useOrg();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [rows, setRows] = useState<StockItemRow[]>([]);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,6 +119,7 @@ export default function StockScreen() {
         onDone={async () => {
           setAdjusting(null);
           await load();
+          await queryClient.invalidateQueries({ queryKey: ["stock-low"] });
         }}
       />
       <RentModal
@@ -126,6 +129,9 @@ export default function StockScreen() {
         onDone={async () => {
           setRenting(null);
           await load();
+          // Renting decrements stock and adds a rental row.
+          await queryClient.invalidateQueries({ queryKey: ["stock-low"] });
+          await queryClient.invalidateQueries({ queryKey: ["stock-rentals"] });
         }}
       />
     </Screen>

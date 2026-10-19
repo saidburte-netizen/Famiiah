@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, ScrollView, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { createUnit, getProperty, listUnits, type UnitRow } from "@/features/api";
+import { queryKeys } from "@/lib/query";
 import { userMessage } from "@/lib/errors";
 
 const KINDS = ["shop", "apartment", "office", "storage"] as const;
@@ -11,6 +13,7 @@ const KINDS = ["shop", "apartment", "office", "storage"] as const;
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [property, setProperty] = useState<Record<string, unknown> | null>(null);
   const [units, setUnits] = useState<UnitRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,6 +159,15 @@ export default function PropertyDetailScreen() {
         onCreated={async () => {
           setModal(false);
           await load();
+          // The properties tab shows unit counts; refresh it too.
+          if (property?.org_id) {
+            await queryClient.invalidateQueries({
+              queryKey: queryKeys.properties(String(property.org_id)),
+            });
+            await queryClient.invalidateQueries({
+              queryKey: queryKeys.dashboard(String(property.org_id)),
+            });
+          }
         }}
         propertyId={id ?? ""}
         orgId={String(property?.org_id ?? "")}

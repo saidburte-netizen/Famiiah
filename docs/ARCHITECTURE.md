@@ -108,9 +108,15 @@ fam/
   (`verifyOtp` with type `sms`) before routing into the app; with confirmations
   off (`sms.autoconfirm`) a phone `signUp` returns the session immediately and
   no SMS gateway is needed. See `docs/DEPLOYMENT.md`.
-- Password reset for phone accounts needs SMS OTP and is not wired yet: the
-  reset screen still takes an email address, and without custom SMTP the
-  emailed link only reaches team addresses (see `docs/DEPLOYMENT.md`).
+- Password reset uses the `fam://reset-password` deep link GoTrue emails
+  (`resetPasswordForEmail(..., redirectTo: 'fam://reset-password')` in both
+  clients). The link carries the recovery tokens in the URI fragment; the app
+  rewrites it to `/auth/reset-password` (keeping the fragment) and
+  `supabase_flutter` / supabase-js turn those tokens into a short-lived
+  recovery session, after which the screen calls `updateUser({password})`. A
+  link that expired or was already used arrives without tokens: the screen says
+  so and offers a fresh link instead of failing. Without custom SMTP the email
+  only reaches team addresses (see `docs/DEPLOYMENT.md`).
 - Session storage on mobile: the platform secure store via a custom adapter —
   `expo-secure-store` (Expo) and `flutter_secure_storage` (Flutter). The refresh
   token normally never lands in plain preferences; when — and only when — the
@@ -121,6 +127,14 @@ fam/
   sign-out (ASSUMPTIONS A14).
 - Invitation deep-link tokens are held in the same secure store until accepted;
   reading or writing them is best-effort and can never block a sign-in.
+- Push registration has one server contract (`register_device_token`, which
+  upserts on the token) shared by both clients. The Expo client obtains an Expo
+  push token and registers it on launch and on sign-in; the Flutter client goes
+  through the same `registerPushToken()` seam (`lib/core/push.dart`) but ships
+  **no provider** yet — Android push needs an FCM `google-services.json` that is
+  not committed, so the hook is a no-op until one is supplied. Switching it on
+  is implementing `PushTokenSource` and calling `setPushTokenSource`, with no
+  server or UI change. See ASSUMPTIONS A31.
 - Biometrics gate **opening an existing session**, never replace credentials.
 - Org roles: `owner`, `manager`, `staff`, `viewer`. A **tenant** is not a role —
   it is a `tenants` row linked to a user who then sees only their own data.

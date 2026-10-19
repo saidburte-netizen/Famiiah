@@ -39,11 +39,42 @@ void main() {
       );
     });
 
-    test('leaves other fam links to the auth guard', () {
+    test('maps the reset-password link and keeps its fragment', () {
       expect(
-        deepLinkRedirect(Uri.parse('fam://reset-password#access_token=x')),
-        isNull,
+        deepLinkRedirect(Uri.parse('fam://reset-password#access_token=x&type=recovery')),
+        '/auth/reset-password#access_token=x&type=recovery',
       );
+    });
+
+    test('maps a bare reset-password link', () {
+      expect(deepLinkRedirect(Uri.parse('fam://reset-password')), '/auth/reset-password');
+    });
+
+    test('leaves unknown fam links to the auth guard', () {
+      expect(deepLinkRedirect(Uri.parse('fam://something-else')), isNull);
+    });
+  });
+
+  group('isAuthCallbackLink', () {
+    test('recognises a recovery link (tokens in the fragment)', () {
+      expect(
+        isAuthCallbackLink(
+          Uri.parse('fam://reset-password#access_token=a&refresh_token=b&type=recovery'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('recognises a PKCE callback link (code in the query)', () {
+      expect(isAuthCallbackLink(Uri.parse('fam://reset-password?code=abc')), isTrue);
+    });
+
+    test('leaves the invitation link alone', () {
+      expect(isAuthCallbackLink(Uri.parse('fam://invite?token=abc123')), isFalse);
+    });
+
+    test('leaves an ordinary in-app location alone', () {
+      expect(isAuthCallbackLink(Uri.parse('fam://invite')), isFalse);
     });
   });
 }

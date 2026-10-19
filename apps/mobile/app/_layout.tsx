@@ -5,9 +5,10 @@ import Constants from "expo-constants";
 import { ActivityIndicator, Linking, Platform, Pressable, Text, View } from "react-native";
 import { QueryProvider } from "@/lib/query";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { hasSupabaseEnv } from "@/lib/supabase";
+import { getSupabase, hasSupabaseEnv } from "@/lib/supabase";
 import { checkVersionGate, type GateDecision } from "@/lib/version-gate";
 import { colors } from "@/theme/tokens";
+import { isAuthCallbackUrl, parseRecoveryTokens } from "@fam/shared";
 
 // Render errors bubble here instead of white-screening the app.
 export { ErrorBoundary } from "@/components/error-boundary";
@@ -35,6 +36,32 @@ function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
 
+  // Password reset: the recovery email links to `fam://reset-password` with the
+  // tokens in the URI fragment (`#access_token=…&type=recovery`). supabase-js is
+  // configured with `detectSessionInUrl: false` (its URL detection only runs in
+  // a browser), so nothing turns those tokens into a session on its own —
+  // without this the reset link is a dead end. We parse the fragment ourselves
+  // and hand the tokens to `setSession`, which the reset screen then reads its
+  // session from. Scoped to auth callbacks so the invite link is left alone.
+  useEffect(() => {
+    function handle(url: string | null) {
+      if (!url || !isAuthCallbackUrl(url)) return;
+      const tokens = parseRecoveryTokens(url);
+      if (!tokens) return;
+      getSupabase()
+        .auth.setSession({
+          access_token: tokens.accessToken,
+          refresh_token: tokens.refreshToken,
+        })
+        .catch(() => {
+          /* expired/already-used link — the reset screen shows a friendly notice */
+        });
+    }
+    Linking.getInitialURL().then(handle).catch(() => undefined);
+    const sub = Linking.addEventListener("url", ({ url }) => handle(url));
+    return () => sub.remove();
+  }, []);
+
   // Version gate: blocks the app when the backend requires an update.
   useEffect(() => {
     if (loading) return;
@@ -58,9 +85,13 @@ function RootNavigator() {
     // Signed in but without a membership yet: the create-workspace screen must
     // stay reachable, otherwise sign-up with email confirmation disabled dead-ends.
     const onCreateOrg = inAuthGroup && segs[1] === "create-organization";
+    // The password-reset link creates a *recovery* session, so this screen is
+    // reachable while signed in — without the exception the user would be sent
+    // to the tabs before they could choose a new password.
+    const onResetPassword = inAuthGroup && segs[1] === "reset-password";
     if (!session && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (session && inAuthGroup && !onInvite && !onCreateOrg) {
+    } else if (session && inAuthGroup && !onInvite && !onCreateOrg && !onResetPassword) {
       router.replace("/(app)/(tabs)");
     }
   }, [loading, session, segments, router, gate]);

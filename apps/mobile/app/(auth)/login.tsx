@@ -16,17 +16,20 @@ export default function LoginScreen() {
   const [busy, setBusy] = useState(false);
 
   async function signIn() {
-    setBusy(true);
     setError(null);
+    // Validate before flipping the button into its loading state, otherwise a
+    // rejected identifier would leave the spinner up forever (the early return
+    // skips the finally block that clears it).
+    const id = identifier.trim();
+    const email = id.includes("@") ? id : null;
+    const phone = email ? null : toE164(id);
+    if (!email && !phone) {
+      setError(t("error.invalidPhone"));
+      return;
+    }
+    setBusy(true);
     try {
       const supabase = getSupabase();
-      const id = identifier.trim();
-      const email = id.includes("@") ? id : null;
-      const phone = email ? null : toE164(id);
-      if (!email && !phone) {
-        setError(t("error.invalidPhone"));
-        return;
-      }
       // GoTrue takes one identifier per request: a verified email account or
       // a phone account. Both shapes are supported so older email accounts
       // still sign in.

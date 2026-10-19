@@ -7,6 +7,7 @@ import '../screens/auth/create_organization.dart';
 import '../screens/auth/forgot_password.dart';
 import '../screens/auth/invite.dart';
 import '../screens/auth/login.dart';
+import '../screens/auth/reset_password.dart';
 import '../screens/auth/sign_up.dart';
 import '../screens/home/dashboard.dart';
 import '../screens/notifications/notifications.dart';
@@ -71,6 +72,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/auth/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/auth/sign-up', builder: (_, __) => const SignUpScreen()),
       GoRoute(path: '/auth/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(path: '/auth/reset-password', builder: (_, __) => const ResetPasswordScreen()),
       GoRoute(path: '/auth/create-organization', builder: (_, __) => const CreateOrganizationScreen()),
       GoRoute(
         path: '/invite',

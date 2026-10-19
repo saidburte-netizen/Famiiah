@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { CreateTenantWithLeaseSchema } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { createTenantWithLease, listVacantUnits, type VacantUnit } from "@/features/api";
+import { queryKeys } from "@/lib/query";
 import { userMessage } from "@/lib/errors";
 
 export default function NewTenantScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ unitId?: string }>();
   const { orgId } = useOrg();
 
@@ -84,6 +87,11 @@ export default function NewTenantScreen() {
     setBusy(true);
     try {
       await createTenantWithLease(parsed.data);
+      // A new tenant flips a unit from vacant to rented and adds an active
+      // lease: refresh the tenants, properties, dashboard and rent caches.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tenants(orgId, "all") });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.properties(orgId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(orgId) });
       router.replace("/(app)/(tabs)/tenants");
     } catch (err) {
       setError(userMessage(err));

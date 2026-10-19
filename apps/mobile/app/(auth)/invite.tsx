@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Crypto from "expo-crypto";
+import { normalizeError } from "@fam/shared";
 import { Button, Card, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { getSupabase } from "@/lib/supabase";
@@ -35,14 +36,16 @@ export default function InviteScreen() {
         setState("done");
         setTimeout(() => router.replace("/(app)/(tabs)"), 800);
       } catch (err) {
-        const message = userMessage(err);
-        setError(
-          message === "invalid_token"
+        // `userMessage()` already returns the localized string, so the
+        // refinement has to look at the *error key*, not at the message text.
+        const key = normalizeError(err).key;
+        const message =
+          key === "invalid_token"
             ? "This invitation is invalid or has already been used."
-            : message === "invitation_expired"
+            : key === "invitation_expired"
               ? "This invitation has expired. Ask an admin to send a new one."
-              : message,
-        );
+              : userMessage(err);
+        setError(message);
         setState("error");
       }
     },

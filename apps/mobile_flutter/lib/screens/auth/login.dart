@@ -31,8 +31,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    // Accounts created from the sign-up form sign in with their phone number;
-    // the field still accepts an email so pre-existing email accounts work.
+    // One field takes both shapes: a value containing `@` goes to GoTrue as an
+    // email (what the sign-up form creates and what pre-existing accounts use),
+    // anything else is normalised to E.164 and sent as a phone number (enabled
+    // later, once Providers → Phone is on).
     final identifier = _identifier.text.trim();
     final email = looksLikeEmail(identifier) ? identifier : null;
     final phone = email == null ? toE164(identifier) : null;

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AssignTenantToUnitSchema } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -12,6 +12,7 @@ import { userMessage } from "@/lib/errors";
 
 export default function AssignTenantScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{
     id: string;
     propertyId?: string;
@@ -60,6 +61,10 @@ export default function AssignTenantScreen() {
     setBusy(true);
     try {
       await assignTenantToUnit(parsed.data);
+      // Assigning flips the unit to rented and gives the tenant an active lease.
+      await queryClient.invalidateQueries({ queryKey: ["properties"] });
+      await queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       if (params.propertyId) {
         // Replacing remounts the property screen so its units refetch.
         router.replace(`/(app)/properties/${params.propertyId}`);

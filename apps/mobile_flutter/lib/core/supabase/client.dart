@@ -1,6 +1,7 @@
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../routing/deep_links.dart';
 import 'secure_local_storage.dart';
 
 /// Compile-time configuration keys (pass via `--dart-define`).
@@ -26,7 +27,16 @@ Future<void> initSupabase() async {
     authOptions: const FlutterAuthClientOptions(
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUri: false,
+      // Required for password reset: the recovery link GoTrue emails carries
+      // `#access_token=…&type=recovery`, and this observer is what exchanges it
+      // for a session before the reset screen renders. Without it the link is a
+      // dead end.
+      //
+      // Scoped to *auth callbacks only*, so the invitation link
+      // (`fam://invite?token=…`, which the router handles) is never mistaken for
+      // one: the predicate is true only when the link carries auth parameters.
+      detectSessionInUri: true,
+      detectSessionInUriPredicate: isAuthCallbackLink,
       // Keep the refresh token in the platform secure store, not in plain
       // preferences. Mirrors the RN client's expo-secure-store adapter.
       localStorage: SecureLocalStorage(),

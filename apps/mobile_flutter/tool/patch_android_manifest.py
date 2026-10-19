@@ -2,10 +2,10 @@
 """Patch a generated AndroidManifest.xml for release use.
 
 `flutter create` only emits the LAUNCHER intent filter, so without this the
-invite link never reaches the app and the invite screen is unreachable. It also
-puts `android.permission.INTERNET` only in the *debug* and *profile* manifests,
-never in the main one — a release build therefore has no permission to open
-sockets and every API call fails with a network error while the phone's
+invite link (and the password-reset link GoTrue emails) never reaches the app.
+It also puts `android.permission.INTERNET` only in the *debug* and *profile*
+manifests, never in the main one — a release build therefore has no permission
+to open sockets and every API call fails with a network error while the phone's
 browser reaches the same host fine. Both patches are idempotent, and the file
 is always re-validated, so a bad rewrite fails here with a clear message
 instead of later inside Gradle's manifest merger.
@@ -71,7 +71,7 @@ def patch(path):
         line_start = source.rfind("\n", 0, index) + 1
         source = source[:line_start] + INTENT_FILTER + source[line_start:]
         changed = True
-        print("Added the {0}:// invite deep link to {1}".format(SCHEME, path))
+        print("Added the {0}:// deep-link scheme (invite + reset-password) to {1}".format(SCHEME, path))
 
     if changed:
         with open(path, "w", encoding="utf-8") as handle:

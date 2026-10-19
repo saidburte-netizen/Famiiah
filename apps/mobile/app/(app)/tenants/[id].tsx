@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Modal, ScrollView, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatMoney } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -37,6 +38,7 @@ interface TenantLease {
 export default function TenantDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
   const [leases, setLeases] = useState<TenantLease[]>([]);
   const [charges, setCharges] = useState<ChargeRow[]>([]);
@@ -156,6 +158,12 @@ export default function TenantDetailScreen() {
         onDone={async () => {
           setLeaseModal(false);
           await load();
+          // Renewing/terminating changes the tenant list, the rent overview and
+          // the dashboard's overdue/occupancy numbers. Prefix keys invalidate
+          // every cached variant (each tab passes its own org/filter/month).
+          await queryClient.invalidateQueries({ queryKey: ["tenants"] });
+          await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+          await queryClient.invalidateQueries({ queryKey: ["rent-overview"] });
         }}
       />
     </Screen>

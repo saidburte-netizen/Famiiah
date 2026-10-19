@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, View } from "react-native";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatMoney } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
@@ -22,6 +23,7 @@ interface PaymentRow {
 export default function PaymentsScreen() {
   const { orgId, role } = useOrg();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PaymentRow | null>(null);
@@ -97,6 +99,10 @@ export default function PaymentsScreen() {
         onDone={async () => {
           setSelected(null);
           await load();
+          // A void reverses an allocation: refresh the rent/dashboard caches the
+          // other screens read from.
+          await queryClient.invalidateQueries({ queryKey: ["rent-overview"] });
+          await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         }}
       />
     </Screen>

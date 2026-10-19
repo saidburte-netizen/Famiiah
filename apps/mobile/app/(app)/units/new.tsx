@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
@@ -14,6 +14,7 @@ const KINDS = ["shop", "apartment", "office", "storage"] as const;
 /** Global "new unit" entry point used by the dashboard quick actions. */
 export default function NewUnitScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { orgId } = useOrg();
 
   const [propertyId, setPropertyId] = useState<string | null>(null);
@@ -56,6 +57,9 @@ export default function NewUnitScreen() {
         floorLabel: floorLabel.trim() || undefined,
         monthlyRent: monthlyRent.trim() || "0",
       });
+      // Unit counts feed the properties tab and the dashboard.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.properties(orgId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(orgId) });
       router.back();
     } catch (e) {
       setError(userMessage(e));

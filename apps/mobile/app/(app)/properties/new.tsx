@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { CreatePropertySchema, type CreatePropertyInput } from "@fam/shared";
 import { Button, Card, Field, Screen, Text } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { useOrg } from "@/lib/org";
 import { createProperty } from "@/features/api";
+import { queryKeys } from "@/lib/query";
 import { userMessage } from "@/lib/errors";
 
 const TYPES = ["residential", "commercial", "mixed_use"] as const;
 
 export default function NewPropertyScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { orgId } = useOrg();
   const [name, setName] = useState("");
   const [type, setType] = useState<(typeof TYPES)[number]>("residential");
@@ -46,6 +49,10 @@ export default function NewPropertyScreen() {
     setBusy(true);
     try {
       await createProperty(orgId, parsed.data);
+      // The list caches are 30s-stale, so without this the properties tab and
+      // the dashboard would show the old set after `router.back()`.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.properties(orgId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(orgId) });
       router.back();
     } catch (err) {
       setError(userMessage(err));
