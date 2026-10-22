@@ -1,25 +1,40 @@
 name: CD
 
-# Continuous deployment. Runs manually (choose the environment) or on a
-# version tag. Database migrations are forward-only and run before functions
-# and mobile so the backend is never ahead of the clients.
+# Continuous deployment. Trigger it by hand from the Actions tab (choose what to
+# deploy) or by pushing a version tag.
 #
-# Deploys: database, edge functions, mobile (Android/Play).
-# The admin web app is intentionally NOT deployed by CD — host it separately if
-# you need it. CI still typechecks and builds apps/admin on every push.
+# Deploys: database migrations, edge functions, and — opt-in — the Expo mobile
+# app (Android/Play). The admin web app is intentionally NOT deployed here; host
+# it separately if you need it (CI still typechecks and builds apps/admin).
+#
+# Triggering this is enough to deploy the backend on the free stack: it needs
+# only SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD and SUPABASE_URL, which are
+# already configured. The project ref is derived from SUPABASE_URL, so you do
+# not have to add a SUPABASE_PROJECT_ID secret (if you do add one, it wins).
+# EXPO_TOKEN is only needed by the opt-in `mobile` component.
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: Target environment
-        type: choice
-        options: [staging, production]
-        default: staging
       components:
-        description: components to deploy — all | db,functions,mobile
+        description: >-
+          Components to deploy. Use "db,functions" for the backend (the usual
+          choice), "all" to also build the Expo mobile app with EAS, or one of
+          "db" / "functions" / "mobile".
         type: string
-        default: all
+        default: db,functions
+      baseline:
+        description: >-
+          Migration-history baseline. "auto" (recommended) marks migrations
+          0001-0019 as already applied when the remote history is empty, so only
+          0020 runs. "never" just pushes. "always" forces the baseline.
+        type: choice
+        options: [auto, never, always]
+        default: auto
+      environment:
+        description: Informational label only (no approval gate is configured)
+        type: string
+        default: production
   push:
     tags: ["v*"]
 
@@ -38,7 +53,6 @@ jobs:
       github.event.inputs.components == 'all' ||
       contains(github.event.inputs.components, 'db')
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v3
@@ -46,14 +60,66 @@ jobs:
           # Pinned: resolving `latest` hits the GitHub API and fails the job with
           # "rate limit exceeded". v3 installs the CLI from npm.
           version: 2.121.0
-      - name: Link project and push migrations
+      - name: Resolve project ref
+        id: project
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
-          supabase link --project-ref "$SUPABASE_PROJECT_ID" -p "$SUPABASE_DB_PASSWORD"
-          supabase db push
+          set -e
+          ref="$SUPABASE_PROJECT_ID"
+          if [ -z "$ref" ]; then
+            : "${SUPABASE_URL:?Set SUPABASE_URL (or SUPABASE_PROJECT_ID) in the repo secrets}"
+            # https://<ref>.supabase.co -> <ref>
+            ref="${SUPABASE_URL#https://}"
+            ref="${ref#http://}"
+            ref="${ref%%.supabase.co*}"
+            ref="${ref%%/*}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Deploying to project ref: $ref"
+      - name: Link project and push migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          BASELINE: ${{ github.event.inputs.baseline || 'auto' }}
+          PROJECT_REF: ${{ steps.project.outputs.ref }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
+
+          echo "::group::Pending migrations (dry run)"
+          supabase db push --linked --dry-run | tee /tmp/pending.txt || true
+          echo "::endgroup::"
+
+          # This project's first 19 migrations were originally applied by hand
+          # through the dashboard SQL Editor, so they may be missing from
+          # supabase_migrations.schema_migrations. Re-running them would fail on
+          # objects that already exist. Baseline them as applied first, so only
+          # new migrations (0020+) actually run.
+          #
+          # Local files are named NNNN_name.sql, so the dry-run lists versions
+          # like `0001`, `0020`. Only versions <= 0019 are baselined; anything
+          # newer is expected to be genuinely new and is left to `db push`.
+          baseline_versions=""
+          if [ "$BASELINE" = "always" ]; then
+            baseline_versions="0001 0002 0003 0004 0005 0006 0007 0008 0009 0010 0011 0012 0013 0014 0015 0016 0017 0018 0019"
+          elif [ "$BASELINE" = "auto" ]; then
+            baseline_versions=$(grep -oE '\b0[0-1][0-9]{2}_|\b0[0-1][0-9]{2}\b' /tmp/pending.txt 2>/dev/null \
+              | sed 's/_$//' | awk '$1 <= "0019"' | sort -u | tr '\n' ' ' || true)
+          fi
+
+          if [ -n "${baseline_versions// /}" ]; then
+            echo "::notice::Baselining already-applied migrations: $baseline_versions"
+            # shellcheck disable=SC2086
+            supabase migration repair --linked --status applied $baseline_versions --yes
+          else
+            echo "No baseline needed (mode=$BASELINE)."
+          fi
+
+          echo "::group::Applying migrations"
+          supabase db push --linked --yes
+          echo "::endgroup::"
 
   functions:
     name: Deploy Edge Functions
@@ -64,7 +130,6 @@ jobs:
        github.event.inputs.components == 'all' ||
        contains(github.event.inputs.components, 'functions'))
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v3
@@ -72,27 +137,91 @@ jobs:
           # Pinned: resolving `latest` hits the GitHub API and fails the job with
           # "rate limit exceeded". v3 installs the CLI from npm.
           version: 2.121.0
+      - name: Resolve project ref
+        id: project
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -e
+          ref="$SUPABASE_PROJECT_ID"
+          if [ -z "$ref" ]; then
+            : "${SUPABASE_URL:?Set SUPABASE_URL (or SUPABASE_PROJECT_ID) in the repo secrets}"
+            ref="${SUPABASE_URL#https://}"
+            ref="${ref#http://}"
+            ref="${ref%%.supabase.co*}"
+            ref="${ref%%/*}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Deploying to project ref: $ref"
       - name: Deploy Edge Functions
-        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_ID"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_REF: ${{ steps.project.outputs.ref }}
+        run: |
+          set -euo pipefail
+          # Link so the CLI reads supabase/config.toml per-function settings
+          # (notably verify_jwt for payment-webhook). The DB password is
+          # optional for functions, but passing it keeps link non-interactive.
+          supabase link --project-ref "$PROJECT_REF" -p "${SUPABASE_DB_PASSWORD:-}"
+          supabase functions deploy --project-ref "$PROJECT_REF"
+
+      - name: Set Edge Function secrets (project-level)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJECT_REF: ${{ steps.project.outputs.ref }}
+          # Values the functions read at runtime. SUPABASE_URL / ANON / SERVICE
+          # ROLE are already repo secrets; the rest are optional and only set
+          # when provided (email, push, webhook signing, CORS).
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EMAIL_PROVIDER_KEY: ${{ secrets.EMAIL_PROVIDER_KEY }}
+          CHAPA_WEBHOOK_SECRET: ${{ secrets.CHAPA_WEBHOOK_SECRET }}
+          EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+        run: |
+          set -euo pipefail
+          args=()
+          add() { if [ -n "${2:-}" ]; then args+=("$1=$2"); fi; }
+          add SUPABASE_URL "$SUPABASE_URL"
+          add SUPABASE_PUBLISHABLE_KEY "$SUPABASE_ANON_KEY"
+          add SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
+          add EMAIL_PROVIDER_KEY "$EMAIL_PROVIDER_KEY"
+          add CHAPA_WEBHOOK_SECRET "$CHAPA_WEBHOOK_SECRET"
+          add EXPO_ACCESS_TOKEN "$EXPO_ACCESS_TOKEN"
+          add ALLOWED_ORIGINS "$ALLOWED_ORIGINS"
+
+          if [ "${#args[@]}" -eq 0 ]; then
+            echo "::warning::No function secrets provided; functions deployed without runtime secrets."
+            exit 0
+          fi
+          echo "Setting ${#args[@]} function secret(s)..."
+          supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}"
 
   mobile:
     name: Build mobile (EAS, Android)
-    needs: [db]
+    # Opt-in only: this needs EXPO_TOKEN and publishes the Expo app. It never
+    # runs for the default "db,functions" backend deploy, so the missing Expo
+    # secret cannot fail a backend release.
     if: >-
-      always() && (needs.db.result == 'success' || needs.db.result == 'skipped') &&
-      (github.event_name == 'push' ||
-       github.event.inputs.components == 'all' ||
-       contains(github.event.inputs.components, 'mobile'))
+      github.event.inputs.components == 'all' ||
+      contains(github.event.inputs.components, 'mobile')
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Require EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN is not set. Add it to the repo secrets, or deploy the backend only (components = db,functions)."
+            exit 1
+          fi
       - run: npm install --global eas-cli
       # When the Android upload keystore is provided as secrets, write it and a
       # credentials.json locally and build with the `ci` profile
@@ -147,7 +276,11 @@ jobs:
 
   release:
     name: GitHub release
-    if: github.event_name == 'push'
+    # Tag pushes only. `always()` lets this run when the opt-in `mobile` job was
+    # skipped, which is the normal case for a backend-only tag.
+    if: >-
+      always() && github.event_name == 'push' &&
+      needs.db.result != 'failure' && needs.functions.result != 'failure'
     needs: [db, functions, mobile]
     runs-on: ubuntu-latest
     steps:
