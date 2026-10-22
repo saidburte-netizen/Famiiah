@@ -6,6 +6,7 @@ import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -74,47 +75,104 @@ class _NewPropertyScreenState extends ConsumerState<NewPropertyScreen> {
   Widget build(BuildContext context) {
     return FamPage(
       title: 'New property',
+      subtitle: 'A building or a block of shops',
       child: ListView(
         children: [
           if (_error != null) ...[
-            Text(_error!, style: const TextStyle(color: FamColors.danger)),
-            const SizedBox(height: 12),
+            FamNotice.error(_error!),
+            const SizedBox(height: 14),
           ],
+          const FamSectionHeader(title: 'Details'),
+          const SizedBox(height: 10),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FamField(label: 'Name', controller: _name),
-                const SizedBox(height: 12),
-                const Text('Type', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                const SizedBox(height: 8),
+                FamField(
+                  label: 'Name',
+                  hint: 'e.g. Bole Tower',
+                  controller: _name,
+                  prefixIcon: Icons.apartment_rounded,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Type',
+                  style: TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: FamColors.textLabel,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   children: _types
                       .map((t) => Expanded(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               child: _type == t
-                                  ? FilledButton(onPressed: () => setState(() => _type = t), child: Text(t.replaceAll('_', ' ')))
-                                  : OutlinedButton(onPressed: () => setState(() => _type = t), child: Text(t.replaceAll('_', ' '))),
+                                  ? FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        minimumSize: const Size(0, 44),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      ),
+                                      onPressed: () => setState(() => _type = t),
+                                      child: Text(
+                                        t.replaceAll('_', ' '),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    )
+                                  : OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize: const Size(0, 44),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      ),
+                                      onPressed: () => setState(() => _type = t),
+                                      child: Text(
+                                        t.replaceAll('_', ' '),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
                             ),
                           ))
                       .toList(),
                 ),
-                const SizedBox(height: 12),
-                FamField(label: 'Address line', controller: _addressLine),
-                const SizedBox(height: 12),
-                FamField(label: 'Sub-city', controller: _subCity),
-                const SizedBox(height: 12),
-                FamField(label: 'City', controller: _city),
-                const SizedBox(height: 12),
-                FamField(label: 'Floors', controller: _floors, keyboardType: TextInputType.number),
-                const SizedBox(height: 12),
-                FamField(label: 'Notes', controller: _notes, maxLines: 3),
                 const SizedBox(height: 16),
-                FilledButton(onPressed: _busy ? null : _submit, child: const Text('Create property')),
+                FamField(
+                  label: 'Address line',
+                  hint: 'Street or landmark',
+                  controller: _addressLine,
+                  prefixIcon: Icons.place_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(label: 'Sub-city', controller: _subCity, prefixIcon: Icons.map_outlined),
+                const SizedBox(height: 14),
+                FamField(label: 'City', controller: _city, prefixIcon: Icons.location_city_outlined),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Floors',
+                  controller: _floors,
+                  keyboardType: TextInputType.number,
+                  prefixIcon: Icons.stairs_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(label: 'Notes', controller: _notes, maxLines: 3, prefixIcon: Icons.notes_rounded),
               ],
             ),
           ),
+          const SizedBox(height: 18),
+          FamPrimaryButton(
+            label: 'Create property',
+            icon: Icons.check_rounded,
+            loading: _busy,
+            onPressed: _busy ? null : _submit,
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

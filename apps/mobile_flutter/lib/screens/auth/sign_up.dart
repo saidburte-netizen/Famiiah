@@ -8,6 +8,7 @@ import '../../core/invite_store.dart';
 import '../../core/supabase/client.dart';
 import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/ui.dart';
 
 /// Sign-up now collects a unique @handle (optional) and a terms toggle that has
@@ -208,27 +209,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
   /// The terms toggle. Sign-up is refused until it is ticked; the acceptance
   /// time is sent along so `profiles.accept_terms_at` records it.
   Widget _termsRow() {
-    return InkWell(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _busy ? null : () => setState(() => _acceptedTerms = !_acceptedTerms),
-      borderRadius: BorderRadius.circular(FamRadius.button),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: FamColors.white,
-          borderRadius: BorderRadius.circular(FamRadius.button),
-          border: Border.all(color: _acceptedTerms ? FamColors.royal : FamColors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              _acceptedTerms ? Icons.check_box : Icons.check_box_outline_blank,
-              color: _acceptedTerms ? FamColors.royal : FamColors.textMuted,
-              size: 22,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: _acceptedTerms ? FamColors.royal : FamColors.white,
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(
+                color: _acceptedTerms ? FamColors.royal : FamColors.borderStrong,
+                width: 1.5,
+              ),
             ),
-            const SizedBox(width: 10),
-            Expanded(child: Text(t('auth.acceptTerms'))),
-          ],
-        ),
+            child: _acceptedTerms
+                ? const Icon(Icons.check_rounded, size: 15, color: FamColors.white)
+                : null,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              t('auth.acceptTerms'),
+              style: const TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textLabel,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -240,63 +256,182 @@ class _SignUpScreenState extends State<SignUpScreen> {
     // project enables Providers → Phone and a phone sign-up returns no session.
     if (pendingPhone != null) return _confirmationScreen(pendingPhone);
 
-    return FamScreen(
-      child: ListView(
-        children: [
-          Text('Create account', style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 16),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      backgroundColor: FamColors.white,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+          children: [
+            Row(
               children: [
-                if (_error != null) ...[
-                  Text(_error!, style: const TextStyle(color: FamColors.danger)),
-                  const SizedBox(height: 12),
+                FamIconButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  background: FamColors.background,
+                  size: 44,
+                  tooltip: 'Back',
+                  onPressed: () => context.go('/auth/login'),
+                ),
+                const Spacer(),
+                const Text(
+                  'Fam',
+                  style: TextStyle(
+                    fontFamily: FamFonts.display,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: FamColors.navy,
+                  ),
+                ),
+                const Spacer(),
+                const SizedBox(width: 44),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Create your account',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 28,
+                height: 1.12,
+                fontWeight: FontWeight.w800,
+                color: FamColors.navy,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Set up your portfolio in a few minutes.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 14,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textLabel,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: FamColors.royal,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                for (var i = 0; i < 2; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: FamColors.border,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
                 ],
-                if (_notice != null) ...[
-                  Text(_notice!, style: const TextStyle(color: FamColors.royal)),
-                  const SizedBox(height: 12),
-                ],
-                FamField(
-                  label: t('auth.handle'),
-                  controller: _handle,
-                  keyboardType: TextInputType.text,
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Your details',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: FamColors.textLabel,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_error != null) ...[
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
+            ],
+            if (_notice != null) ...[
+              FamNotice(_notice!),
+              const SizedBox(height: 14),
+            ],
+            FamField(
+              label: t('auth.handle'),
+              hint: 'optional',
+              controller: _handle,
+              keyboardType: TextInputType.text,
+              prefixIcon: Icons.alternate_email_rounded,
+              autocorrect: false,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Optional — your public name.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 14),
+            FamField(
+              label: t('auth.email'),
+              hint: 'you@example.com',
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icons.mail_outline_rounded,
+              autocorrect: false,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.email],
+            ),
+            const SizedBox(height: 14),
+            FamField(
+              label: t('auth.password'),
+              hint: 'Create a password',
+              controller: _password,
+              obscureText: true,
+              prefixIcon: Icons.lock_outline_rounded,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.newPassword],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'At least 8 characters, with an uppercase letter and a number.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 18),
+            _termsRow(),
+            const SizedBox(height: 20),
+            FamPrimaryButton(
+              label: t('auth.signUp'),
+              loading: _busy,
+              onPressed: _busy ? null : _submit,
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Already a member?',
+                  style: TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: FamColors.textLabel,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                FamField(
-                  label: t('auth.email'),
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 12),
-                FamField(label: t('auth.password'), controller: _password, obscureText: true),
-                const SizedBox(height: 6),
-                Text(
-                  'At least 8 characters, with an uppercase letter and a number.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: FamColors.textMuted),
-                ),
-                const SizedBox(height: 12),
-                _termsRow(),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _busy ? null : _submit,
-                  child: _busy
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(t('auth.signUp')),
+                TextButton(
+                  onPressed: () => context.go('/auth/login'),
+                  child: Text(t('auth.signIn')),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(onPressed: () => context.go('/auth/login'), child: Text(t('auth.signIn'))),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -307,49 +442,73 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return FamScreen(
       child: ListView(
         children: [
-          Text(t('auth.verifyPhoneTitle'), style: Theme.of(context).textTheme.displayLarge),
+          const SizedBox(height: 8),
+          const FamLogo(size: 56, glow: true),
+          const SizedBox(height: 18),
+          Text(
+            t('auth.verifyPhoneTitle'),
+            style: const TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: FamColors.navy,
+            ),
+          ),
           const SizedBox(height: 16),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (_error != null) ...[
-                  Text(_error!, style: const TextStyle(color: FamColors.danger)),
-                  const SizedBox(height: 12),
+                  FamNotice.error(_error!),
+                  const SizedBox(height: 14),
                 ],
                 if (_notice != null) ...[
-                  Text(_notice!, style: const TextStyle(color: FamColors.royal)),
-                  const SizedBox(height: 12),
+                  FamNotice(_notice!),
+                  const SizedBox(height: 14),
                 ],
-                Text(t('auth.verifyPhoneBody')),
-                const SizedBox(height: 4),
-                Text(phone, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
+                Text(
+                  t('auth.verifyPhoneBody'),
+                  style: const TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 14,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                    color: FamColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  phone,
+                  style: const TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: FamColors.navy,
+                  ),
+                ),
+                const SizedBox(height: 16),
                 FamField(
                   label: t('auth.otpCode'),
                   controller: _code,
                   keyboardType: TextInputType.number,
+                  prefixIcon: Icons.password_rounded,
                 ),
-                const SizedBox(height: 16),
-                FilledButton(
+                const SizedBox(height: 18),
+                FamPrimaryButton(
+                  label: t('auth.verify'),
+                  loading: _busy,
                   onPressed: _busy ? null : _verify,
-                  child: _busy
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(t('auth.verify')),
                 ),
-                const SizedBox(height: 8),
-                OutlinedButton(
+                const SizedBox(height: 10),
+                FamSecondaryButton(
+                  label: t('auth.resendCode'),
                   onPressed: _busy ? null : _resend,
-                  child: Text(t('auth.resendCode')),
                 ),
-                const SizedBox(height: 8),
-                OutlinedButton(
+                const SizedBox(height: 10),
+                FamSecondaryButton(
+                  label: t('auth.changeNumber'),
                   onPressed: _busy ? null : () => setState(() => _pendingPhone = null),
-                  child: Text(t('auth.changeNumber')),
                 ),
               ],
             ),

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
+import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/ui.dart';
 
 /// First-run: the signed-in user creates their organization (becomes owner).
@@ -49,28 +51,60 @@ class _CreateOrganizationScreenState extends ConsumerState<CreateOrganizationScr
     return FamScreen(
       child: ListView(
         children: [
-          Text('Create your organization', style: Theme.of(context).textTheme.displayLarge),
-          const Text("You'll be the owner of this workspace."),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          const FamLogo(size: 56, glow: true),
+          const SizedBox(height: 18),
+          const Text(
+            'Create your organization',
+            style: TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: FamColors.navy,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "You'll be the owner of this workspace.",
+            style: TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+              color: FamColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 20),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (_error != null) ...[
-                  Text(_error!, style: const TextStyle(color: Color(0xFFB42318))),
-                  const SizedBox(height: 8),
+                  FamNotice.error(_error!),
+                  const SizedBox(height: 14),
                 ],
-                FamField(label: 'Organization name', controller: _name),
-                const SizedBox(height: 16),
-                FilledButton(
+                FamField(
+                  label: 'Organization name',
+                  hint: 'e.g. Burte Holdings',
+                  controller: _name,
+                  prefixIcon: Icons.business_outlined,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _busy ? null : _create(),
+                ),
+                const SizedBox(height: 18),
+                FamPrimaryButton(
+                  label: 'Create organization',
+                  loading: _busy,
                   onPressed: _busy ? null : _create,
-                  child: const Text('Create organization'),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(onPressed: () => context.go('/auth/login'), child: const Text('I have an invitation')),
+          FamSecondaryButton(
+            label: 'I have an invitation',
+            onPressed: () => context.go('/auth/login'),
+          ),
         ],
       ),
     );

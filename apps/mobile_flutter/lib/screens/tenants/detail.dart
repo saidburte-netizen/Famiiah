@@ -6,6 +6,7 @@ import '../../core/errors/user_message.dart';
 import '../../core/money/money.dart';
 import '../../features/api.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -45,14 +46,61 @@ class TenantDetailScreen extends ConsumerWidget {
           return ListView(
             children: [
               FamCard(
+                child: Row(
+                  children: [
+                    FamAvatar(name: '${t['full_name'] ?? '—'}', size: 56),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${t['full_name'] ?? '—'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: FamFonts.body,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: FamColors.navy,
+                            ),
+                          ),
+                          if (t['business_name'] != null)
+                            Text(
+                              '${t['business_name']}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: FamFonts.body,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: FamColors.textMuted,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              FamCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${t['full_name'] ?? '—'}',
-                        style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                    if (t['business_name'] != null) Text('${t['business_name']}', style: const TextStyle(color: FamColors.textMuted)),
-                    Text('${t['phone'] ?? 'no phone'}', style: const TextStyle(color: FamColors.textMuted)),
-                    Text('${t['email'] ?? 'no email'}', style: const TextStyle(color: FamColors.textMuted)),
+                    const FamSectionHeader(title: 'Contact'),
+                    const SizedBox(height: 10),
+                    FamInfoRow(
+                      label: 'Phone',
+                      value: '${t['phone'] ?? 'no phone'}',
+                      icon: Icons.phone_outlined,
+                    ),
+                    const Divider(),
+                    FamInfoRow(
+                      label: 'Email',
+                      value: '${t['email'] ?? 'no email'}',
+                      icon: Icons.mail_outline_rounded,
+                    ),
                   ],
                 ),
               ),
@@ -62,28 +110,50 @@ class TenantDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Active lease · ${lease['unit_code'] ?? 'unit'}',
-                          style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                      Text(
-                        '${lease['start_date']} → ${lease['end_date'] ?? 'open'} · ${formatMoney(lease['monthly_rent'])}/mo',
-                        style: const TextStyle(color: FamColors.textMuted),
-                      ),
-                      if (lease['deposit_amount'] != null)
-                        Text('Deposit ${formatMoney(lease['deposit_amount'])}', style: const TextStyle(color: FamColors.textMuted)),
+                      FamBadge(label: 'Active lease · ${lease['unit_code'] ?? 'unit'}'),
                       const SizedBox(height: 12),
+                      Text(
+                        '${lease['start_date']} → ${lease['end_date'] ?? 'open'} · '
+                        '${formatMoney(lease['monthly_rent'], decimals: 0)}/mo',
+                        style: const TextStyle(
+                          fontFamily: FamFonts.body,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: FamColors.text,
+                        ),
+                      ),
+                      if (lease['deposit_amount'] != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Deposit ${formatMoney(lease['deposit_amount'], decimals: 0)}',
+                          style: const TextStyle(
+                            fontFamily: FamFonts.body,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: FamColors.textMuted,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 14),
                       Row(
                         children: [
                           Expanded(
-                            child: FilledButton(
-                              onPressed: () => context.push('/app/payments/new?leaseId=${lease['id']}'),
-                              child: const Text('Record payment'),
+                            child: FamPrimaryButton(
+                              label: 'Record payment',
+                              height: 48,
+                              dense: true,
+                              onPressed: () =>
+                                  context.push('/app/payments/new?leaseId=${lease['id']}'),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 10),
                           Expanded(
-                            child: OutlinedButton(
+                            child: FamSecondaryButton(
+                              label: 'Manage',
+                              height: 48,
+                              dense: true,
+                              filled: true,
                               onPressed: () => _showManageSheet(context, ref, lease),
-                              child: const Text('Manage'),
                             ),
                           ),
                         ],
@@ -92,27 +162,59 @@ class TenantDetailScreen extends ConsumerWidget {
                   ),
                 )
               else
-                const FamCard(child: EmptyState(message: 'No active lease.')),
+                const FamCard(
+                  child: EmptyState(
+                    icon: Icons.description_outlined,
+                    title: 'No active lease',
+                    message: 'This tenant has no lease running right now.',
+                  ),
+                ),
               const SizedBox(height: 12),
               FamCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Charges', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                    const FamSectionHeader(title: 'Charges'),
+                    const SizedBox(height: 8),
                     if (data.charges.isEmpty)
                       const EmptyState(message: 'No charges yet.')
                     else
-                      ...data.charges.map((c) => Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('${c['due_date']}', style: const TextStyle(color: FamColors.textMuted)),
-                              Text(formatMoney(c['amount']), style: const TextStyle(color: FamColors.textMuted)),
-                              Text('${c['status']}',
-                                  style: TextStyle(
+                      ...data.charges.map((c) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${c['due_date']}',
+                                    style: const TextStyle(
+                                      fontFamily: FamFonts.body,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: FamColors.text,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  formatMoney(c['amount'], decimals: 0),
+                                  style: const TextStyle(
+                                    fontFamily: FamFonts.body,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: c['status'] == 'overdue' ? FamColors.danger : FamColors.textMuted,
-                                  )),
-                            ],
+                                    color: FamColors.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                FamBadge(
+                                  label: '${c['status']}',
+                                  foreground: c['status'] == 'overdue'
+                                      ? FamColors.danger
+                                      : FamColors.textMuted,
+                                  background: c['status'] == 'overdue'
+                                      ? FamColors.dangerBg
+                                      : FamColors.chipBg,
+                                ),
+                              ],
+                            ),
                           )),
                   ],
                 ),
@@ -122,14 +224,23 @@ class TenantDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Lease history', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                    const FamSectionHeader(title: 'Lease history'),
+                    const SizedBox(height: 8),
                     if (data.leases.isEmpty)
                       const EmptyState(message: 'None.')
                     else
-                      ...data.leases.map((l) => Text(
-                            '${l['start_date']} → ${l['end_date'] ?? 'open'} · ${l['status']}'
-                            '${l['ended_reason'] != null ? ' (${l['ended_reason']})' : ''}',
-                            style: const TextStyle(color: FamColors.textMuted),
+                      ...data.leases.map((l) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Text(
+                              '${l['start_date']} → ${l['end_date'] ?? 'open'} · ${l['status']}'
+                              '${l['ended_reason'] != null ? ' (${l['ended_reason']})' : ''}',
+                              style: const TextStyle(
+                                fontFamily: FamFonts.body,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: FamColors.textMuted,
+                              ),
+                            ),
                           )),
                   ],
                 ),
@@ -210,55 +321,70 @@ class _ManageLeaseSheetState extends State<_ManageLeaseSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Manage lease', style: Theme.of(context).textTheme.displayLarge?.copyWith(color: FamColors.midnight)),
-            const SizedBox(height: 12),
-            if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: FamColors.danger)),
-              const SizedBox(height: 8),
-            ],
-            FamCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _mode == 'renew'
-                            ? FilledButton(onPressed: () => setState(() => _mode = 'renew'), child: const Text('Renew'))
-                            : OutlinedButton(onPressed: () => setState(() => _mode = 'renew'), child: const Text('Renew')),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _mode == 'terminate'
-                            ? FilledButton(onPressed: () => setState(() => _mode = 'terminate'), child: const Text('Terminate'))
-                            : OutlinedButton(onPressed: () => setState(() => _mode = 'terminate'), child: const Text('Terminate')),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  FamField(
-                    label: _mode == 'renew' ? 'New end date (YYYY-MM-DD)' : 'Termination date (YYYY-MM-DD)',
-                    controller: _date,
-                  ),
-                  const SizedBox(height: 12),
-                  if (_mode == 'renew')
-                    FamField(label: 'Monthly rent (ETB)', controller: _rent, keyboardType: TextInputType.number)
-                  else
-                    FamField(label: 'Reason', controller: _reason),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: _busy ? null : _save,
-                    child: Text(_mode == 'renew' ? 'Renew lease' : 'Terminate lease'),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-                ],
+            const Text(
+              'Manage lease',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: FamColors.navy,
               ),
             ),
+            const SizedBox(height: 4),
+            const Text(
+              'Renew the term or end the lease.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_error != null) ...[
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
+            ],
+            FamSegmented(
+              labels: const ['Renew', 'Terminate'],
+              selected: _mode == 'renew' ? 0 : 1,
+              onChanged: (i) => setState(() => _mode = i == 0 ? 'renew' : 'terminate'),
+            ),
+            const SizedBox(height: 18),
+            FamField(
+              label: _mode == 'renew'
+                  ? 'New end date (YYYY-MM-DD)'
+                  : 'Termination date (YYYY-MM-DD)',
+              controller: _date,
+              prefixIcon: Icons.event_outlined,
+            ),
+            const SizedBox(height: 14),
+            if (_mode == 'renew')
+              FamField(
+                label: 'Monthly rent (ETB)',
+                controller: _rent,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                prefixIcon: Icons.payments_outlined,
+              )
+            else
+              FamField(
+                label: 'Reason (optional)',
+                controller: _reason,
+                prefixIcon: Icons.notes_rounded,
+              ),
+            const SizedBox(height: 20),
+            FamPrimaryButton(
+              label: _mode == 'renew' ? 'Renew lease' : 'Terminate lease',
+              loading: _busy,
+              onPressed: _busy ? null : _save,
+            ),
+            const SizedBox(height: 10),
+            FamSecondaryButton(label: 'Cancel', onPressed: () => Navigator.of(context).pop()),
           ],
         ),
       ),

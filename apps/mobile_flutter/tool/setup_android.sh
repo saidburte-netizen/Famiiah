@@ -61,6 +61,40 @@ if [ -f "${manifest}" ]; then
   python3 tool/patch_android_manifest.py "${manifest}"
 fi
 
+# ---- brand launcher icon -------------------------------------------------
+# `flutter create` ships the default Flutter icon. The Fam mark is committed as
+# pre-rendered PNGs (tool/generate_brand_icons.py) so this script only has to
+# copy files — no image tooling in CI. Adaptive icons (API 26+) get a
+# foreground layer on the brand navy background; older devices use the square
+# and round legacy PNGs.
+res="android/app/src/main/res"
+brand="assets/branding/android"
+if [ -d "${brand}" ]; then
+  for dir in "${brand}"/mipmap-*; do
+    [ -d "${dir}" ] || continue
+    name="$(basename "${dir}")"
+    mkdir -p "${res}/${name}"
+    cp -f "${dir}"/*.png "${res}/${name}/"
+  done
+  mkdir -p "${res}/mipmap-anydpi-v26" "${res}/values"
+  for name in ic_launcher ic_launcher_round; do
+    cat > "${res}/mipmap-anydpi-v26/${name}.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+  <background android:drawable="@color/ic_launcher_background" />
+  <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
+XML
+  done
+  cat > "${res}/values/ic_launcher_background.xml" <<'XML'
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="ic_launcher_background">#0A2260</color>
+</resources>
+XML
+  echo "Brand launcher icon installed."
+fi
+
 # flutter_secure_storage needs API 23+; pin the floor explicitly rather than
 # depending on the Flutter template's default.
 if grep -q 'minSdk = flutter.minSdkVersion' android/app/build.gradle.kts 2>/dev/null; then

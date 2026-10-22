@@ -6,6 +6,7 @@ import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 import '../properties/detail.dart';
@@ -92,88 +93,183 @@ class _AssignTenantScreenState extends ConsumerState<AssignTenantScreen> {
 
     return FamPage(
       title: 'Assign tenant',
+      subtitle: 'Tenant and lease for this unit',
       child: ListView(
         children: [
           FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text('Unit ${widget.unitCode ?? widget.unitId}',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                const Text('The unit becomes rented once the lease is created.',
-                    style: TextStyle(color: FamColors.textMuted)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_error != null) ...[
-            Text(_error!, style: const TextStyle(color: FamColors.danger)),
-            const SizedBox(height: 12),
-          ],
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Tenant', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                tenants.when(
-                  loading: () => const FamLoading(),
-                  error: (e, _) =>
-                      ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(assignableTenantsProvider)),
-                  data: (rows) => rows.isEmpty
-                      ? const EmptyState(
-                          message: 'Every tenant already has an active lease. Create a new tenant instead.')
-                      : Column(
-                          children: rows.take(50).map((t) {
-                            final selected = t['id'] == _tenantId;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: InkWell(
-                                onTap: () => setState(() => _tenantId = t['id'] as String?),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: selected ? FamColors.royal : FamColors.border),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: selected ? FamColors.tint : FamColors.white,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${t['full_name'] ?? t['id'].toString().substring(0, 8)}',
-                                          style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                                      if (t['phone'] != null)
-                                        Text('${t['phone']}', style: const TextStyle(color: FamColors.textMuted)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: FamColors.tint,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(Icons.door_front_door_outlined,
+                      size: 22, color: FamColors.royal),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unit ${widget.unitCode ?? widget.unitId}',
+                        style: const TextStyle(
+                          fontFamily: FamFonts.body,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: FamColors.navy,
                         ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'The unit becomes rented once the lease is created.',
+                        style: TextStyle(
+                          fontFamily: FamFonts.body,
+                          fontSize: 12,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                          color: FamColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          if (_error != null) ...[
+            FamNotice.error(_error!),
+            const SizedBox(height: 14),
+          ],
+          const FamSectionHeader(title: 'Tenant'),
+          const SizedBox(height: 10),
+          tenants.when(
+            loading: () => const FamLoading(),
+            error: (e, _) => ErrorState(
+                message: userMessage(e), onRetry: () => ref.invalidate(assignableTenantsProvider)),
+            data: (rows) => rows.isEmpty
+                ? const EmptyState(
+                    icon: Icons.people_alt_rounded,
+                    title: 'No tenant available',
+                    message: 'Every tenant already has an active lease. Create a new tenant instead.',
+                  )
+                : Column(
+                    children: rows.take(50).map((t) {
+                      final selected = t['id'] == _tenantId;
+                      final name = '${t['full_name'] ?? t['id'].toString().substring(0, 8)}';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Material(
+                          color: selected ? FamColors.tint : FamColors.white,
+                          borderRadius: BorderRadius.circular(FamRadius.button),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(FamRadius.button),
+                            onTap: () => setState(() => _tenantId = t['id'] as String?),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: selected ? FamColors.royal : FamColors.border,
+                                  width: selected ? 1.6 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(FamRadius.button),
+                              ),
+                              child: Row(
+                                children: [
+                                  FamAvatar(
+                                    name: name,
+                                    size: 40,
+                                    background: selected ? FamColors.white : FamColors.tint,
+                                    foreground: FamColors.royalMid,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontFamily: FamFonts.body,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: FamColors.navy,
+                                          ),
+                                        ),
+                                        if (t['phone'] != null)
+                                          Text(
+                                            '${t['phone']}',
+                                            style: const TextStyle(
+                                              fontFamily: FamFonts.body,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: FamColors.textMuted,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (selected)
+                                    const Icon(Icons.check_circle_rounded,
+                                        size: 20, color: FamColors.royal),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
+          const SizedBox(height: 16),
+          const FamSectionHeader(title: 'Lease'),
+          const SizedBox(height: 10),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Lease', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                FamField(label: 'Start date (YYYY-MM-DD)', controller: _startDate),
-                const SizedBox(height: 12),
-                FamField(label: 'End date (optional)', controller: _endDate),
-                const SizedBox(height: 12),
-                FamField(label: 'Monthly rent (ETB)', controller: _monthlyRent, keyboardType: TextInputType.number),
-                const SizedBox(height: 12),
-                FamField(label: 'Deposit (ETB)', controller: _deposit, keyboardType: TextInputType.number),
+                FamField(
+                  label: 'Start date (YYYY-MM-DD)',
+                  controller: _startDate,
+                  prefixIcon: Icons.event_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'End date (optional)',
+                  controller: _endDate,
+                  prefixIcon: Icons.event_available_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Monthly rent (ETB)',
+                  controller: _monthlyRent,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  prefixIcon: Icons.payments_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Deposit (ETB)',
+                  controller: _deposit,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  prefixIcon: Icons.savings_outlined,
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : () => _submit(tenants.valueOrNull ?? const []), child: const Text('Assign tenant')),
+          const SizedBox(height: 18),
+          FamPrimaryButton(
+            label: 'Assign tenant',
+            icon: Icons.check_rounded,
+            loading: _busy,
+            onPressed: _busy ? null : () => _submit(tenants.valueOrNull ?? const []),
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

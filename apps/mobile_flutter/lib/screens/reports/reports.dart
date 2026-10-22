@@ -7,6 +7,7 @@ import '../../core/money/money.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -45,6 +46,7 @@ class ReportsScreen extends ConsumerWidget {
 
     return FamPage(
       title: 'Reports',
+      subtitle: 'Collections, occupancy and ageing',
       child: reports.when(
         loading: () => const FamLoading(),
         error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(reportsProvider)),
@@ -54,23 +56,49 @@ class ReportsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Collections (last 6 months)',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                  const FamSectionHeader(title: 'Collections (last 6 months)'),
+                  const SizedBox(height: 8),
                   if (data.collections.isEmpty)
                     const EmptyState(message: 'No data.')
                   else
-                    ...data.collections.map((r) => Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('${r['bucket']}', style: const TextStyle(color: FamColors.textMuted)),
-                            Text('${formatMoney(r['collected'])} / ${formatMoney(r['expected'])}',
-                                style: const TextStyle(color: FamColors.textMuted)),
-                            Text(formatMoney(r['outstanding']),
-                                style: TextStyle(
+                    ...data.collections.map((r) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${r['bucket']}',
+                                  style: const TextStyle(
+                                    fontFamily: FamFonts.body,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: FamColors.text,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                formatMoney(r['collected'], decimals: 0),
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: (r['outstanding'] as num? ?? 0) > 0 ? FamColors.danger : FamColors.textMuted,
-                                )),
-                          ],
+                                  color: FamColors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                formatMoney(r['outstanding'], decimals: 0),
+                                style: TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: (r['outstanding'] as num? ?? 0) > 0
+                                      ? FamColors.danger
+                                      : FamColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
                         )),
                 ],
               ),
@@ -80,19 +108,18 @@ class ReportsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Occupancy', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                  const FamSectionHeader(title: 'Occupancy'),
+                  const SizedBox(height: 8),
                   if (data.occupancy.isEmpty)
                     const EmptyState(message: 'No data.')
                   else
-                    ...data.occupancy.map((r) => Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('${r['bucket']}', style: const TextStyle(color: FamColors.textMuted)),
-                            Text('${r['rented_units']}/${r['total_units']} units',
-                                style: const TextStyle(color: FamColors.textMuted)),
-                            Text('${r['occupancy_pct']}%',
-                                style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                          ],
+                    ...data.occupancy.map((r) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: FamProgress(
+                            value: ((r['occupancy_pct'] as num?)?.toDouble() ?? 0) / 100,
+                            label: '${r['bucket']} · ${r['rented_units']}/${r['total_units']} units',
+                            trailing: '${r['occupancy_pct']}%',
+                          ),
                         )),
                 ],
               ),
@@ -102,27 +129,58 @@ class ReportsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Overdue ageing', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
+                  const FamSectionHeader(title: 'Overdue ageing'),
+                  const SizedBox(height: 8),
                   if (data.ageing.isEmpty)
                     const EmptyState(message: 'Nothing overdue.')
                   else
-                    ...data.ageing.map((r) => Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('${r['ageing']}', style: const TextStyle(color: FamColors.textMuted)),
-                            Text('${r['charges']} charges', style: const TextStyle(color: FamColors.textMuted)),
-                            Text(formatMoney(r['amount']),
-                                style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.danger)),
-                          ],
+                    ...data.ageing.map((r) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${r['ageing']}',
+                                  style: const TextStyle(
+                                    fontFamily: FamFonts.body,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: FamColors.text,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${r['charges']} charges',
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: FamColors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                formatMoney(r['amount'], decimals: 0),
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: FamColors.danger,
+                                ),
+                              ),
+                            ],
+                          ),
                         )),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            OutlinedButton(
+            const SizedBox(height: 16),
+            FamSecondaryButton(
+              label: 'View payment history',
+              icon: Icons.receipt_long_outlined,
               onPressed: () => context.push('/app/payments'),
-              child: const Text('View payment history'),
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),

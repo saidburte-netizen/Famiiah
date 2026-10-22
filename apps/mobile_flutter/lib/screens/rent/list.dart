@@ -7,6 +7,7 @@ import '../../core/money/money.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -24,7 +25,6 @@ class RentScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final org = ref.watch(orgProvider);
     final rent = ref.watch(rentProvider);
-    final text = Theme.of(context).textTheme;
 
     if (org.loading) return const Center(child: CircularProgressIndicator(color: FamColors.royal));
     if (org.error != null) {
@@ -37,54 +37,81 @@ class RentScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Rent', style: text.displayLarge?.copyWith(color: FamColors.midnight)),
-          const SizedBox(height: 12),
+          const FamScreenHeader(
+            title: 'Rent',
+            subtitle: 'Charges, collections and reminders',
+          ),
+          const SizedBox(height: 16),
           rent.when(
             loading: () => const FamLoading(),
             error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(rentProvider)),
             data: (data) {
               final rows = (data['rows'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+              final expected = (data['expected'] as num?)?.toDouble() ?? 0;
+              final collected = (data['collected'] as num?)?.toDouble() ?? 0;
+              final rate = expected <= 0 ? 0.0 : collected / expected;
               return Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    FamHeroCard(
+                      label: 'Collected this month',
+                      value: formatMoney(data['collected'], decimals: 0),
+                      trailing: '${(rate * 100).toStringAsFixed(0)}%',
+                      progress: rate,
+                      caption: '${formatMoney(data['outstanding'], decimals: 0)} outstanding',
+                      height: 92,
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
-                          child: FilledButton(
+                          child: FamPrimaryButton(
+                            label: 'Record',
+                            icon: Icons.add_card_rounded,
+                            height: 48,
+                            dense: true,
                             onPressed: () => context.push('/app/payments/new'),
-                            child: const Text('Record payment'),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(
-                          child: OutlinedButton(
+                          child: FamSecondaryButton(
+                            label: 'History',
+                            icon: Icons.receipt_long_outlined,
+                            height: 48,
+                            dense: true,
+                            filled: true,
                             onPressed: () => context.push('/app/payments'),
-                            child: const Text('History'),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
+                    const SizedBox(height: 10),
+                    FamSecondaryButton(
+                      label: 'Remind unpaid tenants',
+                      icon: Icons.notifications_active_outlined,
+                      height: 48,
+                      dense: true,
                       onPressed: () => _remindUnpaid(context, ref),
-                      child: const Text('Remind unpaid'),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _stat(context, 'Expected', formatMoney(data['expected']))),
-                        Expanded(child: _stat(context, 'Collected', formatMoney(data['collected']))),
-                        Expanded(child: _stat(context, 'Outstanding', formatMoney(data['outstanding']))),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+                    const FamSectionHeader(title: 'This month'),
+                    const SizedBox(height: 10),
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: () async => ref.invalidate(rentProvider),
                         child: rows.isEmpty
-                            ? ListView(children: const [SizedBox(height: 120), EmptyState(message: 'No charges this month.')])
+                            ? ListView(children: const [
+                                SizedBox(height: 80),
+                                EmptyState(
+                                  icon: Icons.event_available_outlined,
+                                  title: 'No charges this month',
+                                  message: 'Once leases are active, their monthly rent shows up here.',
+                                ),
+                              ])
                             : ListView.separated(
+                                padding: const EdgeInsets.only(bottom: 12),
                                 itemCount: rows.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                                 itemBuilder: (context, i) => _rentCard(context, ref, rows[i]),
@@ -115,58 +142,107 @@ class RentScreen extends ConsumerWidget {
     }
   }
 
-  Widget _stat(BuildContext context, String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: FamColors.textMuted)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-      ],
-    );
-  }
-
   Widget _rentCard(BuildContext context, WidgetRef ref, Map<String, dynamic> item) {
     final status = '${item['status']}';
     final owes = ['overdue', 'pending', 'partial'].contains(status);
-    return InkWell(
+    final overdue = status == 'overdue';
+    final name = '${item['tenant_name']}';
+    return FamCard(
       onTap: () => context.push('/app/payments/new?leaseId=${item['lease_id']}'),
-      borderRadius: BorderRadius.circular(FamRadius.card),
-      child: FamCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('${item['tenant_name']}',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                Text(status,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: status == 'overdue' ? FamColors.danger : FamColors.textMuted,
-                    )),
-              ],
-            ),
-            Text('${item['unit_code']} · due ${item['due_date']} · ${formatMoney(item['amount'])}',
-                style: const TextStyle(color: FamColors.textMuted)),
-            Text('Paid ${formatMoney(item['amount_paid'])}', style: const TextStyle(color: FamColors.textMuted)),
-            if (owes) ...[
-              const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  try {
-                    await sendReminder(item['id'] as String);
-                    messenger.showSnackBar(const SnackBar(content: Text('Reminder sent')));
-                  } catch (e) {
-                    messenger.showSnackBar(SnackBar(content: Text(userMessage(e))));
-                  }
-                },
-                child: const Text('Send reminder'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              FamAvatar(
+                name: name,
+                size: 44,
+                background: overdue ? FamColors.dangerBg : FamColors.tint,
+                foreground: overdue ? FamColors.danger : FamColors.royalMid,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: FamFonts.body,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: FamColors.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${item['unit_code']} · due ${item['due_date']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: FamFonts.body,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: FamColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              FamBadge(
+                label: status,
+                foreground: overdue ? FamColors.danger : FamColors.textMuted,
+                background: overdue ? FamColors.dangerBg : FamColors.chipBg,
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Rent ${formatMoney(item['amount'], decimals: 0)}',
+                  style: const TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: FamColors.text,
+                  ),
+                ),
+              ),
+              Text(
+                'Paid ${formatMoney(item['amount_paid'], decimals: 0)}',
+                style: const TextStyle(
+                  fontFamily: FamFonts.body,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: FamColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+          if (owes) ...[
+            const SizedBox(height: 12),
+            FamSecondaryButton(
+              label: 'Send reminder',
+              icon: Icons.notifications_active_outlined,
+              height: 46,
+              dense: true,
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await sendReminder(item['id'] as String);
+                  messenger.showSnackBar(const SnackBar(content: Text('Reminder sent')));
+                } catch (e) {
+                  messenger.showSnackBar(SnackBar(content: Text(userMessage(e))));
+                }
+              },
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

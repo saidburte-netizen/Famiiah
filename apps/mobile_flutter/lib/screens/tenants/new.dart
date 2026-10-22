@@ -6,6 +6,7 @@ import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -106,91 +107,169 @@ class _NewTenantScreenState extends ConsumerState<NewTenantScreen> {
 
     return FamPage(
       title: 'New tenant',
+      subtitle: 'Tenant details and lease',
       child: ListView(
         children: [
           if (_error != null) ...[
-            Text(_error!, style: const TextStyle(color: FamColors.danger)),
-            const SizedBox(height: 12),
+            FamNotice.error(_error!),
+            const SizedBox(height: 14),
           ],
+          const FamSectionHeader(title: 'Unit'),
+          const SizedBox(height: 10),
+          units.when(
+            loading: () => const FamLoading(),
+            error: (e, _) => ErrorState(
+                message: userMessage(e), onRetry: () => ref.invalidate(vacantUnitsProvider)),
+            data: (data) => data.isEmpty
+                ? const EmptyState(
+                    icon: Icons.meeting_room_outlined,
+                    title: 'No vacant units',
+                    message: 'Add units to a property first, then assign a tenant.',
+                  )
+                : Column(
+                    children: data.take(30).map((u) {
+                      final selected = u['id'] == selectedId;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Material(
+                          color: selected ? FamColors.tint : FamColors.white,
+                          borderRadius: BorderRadius.circular(FamRadius.button),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(FamRadius.button),
+                            onTap: () => setState(() => _unitId = u['id'] as String?),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: selected ? FamColors.royal : FamColors.border,
+                                  width: selected ? 1.6 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(FamRadius.button),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${u['code']} — ${u['property_name'] ?? 'Property'}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontFamily: FamFonts.body,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: FamColors.navy,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Rent ${formatMoney(u['monthly_rent'], decimals: 0)}/mo',
+                                          style: const TextStyle(
+                                            fontFamily: FamFonts.body,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: FamColors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (selected)
+                                    const Icon(Icons.check_circle_rounded,
+                                        size: 20, color: FamColors.royal),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
+          const SizedBox(height: 16),
+          const FamSectionHeader(title: 'Tenant'),
+          const SizedBox(height: 10),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Unit', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                units.when(
-                  loading: () => const FamLoading(),
-                  error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(vacantUnitsProvider)),
-                  data: (data) => data.isEmpty
-                      ? const EmptyState(message: 'No vacant units. Add units to a property first.')
-                      : Column(
-                          children: data.take(30).map((u) {
-                            final selected = u['id'] == selectedId;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: InkWell(
-                                onTap: () => setState(() => _unitId = u['id'] as String?),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: selected ? FamColors.royal : FamColors.border),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: selected ? FamColors.tint : FamColors.white,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${u['code']} — ${u['property_name'] ?? 'Property'}',
-                                          style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                                      Text('Rent ${u['monthly_rent']} ETB',
-                                          style: const TextStyle(color: FamColors.textMuted)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                FamField(
+                  label: 'Full name',
+                  hint: 'e.g. Abebe Kebede',
+                  controller: _fullName,
+                  prefixIcon: Icons.person_outline_rounded,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Business name (optional)',
+                  controller: _businessName,
+                  prefixIcon: Icons.storefront_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Phone (optional)',
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  prefixIcon: Icons.phone_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Email (optional)',
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  prefixIcon: Icons.mail_outline_rounded,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Tenant', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                FamField(label: 'Full name', controller: _fullName),
-                const SizedBox(height: 12),
-                FamField(label: 'Business name', controller: _businessName),
-                const SizedBox(height: 12),
-                FamField(label: 'Phone', controller: _phone, keyboardType: TextInputType.phone),
-                const SizedBox(height: 12),
-                FamField(label: 'Email', controller: _email, keyboardType: TextInputType.emailAddress),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Lease', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                FamField(label: 'Start date (YYYY-MM-DD)', controller: _startDate),
-                const SizedBox(height: 12),
-                FamField(label: 'End date (optional)', controller: _endDate),
-                const SizedBox(height: 12),
-                FamField(label: 'Monthly rent (ETB)', controller: _monthlyRent, keyboardType: TextInputType.number),
-                const SizedBox(height: 12),
-                FamField(label: 'Deposit (ETB)', controller: _deposit, keyboardType: TextInputType.number),
-              ],
-            ),
-          ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : () => _submit(rows), child: const Text('Create tenant & lease')),
+          const FamSectionHeader(title: 'Lease'),
+          const SizedBox(height: 10),
+          FamCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FamField(
+                  label: 'Start date (YYYY-MM-DD)',
+                  controller: _startDate,
+                  prefixIcon: Icons.event_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'End date (optional)',
+                  controller: _endDate,
+                  prefixIcon: Icons.event_available_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Monthly rent (ETB)',
+                  hint: 'Defaults to the unit rent',
+                  controller: _monthlyRent,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  prefixIcon: Icons.payments_outlined,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Deposit (ETB)',
+                  controller: _deposit,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  prefixIcon: Icons.savings_outlined,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          FamPrimaryButton(
+            label: 'Create tenant & lease',
+            icon: Icons.check_rounded,
+            loading: _busy,
+            onPressed: _busy ? null : () => _submit(rows),
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

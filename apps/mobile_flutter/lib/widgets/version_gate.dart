@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/supabase/client.dart';
 import '../core/version/gate.dart';
 import '../theme/tokens.dart';
+import 'brand.dart';
 
 /// Blocks the app when the backend requires an update. Fails open on network
 /// error so a flaky connection never bricks the app.
@@ -52,32 +53,62 @@ class _VersionGateState extends ConsumerState<VersionGate> {
     if (decision.kind == GateKind.forceUpdate) {
       return Scaffold(
         backgroundColor: FamColors.midnight,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Update required',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: FamColors.ice, fontSize: 22, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  decision.notes ?? 'A newer version of Fam is required to continue.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: FamColors.ice),
-                ),
-                const SizedBox(height: 16),
-                if (decision.storeUrl != null)
-                  FilledButton(
-                    onPressed: () => launchUrl(Uri.parse(decision.storeUrl!)),
-                    child: const Text('Update now'),
+        body: Stack(
+          children: [
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment(0.2, -1),
+                    end: Alignment(-0.2, 1),
+                    colors: FamGradients.header,
                   ),
-              ],
+                ),
+              ),
             ),
-          ),
+            const Positioned(right: -170, top: -120, child: FamRing(size: 420, opacity: 0.15)),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const FamLogo(size: 84, glow: true),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Update required',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: FamFonts.body,
+                        color: FamColors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      decision.notes ?? 'A newer version of Fam is required to continue.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: FamFonts.body,
+                        color: FamColors.iceSoft,
+                        fontSize: 14,
+                        height: 1.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    if (decision.storeUrl != null)
+                      FamPrimaryButton(
+                        label: 'Update now',
+                        icon: Icons.download_rounded,
+                        onPressed: () => launchUrl(Uri.parse(decision.storeUrl!)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }

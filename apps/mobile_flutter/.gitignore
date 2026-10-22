@@ -12,4 +12,6 @@ build/
 pubspec.lock
 # Generated on demand by tool/setup_android.sh; it carries a binary
 # gradle-wrapper.jar, so the platform project is deliberately not committed.
-android/
+# Anchored to the project root so it does not also hide the committed branding
+# assets under assets/branding/android/.
+/android/

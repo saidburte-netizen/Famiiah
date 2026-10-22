@@ -8,6 +8,7 @@ import '../../core/errors/user_message.dart';
 import '../../core/supabase/client.dart';
 import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/ui.dart';
 
 /// Finish a password reset: the user arrives from the `fam://reset-password`
@@ -88,55 +89,76 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return FamScreen(
       child: ListView(
         children: [
-          Text(t('auth.resetPasswordTitle'), style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 12),
+          const Text(
+            'Set a new password',
+            style: TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: FamColors.navy,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            t('auth.resetPasswordTitle'),
+            style: const TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+              color: FamColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 18),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (_done) ...[
-                  Text(t('auth.passwordUpdated'), style: const TextStyle(color: FamColors.royal)),
-                  const SizedBox(height: 12),
-                  FilledButton(
+                  FamNotice.success(t('auth.passwordUpdated')),
+                  const SizedBox(height: 16),
+                  FamPrimaryButton(
+                    label: 'Continue',
                     onPressed: () => context.go('/app/home'),
-                    child: const Text('Continue'),
                   ),
                 ] else if (_hasSession == null) ...[
                   const Center(child: CircularProgressIndicator(color: FamColors.royal)),
                 ] else if (!_hasSession!) ...[
-                  Text(t('error.invalidToken'), style: const TextStyle(color: FamColors.danger)),
-                  const SizedBox(height: 12),
-                  FilledButton(
+                  FamNotice.error(t('error.invalidToken')),
+                  const SizedBox(height: 16),
+                  FamPrimaryButton(
+                    label: 'Send a new link',
                     onPressed: () => context.go('/auth/forgot-password'),
-                    child: const Text('Send a new link'),
                   ),
                 ] else ...[
                   FamField(
                     label: t('auth.newPassword'),
+                    hint: 'Create a password',
                     controller: _password,
                     obscureText: true,
+                    prefixIcon: Icons.lock_outline_rounded,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _busy ? null : _submit(),
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  const Text(
                     'At least 8 characters, with an uppercase letter and a number.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: FamColors.textMuted),
+                    style: TextStyle(
+                      fontFamily: FamFonts.body,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: FamColors.textMuted,
+                    ),
                   ),
                   if (_error != null) ...[
-                    const SizedBox(height: 8),
-                    Text(_error!, style: const TextStyle(color: FamColors.danger)),
+                    const SizedBox(height: 12),
+                    FamNotice.error(_error!),
                   ],
                   const SizedBox(height: 16),
-                  FilledButton(
+                  FamPrimaryButton(
+                    label: t('auth.updatePassword'),
+                    loading: _busy,
                     onPressed: _busy ? null : _submit,
-                    child: _busy
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(t('auth.updatePassword')),
                   ),
                 ],
               ],

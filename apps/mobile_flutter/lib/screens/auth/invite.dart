@@ -11,6 +11,7 @@ import '../../core/supabase/client.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/ui.dart';
 
 enum _InviteState { checking, needsAuth, accepting, done, error }
@@ -84,8 +85,30 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     return FamScreen(
       child: ListView(
         children: [
-          Text('Organization invitation', style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          const FamLogo(size: 56, glow: true),
+          const SizedBox(height: 18),
+          const Text(
+            'Organization invitation',
+            style: TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: FamColors.navy,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Join the workspace your colleague invited you to.',
+            style: TextStyle(
+              fontFamily: FamFonts.body,
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+              color: FamColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 20),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -95,22 +118,36 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                   const SizedBox(height: 12),
                   Text(
                     _state == _InviteState.checking ? 'Checking your invitation…' : 'Joining the organization…',
-                    style: const TextStyle(color: FamColors.textMuted),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: FamFonts.body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: FamColors.textMuted,
+                    ),
                   ),
                 ],
-                if (_state == _InviteState.done)
-                  const Text('You have joined the organization.', style: TextStyle(color: FamColors.royal)),
+                if (_state == _InviteState.done) const FamNotice.success('You have joined the organization.'),
                 if (_state == _InviteState.error) ...[
-                  Text(_error ?? 'Something went wrong.', style: const TextStyle(color: FamColors.danger)),
-                  const SizedBox(height: 12),
-                  FilledButton(onPressed: () => context.go('/auth/login'), child: const Text('Go to sign in')),
+                  FamNotice.error(_error ?? 'Something went wrong.'),
+                  const SizedBox(height: 14),
+                  FamPrimaryButton(
+                    label: 'Go to sign in',
+                    onPressed: () => context.go('/auth/login'),
+                  ),
                 ],
                 if (_state == _InviteState.needsAuth) ...[
-                  const Text('Sign in or create an account to accept this invitation. Your invitation is saved.'),
-                  const SizedBox(height: 12),
-                  FilledButton(onPressed: () => context.go('/auth/login'), child: const Text('Sign in')),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => context.go('/auth/sign-up'), child: const Text('Create an account')),
+                  const FamNotice('Sign in or create an account to accept this invitation. Your invitation is saved.'),
+                  const SizedBox(height: 14),
+                  FamPrimaryButton(
+                    label: 'Sign in',
+                    onPressed: () => context.go('/auth/login'),
+                  ),
+                  const SizedBox(height: 10),
+                  FamSecondaryButton(
+                    label: 'Create an account',
+                    onPressed: () => context.go('/auth/sign-up'),
+                  ),
                 ],
               ],
             ),

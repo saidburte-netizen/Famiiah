@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/errors/user_message.dart';
+import '../../core/money/money.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -89,87 +91,159 @@ class _NewPaymentScreenState extends ConsumerState<NewPaymentScreen> {
 
     return FamPage(
       title: 'Record payment',
+      subtitle: 'Against an active lease',
       child: ListView(
         children: [
           if (_error != null) ...[
-            Text(_error!, style: const TextStyle(color: FamColors.danger)),
-            const SizedBox(height: 12),
+            FamNotice.error(_error!),
+            const SizedBox(height: 14),
           ],
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Lease', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                leases.when(
-                  loading: () => const FamLoading(),
-                  error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(activeLeasesProvider)),
-                  data: (data) => data.isEmpty
-                      ? const EmptyState(message: 'No active leases. Create a tenant first.')
-                      : Column(
-                          children: data.take(50).map((l) {
-                            final isSel = l['id'] == selectedId;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: InkWell(
-                                onTap: () => setState(() => _leaseId = l['id'] as String?),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: isSel ? FamColors.royal : FamColors.border),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: isSel ? FamColors.tint : FamColors.white,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('${l['label'] ?? l['id'].toString().substring(0, 8)}',
-                                          style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                                      Text('${l['monthly_rent']} ETB', style: const TextStyle(color: FamColors.textMuted)),
-                                    ],
-                                  ),
+          const FamSectionHeader(title: 'Lease'),
+          const SizedBox(height: 10),
+          leases.when(
+            loading: () => const FamLoading(),
+            error: (e, _) => ErrorState(
+                message: userMessage(e), onRetry: () => ref.invalidate(activeLeasesProvider)),
+            data: (data) => data.isEmpty
+                ? const EmptyState(
+                    icon: Icons.people_alt_rounded,
+                    title: 'No active leases',
+                    message: 'Add a tenant first, then record their rent here.',
+                  )
+                : Column(
+                    children: data.take(50).map((l) {
+                      final isSel = l['id'] == selectedId;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Material(
+                          color: isSel ? FamColors.tint : FamColors.white,
+                          borderRadius: BorderRadius.circular(FamRadius.button),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(FamRadius.button),
+                            onTap: () => setState(() => _leaseId = l['id'] as String?),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: isSel ? FamColors.royal : FamColors.border,
+                                  width: isSel ? 1.6 : 1,
                                 ),
+                                borderRadius: BorderRadius.circular(FamRadius.button),
                               ),
-                            );
-                          }).toList(),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${l['label'] ?? l['id'].toString().substring(0, 8)}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontFamily: FamFonts.body,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: FamColors.navy,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${formatMoney(l['monthly_rent'], decimals: 0)}/mo',
+                                    style: const TextStyle(
+                                      fontFamily: FamFonts.body,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: FamColors.textMuted,
+                                    ),
+                                  ),
+                                  if (isSel) ...[
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.check_circle_rounded,
+                                        size: 20, color: FamColors.royal),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                ),
-              ],
-            ),
+                      );
+                    }).toList(),
+                  ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          const FamSectionHeader(title: 'Payment'),
+          const SizedBox(height: 10),
           FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Payment', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
                 FamField(
-                  label: selected.isNotEmpty ? 'Amount (ETB) · rent ${selected.first['monthly_rent']}' : 'Amount (ETB)',
+                  label: selected.isNotEmpty
+                      ? 'Amount (ETB) · rent ${formatMoney(selected.first['monthly_rent'], decimals: 0)}'
+                      : 'Amount (ETB)',
+                  hint: '0.00',
                   controller: _amount,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  prefixIcon: Icons.payments_outlined,
                 ),
-                const SizedBox(height: 12),
-                const Text('Method', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
+                const Text(
+                  'Method',
+                  style: TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: FamColors.textLabel,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: _methods
                       .map((m) => _method == m
-                          ? FilledButton(onPressed: () => setState(() => _method = m), child: Text(m.replaceAll('_', ' ')))
-                          : OutlinedButton(onPressed: () => setState(() => _method = m), child: Text(m.replaceAll('_', ' '))))
+                          ? FilledButton(
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(0, 44),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                              ),
+                              onPressed: () => setState(() => _method = m),
+                              child: Text(m.replaceAll('_', ' ')),
+                            )
+                          : OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 44),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                              ),
+                              onPressed: () => setState(() => _method = m),
+                              child: Text(m.replaceAll('_', ' ')),
+                            ))
                       .toList(),
                 ),
-                const SizedBox(height: 12),
-                FamField(label: 'Reference', controller: _reference),
-                const SizedBox(height: 12),
-                FamField(label: 'Notes', controller: _notes, maxLines: 3),
+                const SizedBox(height: 16),
+                FamField(
+                  label: 'Reference (optional)',
+                  hint: 'Bank or Telebirr reference',
+                  controller: _reference,
+                  prefixIcon: Icons.tag_rounded,
+                ),
+                const SizedBox(height: 14),
+                FamField(
+                  label: 'Notes (optional)',
+                  controller: _notes,
+                  maxLines: 3,
+                  prefixIcon: Icons.notes_rounded,
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : () => _submit(rows), child: const Text('Save payment')),
+          const SizedBox(height: 18),
+          FamPrimaryButton(
+            label: 'Save payment',
+            icon: Icons.check_rounded,
+            loading: _busy,
+            onPressed: _busy ? null : () => _submit(rows),
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

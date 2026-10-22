@@ -5,6 +5,7 @@ import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/ui.dart';
 import '../properties/list.dart' show propertiesProvider;
 
@@ -95,86 +96,192 @@ class _UnitFormState extends ConsumerState<UnitForm> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('New unit',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(color: FamColors.midnight)),
-            const SizedBox(height: 12),
+            const Text(
+              'New unit',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: FamColors.navy,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'A shop, apartment, office or store inside a property.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 16),
             if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: FamColors.danger)),
-              const SizedBox(height: 8),
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
+            ],
+            if (needsPicker) ...[
+              const Text(
+                'Property',
+                style: TextStyle(
+                  fontFamily: FamFonts.body,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: FamColors.textLabel,
+                ),
+              ),
+              const SizedBox(height: 10),
+              properties.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: FamColors.royal)),
+                error: (e, _) => ErrorState(
+                    message: userMessage(e), onRetry: () => ref.invalidate(propertiesProvider)),
+                data: (list) => list.isEmpty
+                    ? const EmptyState(
+                        icon: Icons.apartment_rounded,
+                        title: 'No property yet',
+                        message: 'Create a property first, then add units to it.',
+                      )
+                    : Column(
+                        children: list.take(30).map((p) {
+                          final selected = p['id'] == selectedId;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Material(
+                              color: selected ? FamColors.tint : FamColors.white,
+                              borderRadius: BorderRadius.circular(FamRadius.button),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(FamRadius.button),
+                                onTap: () => setState(() => _propertyId = p['id'] as String?),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: selected ? FamColors.royal : FamColors.border,
+                                      width: selected ? 1.6 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(FamRadius.button),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${p['name']}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontFamily: FamFonts.body,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: FamColors.navy,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${p['type']} · ${p['city'] ?? '—'}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontFamily: FamFonts.body,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: FamColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (selected)
+                                        const Icon(Icons.check_circle_rounded,
+                                            size: 20, color: FamColors.royal),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+              ),
+              const SizedBox(height: 16),
             ],
             FamCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (needsPicker) ...[
-                    const Text('Property', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                    const SizedBox(height: 8),
-                    properties.when(
-                      loading: () => const Center(child: CircularProgressIndicator(color: FamColors.royal)),
-                      error: (e, _) => ErrorState(
-                          message: userMessage(e), onRetry: () => ref.invalidate(propertiesProvider)),
-                      data: (list) => list.isEmpty
-                          ? const EmptyState(message: 'Create a property first.')
-                          : Column(
-                              children: list.take(30).map((p) {
-                                final selected = p['id'] == selectedId;
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: InkWell(
-                                    onTap: () => setState(() => _propertyId = p['id'] as String?),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: selected ? FamColors.royal : FamColors.border),
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: selected ? FamColors.tint : FamColors.white,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('${p['name']}',
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w600, color: FamColors.navy)),
-                                          Text('${p['type']} · ${p['city'] ?? '—'}',
-                                              style: const TextStyle(color: FamColors.textMuted)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                  FamField(
+                    label: 'Unit code',
+                    hint: 'e.g. A-101',
+                    controller: _code,
+                    prefixIcon: Icons.confirmation_number_outlined,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Kind',
+                    style: TextStyle(
+                      fontFamily: FamFonts.body,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: FamColors.textLabel,
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  FamField(label: 'Unit code', controller: _code),
-                  const SizedBox(height: 12),
-                  const Text('Kind', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                  const SizedBox(height: 8),
+                  ),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: _unitKinds
                         .map((k) => _kind == k
-                            ? FilledButton(onPressed: () => setState(() => _kind = k), child: Text(k))
-                            : OutlinedButton(onPressed: () => setState(() => _kind = k), child: Text(k)))
+                            ? FilledButton(
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(0, 44),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                ),
+                                onPressed: () => setState(() => _kind = k),
+                                child: Text(k),
+                              )
+                            : OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(0, 44),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                ),
+                                onPressed: () => setState(() => _kind = k),
+                                child: Text(k),
+                              ))
                         .toList(),
                   ),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Floor label', controller: _floorLabel),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Monthly rent (ETB)', controller: _monthlyRent, keyboardType: TextInputType.number),
-                  const SizedBox(height: 12),
-                  FilledButton(onPressed: _busy ? null : () => _save(rows), child: const Text('Save unit')),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => Navigator.of(context).maybePop(), child: const Text('Cancel')),
+                  const SizedBox(height: 16),
+                  FamField(
+                    label: 'Floor label (optional)',
+                    hint: 'e.g. Ground floor',
+                    controller: _floorLabel,
+                    prefixIcon: Icons.layers_outlined,
+                  ),
+                  const SizedBox(height: 14),
+                  FamField(
+                    label: 'Monthly rent (ETB)',
+                    controller: _monthlyRent,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    prefixIcon: Icons.payments_outlined,
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 18),
+            FamPrimaryButton(
+              label: 'Save unit',
+              icon: Icons.check_rounded,
+              loading: _busy,
+              onPressed: _busy ? null : () => _save(rows),
+            ),
+            const SizedBox(height: 10),
+            FamSecondaryButton(label: 'Cancel', onPressed: () => Navigator.of(context).maybePop()),
           ],
         ),
       ),

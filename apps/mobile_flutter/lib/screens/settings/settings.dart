@@ -7,6 +7,7 @@ import '../../core/supabase/client.dart';
 import '../../state/auth_notifier.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -24,85 +25,104 @@ class SettingsScreen extends ConsumerWidget {
 
     return FamPage(
       title: 'Settings',
+      subtitle: 'Account and workspace',
       child: ListView(
         children: [
           FamCard(
+            child: Row(
+              children: [
+                FamAvatar(name: name ?? user?.email ?? 'Fam', size: 52),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name ?? 'Signed in',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: FamFonts.body,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: FamColors.navy,
+                        ),
+                      ),
+                      Text(
+                        user?.email ?? '—',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: FamFonts.body,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: FamColors.textMuted,
+                        ),
+                      ),
+                      if (org.role != null) ...[
+                        const SizedBox(height: 4),
+                        FamBadge(label: '${org.role}'),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SettingsLink(
+            icon: Icons.receipt_long_outlined,
+            title: 'Payments',
+            subtitle: 'Every recorded payment, with receipts and voiding.',
+            actionLabel: 'Payment history',
+            onTap: () => context.push('/app/payments'),
+          ),
+          const SizedBox(height: 12),
+          _SettingsLink(
+            icon: Icons.insights_outlined,
+            title: 'Reports',
+            subtitle: 'Collections, occupancy and overdue ageing.',
+            actionLabel: 'Open reports',
+            onTap: () => context.push('/app/reports'),
+          ),
+          const SizedBox(height: 12),
+          _SettingsLink(
+            icon: Icons.notifications_none_rounded,
+            title: 'Notifications',
+            subtitle: 'Reminders, receipts and overdue alerts.',
+            actionLabel: 'Open notifications',
+            onTap: () => context.push('/app/notifications'),
+          ),
+          const SizedBox(height: 12),
+          FamCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Signed in as', style: TextStyle(color: FamColors.textMuted)),
-                Text(name ?? '—',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                Text(user?.email ?? '—', style: const TextStyle(color: FamColors.textMuted)),
-                if (org.role != null)
-                  Text('Role: ${org.role}', style: const TextStyle(color: FamColors.textMuted)),
+                const FamSectionHeader(title: 'About'),
+                const SizedBox(height: 10),
+                FamInfoRow(label: 'App version', value: version, icon: Icons.info_outline_rounded),
+                const Divider(),
+                const FamInfoRow(label: 'Currency', value: 'ETB', icon: Icons.payments_outlined),
+                const Divider(),
+                const FamInfoRow(
+                    label: 'Timezone', value: 'Africa/Addis_Ababa', icon: Icons.public_rounded),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Payments', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const Text('Every recorded payment, with receipts and voiding.',
-                    style: TextStyle(color: FamColors.textMuted)),
-                const SizedBox(height: 8),
-                OutlinedButton(onPressed: () => context.push('/app/payments'), child: const Text('Payment history')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Reports', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const Text('Collections, occupancy and overdue ageing.',
-                    style: TextStyle(color: FamColors.textMuted)),
-                const SizedBox(height: 8),
-                OutlinedButton(onPressed: () => context.push('/app/reports'), child: const Text('Open reports')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Notifications', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const Text('Reminders, receipts and overdue alerts.',
-                    style: TextStyle(color: FamColors.textMuted)),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                    onPressed: () => context.push('/app/notifications'), child: const Text('Open notifications')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('About', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                Text('App version $version', style: const TextStyle(color: FamColors.textMuted)),
-                const Text('Currency ETB · Timezone Africa/Addis_Ababa',
-                    style: TextStyle(color: FamColors.textMuted)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(
+          const SizedBox(height: 16),
+          FamSecondaryButton(
+            label: 'Sign out',
+            icon: Icons.logout_rounded,
+            borderColor: FamColors.danger,
             onPressed: () => _confirmSignOut(context, ref),
-            child: const Text('Sign out'),
           ),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {    final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sign out'),
@@ -122,5 +142,76 @@ class SettingsScreen extends ConsumerWidget {
         SnackBar(content: Text(userMessage(err))),
       );
     }
+  }
+}
+
+/// A settings row: icon tile, title, description and a full-width action.
+class _SettingsLink extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback onTap;
+
+  const _SettingsLink({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FamCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: FamColors.tint,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(icon, size: 22, color: FamColors.royal),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontFamily: FamFonts.body,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: FamColors.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontFamily: FamFonts.body,
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                        color: FamColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          FamSecondaryButton(label: actionLabel, onPressed: onTap, height: 48, dense: true),
+        ],
+      ),
+    );
   }
 }

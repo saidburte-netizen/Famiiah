@@ -7,6 +7,7 @@ import '../../core/money/money.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -45,39 +46,24 @@ class StockScreen extends ConsumerWidget {
 
     return FamPage(
       title: 'Stock',
+      subtitle: 'Items, adjustments and rentals',
       actions: [
-        TextButton(
+        FamIconButton(
+          icon: Icons.handshake_outlined,
+          tooltip: 'Rentals',
+          size: 40,
           onPressed: () => context.push('/app/stock/rentals'),
-          child: const Text('Rentals', style: TextStyle(color: FamColors.white)),
         ),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: filter == 'all'
-                    ? FilledButton(
-                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'all',
-                        child: const Text('All items'))
-                    : OutlinedButton(
-                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'all',
-                        child: const Text('All items')),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: filter == 'low'
-                    ? FilledButton(
-                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'low',
-                        child: const Text('Low stock'))
-                    : OutlinedButton(
-                        onPressed: () => ref.read(stockFilterProvider.notifier).state = 'low',
-                        child: const Text('Low stock')),
-              ),
-            ],
+          FamSegmented(
+            labels: const ['All items', 'Low stock'],
+            selected: filter == 'low' ? 1 : 0,
+            onChanged: (i) => ref.read(stockFilterProvider.notifier).state = i == 1 ? 'low' : 'all',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Expanded(
             child: items.when(
               loading: () => const FamLoading(),
@@ -90,13 +76,16 @@ class StockScreen extends ConsumerWidget {
                     ref.invalidate(filter == 'low' ? lowStockProvider : stockItemsProvider),
                 child: rows.isEmpty
                     ? ListView(children: [
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 80),
                         EmptyState(
+                            icon: Icons.inventory_2_outlined,
+                            title: filter == 'low' ? 'Nothing running low' : 'No stock items yet',
                             message: filter == 'low'
                                 ? 'No items are below their minimum quantity.'
-                                : 'No stock items yet.')
+                                : 'Add items to track quantities, movements and rentals.'),
                       ])
                     : ListView.separated(
+                        padding: const EdgeInsets.only(bottom: 12),
                         itemCount: rows.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, i) {
@@ -109,43 +98,106 @@ class StockScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('${item['name']}',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w700, color: FamColors.navy)),
-                                    Text('${item['quantity']} ${item['uom']}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: low ? FamColors.danger : FamColors.textMuted,
-                                        )),
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: low ? FamColors.dangerBg : FamColors.tint,
+                                        borderRadius: BorderRadius.circular(13),
+                                      ),
+                                      child: Icon(Icons.inventory_2_outlined,
+                                          size: 22,
+                                          color: low ? FamColors.danger : FamColors.royal),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${item['name']}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontFamily: FamFonts.body,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: FamColors.navy,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${item['sku'] ?? 'no sku'}'
+                                            '${item['category'] != null ? ' · ${item['category']}' : ''}'
+                                            '${rentable ? ' · rentable' : ''}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontFamily: FamFonts.body,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: FamColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${item['quantity']}',
+                                          style: TextStyle(
+                                            fontFamily: FamFonts.body,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w800,
+                                            color: low ? FamColors.danger : FamColors.navy,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${item['uom']}',
+                                          style: const TextStyle(
+                                            fontFamily: FamFonts.body,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: FamColors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                                Text(
-                                  '${item['sku'] ?? 'no sku'}'
-                                  '${item['category'] != null ? ' · ${item['category']}' : ''}'
-                                  '${rentable ? ' · rentable' : ''}',
-                                  style: const TextStyle(color: FamColors.textMuted),
-                                ),
-                                if (low)
-                                  Text('Low stock (min ${item['min_quantity']})',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600, color: FamColors.danger)),
-                                const SizedBox(height: 8),
+                                if (low) ...[
+                                  const SizedBox(height: 10),
+                                  FamBadge(
+                                    label: 'Low stock · min ${item['min_quantity']}',
+                                    foreground: FamColors.danger,
+                                    background: FamColors.dangerBg,
+                                    icon: Icons.warning_amber_rounded,
+                                  ),
+                                ],
+                                const SizedBox(height: 14),
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: OutlinedButton(
+                                      child: FamSecondaryButton(
+                                        label: 'Adjust',
+                                        height: 46,
+                                        dense: true,
+                                        filled: true,
                                         onPressed: () => _showAdjust(context, ref, item),
-                                        child: const Text('Adjust'),
                                       ),
                                     ),
                                     if (rentable && (item['quantity'] as num? ?? 0) > 0) ...[
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 10),
                                       Expanded(
-                                        child: FilledButton(
+                                        child: FamPrimaryButton(
+                                          label: 'Rent out',
+                                          height: 46,
+                                          dense: true,
                                           onPressed: () => _showRent(context, ref, item, tenants),
-                                          child: const Text('Rent out'),
                                         ),
                                       ),
                                     ],
@@ -239,50 +291,61 @@ class _AdjustSheetState extends State<_AdjustSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('${widget.item['name']}',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(color: FamColors.midnight)),
-            const SizedBox(height: 12),
-            if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: FamColors.danger)),
-              const SizedBox(height: 8),
-            ],
-            FamCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text('Movement', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: _adjustTypes
-                        .map((t) => Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
-                                child: _type == t
-                                    ? FilledButton(onPressed: () => setState(() => _type = t), child: Text(t))
-                                    : OutlinedButton(onPressed: () => setState(() => _type = t), child: Text(t)),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 12),
-                  FamField(
-                    label: _type == 'adjustment' ? 'Counted quantity' : 'Quantity',
-                    controller: _qty,
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Reason', controller: _reason),
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: _busy ? null : _save, child: const Text('Save')),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-                ],
+            const Text(
+              'Stock movement',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: FamColors.navy,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              '${widget.item['name']} · ${widget.item['quantity']} ${widget.item['uom']} on hand',
+              style: const TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_error != null) ...[
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
+            ],
+            _ChoiceRow(
+              label: 'Movement',
+              options: _adjustTypes,
+              value: _type,
+              onChanged: (v) => setState(() => _type = v),
+            ),
+            const SizedBox(height: 18),
+            FamField(
+              label: _type == 'adjustment' ? 'Counted quantity' : 'Quantity',
+              controller: _qty,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.numbers_rounded,
+            ),
+            const SizedBox(height: 14),
+            FamField(
+              label: 'Reason (optional)',
+              controller: _reason,
+              prefixIcon: Icons.notes_rounded,
+            ),
+            const SizedBox(height: 20),
+            FamPrimaryButton(
+              label: 'Save movement',
+              loading: _busy,
+              onPressed: _busy ? null : _save,
+            ),
+            const SizedBox(height: 10),
+            FamSecondaryButton(label: 'Cancel', onPressed: () => Navigator.of(context).pop()),
           ],
         ),
       ),
@@ -346,54 +409,128 @@ class _RentSheetState extends State<_RentSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Rent out', style: Theme.of(context).textTheme.displayLarge?.copyWith(color: FamColors.midnight)),
+            const Text(
+              'Rent out',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: FamColors.navy,
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               '${widget.item['name']} · ${widget.item['quantity']} ${widget.item['uom']} available'
               '${widget.item['rental_rate'] != null ? ' · ${formatMoney(widget.item['rental_rate'])}/day' : ''}',
-              style: const TextStyle(color: FamColors.textMuted),
+              style: const TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: FamColors.danger)),
-              const SizedBox(height: 8),
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
             ],
+            const FamSectionHeader(title: 'Tenant'),
+            const SizedBox(height: 10),
+            if (widget.tenants.isEmpty)
+              const EmptyState(
+                icon: Icons.people_alt_rounded,
+                title: 'No tenants yet',
+                message: 'Add a tenant before renting stock out.',
+              )
+            else
+              ...widget.tenants.take(30).map((t) {
+                final selected = _tenantId == t['id'];
+                final name = '${t['full_name'] ?? t['id'].toString().substring(0, 8)}';
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Material(
+                    color: selected ? FamColors.tint : FamColors.white,
+                    borderRadius: BorderRadius.circular(FamRadius.button),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(FamRadius.button),
+                      onTap: () => setState(() => _tenantId = t['id'] as String?),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: selected ? FamColors.royal : FamColors.border,
+                            width: selected ? 1.6 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(FamRadius.button),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: FamColors.navy,
+                                ),
+                              ),
+                            ),
+                            if (selected)
+                              const Icon(Icons.check_circle_rounded,
+                                  size: 20, color: FamColors.royal),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            const SizedBox(height: 16),
+            const FamSectionHeader(title: 'Rental'),
+            const SizedBox(height: 10),
             FamCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Tenant', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                  const SizedBox(height: 8),
-                  if (widget.tenants.isEmpty)
-                    const EmptyState(message: 'No tenants yet.')
-                  else
-                    ...widget.tenants.take(30).map((t) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: _tenantId == t['id']
-                              ? FilledButton(
-                                  onPressed: () => setState(() => _tenantId = t['id'] as String?),
-                                  child: Text('${t['full_name'] ?? t['id'].toString().substring(0, 8)}'))
-                              : OutlinedButton(
-                                  onPressed: () => setState(() => _tenantId = t['id'] as String?),
-                                  child: Text('${t['full_name'] ?? t['id'].toString().substring(0, 8)}')),
-                        )),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Quantity', controller: _qty, keyboardType: TextInputType.number),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Daily rate (ETB)', controller: _rate, keyboardType: TextInputType.number),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Due date (YYYY-MM-DD)', controller: _due),
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: _busy ? null : _save, child: const Text('Rent out')),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+                  FamField(
+                    label: 'Quantity',
+                    controller: _qty,
+                    keyboardType: TextInputType.number,
+                    prefixIcon: Icons.numbers_rounded,
+                  ),
+                  const SizedBox(height: 14),
+                  FamField(
+                    label: 'Daily rate (ETB)',
+                    controller: _rate,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    prefixIcon: Icons.payments_outlined,
+                  ),
+                  const SizedBox(height: 14),
+                  FamField(
+                    label: 'Due date (YYYY-MM-DD)',
+                    controller: _due,
+                    prefixIcon: Icons.event_outlined,
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 18),
+            FamPrimaryButton(
+              label: 'Rent out',
+              icon: Icons.check_rounded,
+              loading: _busy,
+              onPressed: _busy ? null : _save,
+            ),
+            const SizedBox(height: 10),
+            FamSecondaryButton(label: 'Cancel', onPressed: () => Navigator.of(context).pop()),
           ],
         ),
       ),

@@ -6,6 +6,7 @@ import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
 
@@ -26,48 +27,73 @@ class AdminScreen extends ConsumerWidget {
     final org = ref.watch(orgProvider);
     final members = ref.watch(membersProvider);
     final isOwner = org.role == 'owner';
-    final text = Theme.of(context).textTheme;
 
     if (org.role != 'owner' && org.role != 'manager') {
-      return const FamScreen(child: EmptyState(message: 'You do not have access to this section.'));
+      return const FamScreen(
+        child: EmptyState(
+          icon: Icons.lock_outline_rounded,
+          title: 'Owners and managers only',
+          message: 'You do not have access to this section.',
+        ),
+      );
     }
 
     return FamScreen(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Admin', style: text.displayLarge?.copyWith(color: FamColors.midnight)),
-          const SizedBox(height: 12),
-          if (isOwner)
-            FilledButton(
-              onPressed: () => _showInvite(context, ref),
-              child: const Text('Invite teammate'),
-            ),
-          const SizedBox(height: 12),
-          FamCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Manage', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.navy)),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () => context.push('/app/reports'),
-                  child: const Text('Reports'),
+          FamScreenHeader(
+            title: 'Admin',
+            subtitle: 'Team and workspace controls',
+            actions: [
+              if (isOwner)
+                FamIconButton(
+                  icon: Icons.person_add_alt_1_rounded,
+                  tooltip: 'Invite teammate',
+                  onPressed: () => _showInvite(context, ref),
                 ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () => context.push('/app/stock'),
-                  child: const Text('Stock'),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () => context.go('/app/properties'),
-                  child: const Text('Properties'),
-                ),
-              ],
-            ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: FamSecondaryButton(
+                  label: 'Reports',
+                  icon: Icons.insights_outlined,
+                  height: 48,
+                  dense: true,
+                  filled: true,
+                  onPressed: () => context.push('/app/reports'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FamSecondaryButton(
+                  label: 'Stock',
+                  icon: Icons.inventory_2_outlined,
+                  height: 48,
+                  dense: true,
+                  filled: true,
+                  onPressed: () => context.push('/app/stock'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FamSecondaryButton(
+                  label: 'Properties',
+                  icon: Icons.apartment_rounded,
+                  height: 48,
+                  dense: true,
+                  filled: true,
+                  onPressed: () => context.go('/app/properties'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          const FamSectionHeader(title: 'Members'),
+          const SizedBox(height: 8),
           Expanded(
             child: members.when(
               loading: () => const FamLoading(),
@@ -75,33 +101,62 @@ class AdminScreen extends ConsumerWidget {
               data: (rows) => RefreshIndicator(
                 onRefresh: () async => ref.invalidate(membersProvider),
                 child: rows.isEmpty
-                    ? ListView(children: const [SizedBox(height: 120), EmptyState(message: 'No members.')])
+                    ? ListView(children: const [
+                        SizedBox(height: 80),
+                        EmptyState(
+                          icon: Icons.people_alt_rounded,
+                          title: 'No members yet',
+                          message: 'Invite a teammate to share this workspace.',
+                        ),
+                      ])
                     : ListView.separated(
+                        padding: const EdgeInsets.only(bottom: 12),
                         itemCount: rows.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, i) {
                           final m = rows[i];
                           final uid = '${m['user_id']}';
+                          final name = '${m['full_name'] ?? uid.substring(0, 8)}';
                           return FamCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            onTap: isOwner ? () => _showManage(context, ref, m) : null,
+                            child: Row(
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('${m['full_name'] ?? uid.substring(0, 8)}',
-                                        style: const TextStyle(fontWeight: FontWeight.w700, color: FamColors.navy)),
-                                    Text('${m['role']}',
-                                        style: const TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                                  ],
-                                ),
-                                Text('${m['status']}', style: const TextStyle(color: FamColors.textMuted)),
-                                if (isOwner) ...[
-                                  const SizedBox(height: 8),
-                                  OutlinedButton(
-                                    onPressed: () => _showManage(context, ref, m),
-                                    child: const Text('Manage'),
+                                FamAvatar(name: name, size: 44),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontFamily: FamFonts.body,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: FamColors.navy,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${m['status']}',
+                                        style: const TextStyle(
+                                          fontFamily: FamFonts.body,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: FamColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                ),
+                                const SizedBox(width: 8),
+                                FamBadge(label: '${m['role']}'),
+                                if (isOwner) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.chevron_right_rounded,
+                                      size: 20, color: FamColors.textMuted),
                                 ],
                               ],
                             ),
@@ -135,6 +190,63 @@ class AdminScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: FamColors.background,
       builder: (_) => _ManageSheet(orgId: orgId, member: member, onDone: () async => ref.invalidate(membersProvider)),
+    );
+  }
+}
+
+/// Shared role/status chooser: the active option is a filled navy pill.
+class _ChoiceRow extends StatelessWidget {
+  final String label;
+  final List<String> options;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _ChoiceRow({
+    required this.label,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: FamFonts.body,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: FamColors.textLabel,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options
+              .map((o) => o == value
+                  ? FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      onPressed: () => onChanged(o),
+                      child: Text(o),
+                    )
+                  : OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      onPressed: () => onChanged(o),
+                      child: Text(o),
+                    ))
+              .toList(),
+        ),
+      ],
     );
   }
 }
@@ -186,42 +298,65 @@ class _InviteSheetState extends State<_InviteSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Invite teammate', style: Theme.of(context).textTheme.displayLarge?.copyWith(color: FamColors.midnight)),
-            const SizedBox(height: 12),
-            if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: FamColors.danger)),
-              const SizedBox(height: 8),
-            ],
-            FamCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FamField(label: 'Email', controller: _email, keyboardType: TextInputType.emailAddress),
-                  const SizedBox(height: 12),
-                  FamField(label: 'Phone (optional)', controller: _phone, keyboardType: TextInputType.phone),
-                  const SizedBox(height: 12),
-                  const Text('Role', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _roles
-                        .map((r) => _role == r
-                            ? FilledButton(onPressed: () => setState(() => _role = r), child: Text(r))
-                            : OutlinedButton(onPressed: () => setState(() => _role = r), child: Text(r)))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: _busy ? null : _save, child: const Text('Send invitation')),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-                ],
+            const Text(
+              'Invite teammate',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: FamColors.navy,
               ),
             ),
+            const SizedBox(height: 4),
+            const Text(
+              'They join the moment they accept the invitation.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_error != null) ...[
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
+            ],
+            FamField(
+              label: 'Email',
+              hint: 'teammate@example.com',
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icons.mail_outline_rounded,
+              autocorrect: false,
+            ),
+            const SizedBox(height: 14),
+            FamField(
+              label: 'Phone (optional)',
+              controller: _phone,
+              keyboardType: TextInputType.phone,
+              prefixIcon: Icons.phone_outlined,
+            ),
+            const SizedBox(height: 18),
+            _ChoiceRow(
+              label: 'Role',
+              options: _roles,
+              value: _role,
+              onChanged: (v) => setState(() => _role = v),
+            ),
+            const SizedBox(height: 20),
+            FamPrimaryButton(
+              label: 'Send invitation',
+              loading: _busy,
+              onPressed: _busy ? null : _save,
+            ),
+            const SizedBox(height: 10),
+            FamSecondaryButton(label: 'Cancel', onPressed: () => Navigator.of(context).pop()),
           ],
         ),
       ),
@@ -265,54 +400,59 @@ class _ManageSheetState extends State<_ManageSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final name = '${widget.member['full_name'] ?? 'Member'}';
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Manage member',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(color: FamColors.midnight)),
-            const SizedBox(height: 12),
-            if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: FamColors.danger)),
-              const SizedBox(height: 8),
-            ],
-            FamCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text('Role', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _roles
-                        .map((r) => _role == r
-                            ? FilledButton(onPressed: () => setState(() => _role = r), child: Text(r))
-                            : OutlinedButton(onPressed: () => setState(() => _role = r), child: Text(r)))
-                        .toList(),
+            Row(
+              children: [
+                FamAvatar(name: name, size: 44),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: FamFonts.body,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: FamColors.navy,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text('Status', style: TextStyle(fontWeight: FontWeight.w600, color: FamColors.textMuted)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _statuses
-                        .map((s) => _status == s
-                            ? FilledButton(onPressed: () => setState(() => _status = s), child: Text(s))
-                            : OutlinedButton(onPressed: () => setState(() => _status = s), child: Text(s)))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(onPressed: _busy ? null : _save, child: const Text('Save')),
-                  const SizedBox(height: 8),
-                  OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-                ],
-              ),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
+            if (_error != null) ...[
+              FamNotice.error(_error!),
+              const SizedBox(height: 14),
+            ],
+            _ChoiceRow(
+              label: 'Role',
+              options: _roles,
+              value: _role,
+              onChanged: (v) => setState(() => _role = v),
+            ),
+            const SizedBox(height: 18),
+            _ChoiceRow(
+              label: 'Status',
+              options: _statuses,
+              value: _status,
+              onChanged: (v) => setState(() => _status = v),
+            ),
+            const SizedBox(height: 20),
+            FamPrimaryButton(
+              label: 'Save',
+              loading: _busy,
+              onPressed: _busy ? null : _save,
+            ),
+            const SizedBox(height: 10),
+            FamSecondaryButton(label: 'Cancel', onPressed: () => Navigator.of(context).pop()),
           ],
         ),
       ),
