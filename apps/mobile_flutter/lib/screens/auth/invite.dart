@@ -137,7 +137,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                   ),
                 ],
                 if (_state == _InviteState.needsAuth) ...[
-                  const FamNotice('Sign in or create an account to accept this invitation. Your invitation is saved.'),
+                  const FamNotice(message: 'Sign in or create an account to accept this invitation. Your invitation is saved.'),
                   const SizedBox(height: 14),
                   FamPrimaryButton(
                     label: 'Sign in',

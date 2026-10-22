@@ -350,7 +350,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 14),
             ],
             if (_notice != null) ...[
-              FamNotice(_notice!),
+              FamNotice(message: _notice!),
               const SizedBox(height: 14),
             ],
             FamField(
@@ -464,7 +464,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 14),
                 ],
                 if (_notice != null) ...[
-                  FamNotice(_notice!),
+                  FamNotice(message: _notice!),
                   const SizedBox(height: 14),
                 ],
                 Text(

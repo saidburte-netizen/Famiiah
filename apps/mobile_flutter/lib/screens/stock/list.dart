@@ -537,3 +537,60 @@ class _RentSheetState extends State<_RentSheet> {
     );
   }
 }
+
+/// Movement chooser: the active option is a filled navy pill.
+class _ChoiceRow extends StatelessWidget {
+  final String label;
+  final List<String> options;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _ChoiceRow({
+    required this.label,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: FamFonts.body,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: FamColors.textLabel,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options
+              .map((o) => o == value
+                  ? FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      onPressed: () => onChanged(o),
+                      child: Text(o),
+                    )
+                  : OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      onPressed: () => onChanged(o),
+                      child: Text(o),
+                    ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+}
