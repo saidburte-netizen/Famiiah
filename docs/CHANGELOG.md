@@ -314,6 +314,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The generated `android/` project and `pubspec.lock` are gitignored so a local
   build cannot sweep them into a commit.
 
+### Verified (sign-up / sign-in without confirmation)
+
+End-to-end audit of the free (no-SMS, no-email-confirmation) account flow against
+the live project (`dlbgnurfuydcziczlzltl`), using the exact payloads the Flutter
+client sends:
+
+- Live auth settings confirm the intended shape: `mailer_autoconfirm: true`
+  (no confirmation email), `external.email: true`, `external.phone: false`
+  (no OTP), `disable_signup: false`.
+- **Sign-up** (`POST /auth/v1/signup`, email + password + `accept_terms_at`)
+  returns a full session immediately (`access_token` + `refresh_token`) with
+  `email_confirmed_at` already set, so the app lands straight in the dashboard —
+  no code to enter and no link to click.
+- The `handle_new_user()` trigger wrote the `profiles` row with
+  `handle = NULL` (the handle field was left blank) and `accept_terms_at` set.
+- `create_organization` made the new user an `owner`/`active` member, so the
+  post-sign-up redirect to the dashboard resolves a real org.
+- **Sign-in** (`grant_type=password`) with the same credentials succeeds
+  (`HTTP 200`, 1 h token) — password-only, no OTP.
+- Every mutation the UI exposes was exercised and returned 200:
+  property, unit, `create_tenant_with_lease`, `record_payment` (receipt no.
+  assigned), `void_payment`, `stock_adjust`, `rent_stock_item`,
+  `return_stock_item`, `renew_lease`, `terminate_lease`,
+  `admin_set_member_role` (the `cannot_demote_last_owner` guard rejects a
+  self-demotion of the only owner), `mark_*_notification_read`,
+  `send_reminders_bulk`.
+- Every read RPC the screens use returns rows: `dashboard_summary`,
+  `list_properties_with_stats`, `list_units`, `list_tenants_with_status`,
+  `rent_overview`, `report_occupancy`, `report_collections`,
+  `report_overdue_ageing`, `admin_list_members`, `list_low_stock`.
+- Every in-app navigation target resolves to a declared `go_router` route, and
+  both `fam://invite` and `fam://reset-password` deep links are registered by
+  `tool/patch_android_manifest.py` (which also adds the release
+  `INTERNET` permission).
+
+**Gap found — Edge Functions are not deployed.** All five functions
+(`invite-member`, `generate-receipt`, `payment-webhook`, `send-reminders`,
+`admin-api`) return `404 NOT_FOUND` on the live project, because `deploy.yml`
+has never run and its `functions` job needs the `SUPABASE_PROJECT_ID` secret
+(currently unset). The only user-visible effect is the Admin screen's **Invite**
+action: `inviteMember()` calls `invite-member`, so it cannot succeed until the
+functions are deployed. The client maps the 404 to the friendly
+"Something went wrong" copy (no raw error), so nothing crashes. Deploy with
+`deploy.yml` (components: `functions`) once `SUPABASE_PROJECT_ID` is set, or
+`supabase functions deploy --project-ref <ref>`.
+
 ### Branding (Flutter mobile)
 
 - The Flutter client now matches the approved design
