@@ -122,7 +122,9 @@ path is referenced by the `submit` profile in `eas.json` and is gitignored.
    - Apply migrations (CD → Run workflow → `components: db`, or paste
      `supabase/migrations/0017` + `0018` into the dashboard SQL Editor) so
      `handle_new_user()` stores the handle and terms acceptance from the
-     sign-up metadata.
+     sign-up metadata. `0019_user_delete_cascade.sql` was applied the same
+     way (dashboard SQL Editor); it is idempotent, so re-running it through
+     `db push` later is harmless.
    - Password reset: the reset screen still sends an **email** link, which
      without custom SMTP only reaches team addresses — phone accounts have no
      self-service reset until SMS OTP recovery is added.
