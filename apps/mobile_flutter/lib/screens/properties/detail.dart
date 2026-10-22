@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors/user_message.dart';
 import '../../core/money/money.dart';
 import '../../features/api.dart';
+import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
@@ -49,6 +50,16 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
 
     return FamPage(
       title: title,
+      actions: [
+        if (async.valueOrNull?.property['deleted_at'] == null)
+          FamIconButton(
+            icon: Icons.archive_outlined,
+            tooltip: t('common.archive'),
+            background: FamColors.background,
+            size: 40,
+            onPressed: () => _archive(context, ref, id),
+          ),
+      ],
       child: async.when(
         loading: () => const FamLoading(),
         error: (e, _) =>
@@ -228,6 +239,29 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                                       background: FamColors.dangerBg,
                                     )
                                   : FamBadge(label: '${u['status']}'),
+                              PopupMenuButton<String>(
+                                tooltip: t('common.manage'),
+                                icon: const Icon(Icons.more_vert_rounded,
+                                    size: 20, color: FamColors.textMuted),
+                                onSelected: (v) {
+                                  if (v == 'archive') {
+                                    _archiveUnit(context, ref, u['id'] as String);
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  PopupMenuItem(
+                                    value: 'archive',
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.archive_outlined,
+                                            size: 18, color: FamColors.danger),
+                                        const SizedBox(width: 10),
+                                        Text(t('common.archive')),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                           if (isVacant) ...[
@@ -284,5 +318,44 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
         onCreated: () async => ref.invalidate(propertyProvider(propertyId)),
       ),
     );
+  }
+
+  /// Archive the whole property. The server refuses while it still has units,
+  /// and the refusal is shown with its own message.
+  Future<void> _archive(BuildContext context, WidgetRef ref, String id) async {
+    final ok = await famConfirm(
+      context,
+      title: t('common.archiveTitle'),
+      message: t('common.archiveBody'),
+      confirmLabel: t('common.archive'),
+      danger: true,
+    );
+    if (!ok) return;
+    try {
+      await archiveProperty(id);
+      if (context.mounted) context.go('/app/properties');
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
+    }
+  }
+
+  /// Archive one unit. Refused while it is still let.
+  Future<void> _archiveUnit(BuildContext context, WidgetRef ref, String unitId) async {
+    final ok = await famConfirm(
+      context,
+      title: t('common.archiveTitle'),
+      message: t('common.archiveBody'),
+      confirmLabel: t('common.archive'),
+      danger: true,
+    );
+    if (!ok) return;
+    try {
+      await archiveUnit(unitId);
+      ref.invalidate(propertyProvider(widget.id));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors/user_message.dart';
 import '../../core/money/money.dart';
 import '../../features/api.dart';
+import '../../i18n/strings.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
@@ -17,13 +18,24 @@ final propertiesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>
   return listPropertiesWithStats(org.orgId!);
 });
 
+/// Archived (soft-deleted) properties, shown when the user toggles the view.
+final archivedPropertiesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final org = ref.watch(orgProvider);
+  if (org.orgId == null) return const [];
+  return listArchivedProperties(org.orgId!);
+});
+
+/// Whether the properties screen is showing the archive instead of live rows.
+final showArchivedPropertiesProvider = StateProvider<bool>((_) => false);
+
 class PropertiesScreen extends ConsumerWidget {
   const PropertiesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final org = ref.watch(orgProvider);
-    final properties = ref.watch(propertiesProvider);
+    final archived = ref.watch(showArchivedPropertiesProvider);
+    final properties = ref.watch(archived ? archivedPropertiesProvider : propertiesProvider);
 
     if (org.loading) return const Center(child: CircularProgressIndicator(color: FamColors.royal));
     if (org.error != null) {
@@ -38,18 +50,39 @@ class PropertiesScreen extends ConsumerWidget {
         children: [
           FamScreenHeader(
             title: 'Properties',
-            subtitle: 'Your buildings and shops',
+            subtitle: archived ? 'Archived properties' : 'Your buildings and shops',
             actions: [
               FamIconButton(
-                icon: Icons.add_rounded,
-                tooltip: 'Add property',
-                onPressed: () => context.push('/app/properties/new'),
+                icon: archived ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                tooltip: archived ? t('common.hideArchived') : t('common.showArchived'),
+                background: FamColors.background,
+                onPressed: () =>
+                    ref.read(showArchivedPropertiesProvider.notifier).state = !archived,
               ),
+              const SizedBox(width: 10),
+              if (!archived)
+                FamIconButton(
+                  icon: Icons.add_rounded,
+                  tooltip: 'Add property',
+                  onPressed: () => context.push('/app/properties/new'),
+                ),
             ],
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: properties.when(
+            child: archived
+                ? _ArchivedList(
+                    provider: archivedPropertiesProvider,
+                    emptyIcon: Icons.archive_outlined,
+                    emptyTitle: t('common.noArchived'),
+                    emptyMessage: 'Properties you archive will appear here so you can restore them.',
+                    onRestore: (row) async {
+                      await restoreProperty(row['id'] as String);
+                      ref.invalidate(archivedPropertiesProvider);
+                      ref.invalidate(propertiesProvider);
+                    },
+                  )
+                : properties.when(
               loading: () => const FamLoading(),
               error: (e, _) => ErrorState(
                 message: userMessage(e),
@@ -141,6 +174,115 @@ class PropertiesScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A read-only list of archived rows with a Restore action on each.
+class _ArchivedList extends ConsumerWidget {
+  final AutoDisposeFutureProvider<List<Map<String, dynamic>>> provider;
+  final IconData emptyIcon;
+  final String emptyTitle;
+  final String emptyMessage;
+  final Future<void> Function(Map<String, dynamic> row) onRestore;
+
+  const _ArchivedList({
+    required this.provider,
+    required this.emptyIcon,
+    required this.emptyTitle,
+    required this.emptyMessage,
+    required this.onRestore,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(provider);
+    return async.when(
+      loading: () => const FamLoading(),
+      error: (e, _) => ErrorState(
+        message: userMessage(e),
+        onRetry: () => ref.invalidate(provider),
+      ),
+      data: (rows) => RefreshIndicator(
+        onRefresh: () async => ref.invalidate(provider),
+        child: rows.isEmpty
+            ? ListView(children: [
+                const SizedBox(height: 80),
+                EmptyState(icon: emptyIcon, title: emptyTitle, message: emptyMessage),
+              ])
+            : ListView.separated(
+                padding: const EdgeInsets.only(bottom: 12),
+                itemCount: rows.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  final r = rows[i];
+                  final label = (r['name'] ?? r['full_name'] ?? r['id'].toString()).toString();
+                  final sub =
+                      (r['type'] ?? r['sku'] ?? r['phone'] ?? '').toString();
+                  return FamCard(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.archive_outlined, size: 22, color: FamColors.textMuted),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: FamColors.navy,
+                                ),
+                              ),
+                              if (sub.isNotEmpty)
+                                Text(
+                                  sub,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontFamily: FamFonts.body,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: FamColors.textMuted,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        FamSecondaryButton(
+                          label: t('common.restore'),
+                          height: 42,
+                          dense: true,
+                          filled: true,
+                          onPressed: () async {
+                            final ok = await famConfirm(
+                              context,
+                              title: t('common.restoreTitle'),
+                              message: t('common.restoreBody'),
+                              confirmLabel: t('common.restore'),
+                            );
+                            if (!ok) return;
+                            try {
+                              await onRestore(r);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(userMessage(e))));
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }

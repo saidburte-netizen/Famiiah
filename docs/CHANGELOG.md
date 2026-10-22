@@ -57,6 +57,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Mobile push**: `lib/push.ts` registers the Expo push token on launch
   (permission prompt → `register_device_token`); tapping a notification
   routes to the Notifications screen.
+- **Archive (Flutter mobile + SQL)**: the app can now remove records the way the
+  schema intended — soft-delete, never a hard delete. Migration `0020` adds eight
+  `SECURITY DEFINER` RPCs (`archive_property` / `restore_property`,
+  `archive_unit` / `restore_unit`, `archive_tenant` / `restore_tenant`,
+  `archive_stock_item` / `restore_stock_item`), authorised to owner/manager only
+  and granted exactly like every other business RPC. Each archive refuses while
+  a live dependant exists and raises a specific error key rather than hiding the
+  dependant: `property_has_units`, `unit_has_lease`, `tenant_has_lease`,
+  `item_has_rental`, `item_has_stock`. Every list RPC already filters
+  `deleted_at is null`, so archived rows leave lists and totals immediately and
+  return on restore.
+  - UI: property and unit archive from the property detail screen (unit rows get
+    an overflow menu); tenant archive from the tenant detail screen; stock-item
+    archive from the stock list. Each list screen gained a **Show archived**
+    toggle that lists archived rows with a **Restore** action.
+  - Client error map: the new guard codes resolve to friendly copy; `userMessage`
+    now checks the RPC's own `message` before the bare SQLSTATE so a guard reads
+    "this unit still has an active lease", not the generic conflict text. `23503`
+    (foreign-key violation) maps to the conflict copy for every other case.
+  - Tests: `supabase/tests/archive.test.sql` covers the guards, the role check,
+    the not-found path and restore round-trip; `test/errors_test.dart` locks in
+    the message-over-SQLSTATE ordering.
 
 ### Changed
 

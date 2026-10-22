@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/errors/user_message.dart';
 import '../../features/api.dart';
+import '../../i18n/strings.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
@@ -18,6 +19,13 @@ final tenantsProvider = FutureProvider.autoDispose.family<List<Map<String, dynam
   return listTenantsWithStatus(org.orgId!, filter);
 });
 
+/// Archived (soft-deleted) tenants, for the restore view.
+final archivedTenantsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final org = ref.watch(orgProvider);
+  if (org.orgId == null) return const [];
+  return listArchivedTenants(org.orgId!);
+});
+
 class TenantsScreen extends ConsumerStatefulWidget {
   const TenantsScreen({super.key});
 
@@ -27,6 +35,7 @@ class TenantsScreen extends ConsumerStatefulWidget {
 
 class _TenantsScreenState extends ConsumerState<TenantsScreen> {
   String _filter = 'all';
+  bool _archived = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,16 +55,36 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
         children: [
           FamScreenHeader(
             title: 'Tenants',
-            subtitle: 'People renting your units',
+            subtitle: _archived ? 'Archived tenants' : 'People renting your units',
             actions: [
               FamIconButton(
-                icon: Icons.person_add_alt_1_rounded,
-                tooltip: 'Add tenant',
-                onPressed: () => context.push('/app/tenants/new'),
+                icon: _archived ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                tooltip: _archived ? t('common.hideArchived') : t('common.showArchived'),
+                background: FamColors.background,
+                onPressed: () => setState(() => _archived = !_archived),
               ),
+              const SizedBox(width: 10),
+              if (!_archived)
+                FamIconButton(
+                  icon: Icons.person_add_alt_1_rounded,
+                  tooltip: 'Add tenant',
+                  onPressed: () => context.push('/app/tenants/new'),
+                ),
             ],
           ),
           const SizedBox(height: 16),
+          if (_archived)
+            Expanded(
+              child: _ArchivedList(
+                provider: archivedTenantsProvider,
+                onRestore: (row) async {
+                  await restoreTenant(row['id'] as String);
+                  ref.invalidate(archivedTenantsProvider);
+                  ref.invalidate(tenantsProvider(_filter));
+                },
+              ),
+            )
+          else ...[
           FamFilterPills(
             labels: _filters.map((f) => f[0].toUpperCase() + f.substring(1)).toList(),
             selected: _filters.indexOf(_filter),
@@ -144,7 +173,111 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
               ),
             ),
           ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// A read-only list of archived tenants with a Restore action on each.
+class _ArchivedList extends ConsumerWidget {
+  final AutoDisposeFutureProvider<List<Map<String, dynamic>>> provider;
+  final Future<void> Function(Map<String, dynamic> row) onRestore;
+
+  const _ArchivedList({required this.provider, required this.onRestore});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(provider);
+    return async.when(
+      loading: () => const FamLoading(),
+      error: (e, _) => ErrorState(
+        message: userMessage(e),
+        onRetry: () => ref.invalidate(provider),
+      ),
+      data: (rows) => RefreshIndicator(
+        onRefresh: () async => ref.invalidate(provider),
+        child: rows.isEmpty
+            ? ListView(children: [
+                const SizedBox(height: 80),
+                EmptyState(
+                  icon: Icons.archive_outlined,
+                  title: t('common.noArchived'),
+                  message: 'Tenants you archive will appear here so you can restore them.',
+                ),
+              ])
+            : ListView.separated(
+                padding: const EdgeInsets.only(bottom: 12),
+                itemCount: rows.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  final r = rows[i];
+                  final name = '${r['full_name'] ?? r['business_name'] ?? r['id']}';
+                  final sub = '${r['phone'] ?? ''}';
+                  return FamCard(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.archive_outlined, size: 22, color: FamColors.textMuted),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: FamColors.navy,
+                                ),
+                              ),
+                              if (sub.isNotEmpty)
+                                Text(
+                                  sub,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontFamily: FamFonts.body,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: FamColors.textMuted,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        FamSecondaryButton(
+                          label: t('common.restore'),
+                          height: 42,
+                          dense: true,
+                          filled: true,
+                          onPressed: () async {
+                            final ok = await famConfirm(
+                              context,
+                              title: t('common.restoreTitle'),
+                              message: t('common.restoreBody'),
+                              confirmLabel: t('common.restore'),
+                            );
+                            if (!ok) return;
+                            try {
+                              await onRestore(r);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(userMessage(e))));
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }

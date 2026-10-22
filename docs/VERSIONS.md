@@ -21,14 +21,14 @@ resolved versions here at build time.
 | App | Version | Source |
 |---|---|---|
 | Expo mobile | 1.0.0 | `apps/mobile/app.json` (`expo.version`) |
-| Flutter mobile | 1.1.9+11 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
+| Flutter mobile | 1.2.0+12 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
 | Android application id | `com.fami.myapp` | `.github/workflows/flutter.yml`, `tool/setup_android.sh` |
 
 ## Backend schema
 
 | Item | Version |
 |---|---|
-| Migrations | `0001`–`0019` |
+| Migrations | `0001`–`0020` |
 | API/RPC contract | `v1` |
 | Database tag | `db-<timestamp>` |
 

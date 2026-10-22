@@ -61,6 +61,27 @@ Future<Map<String, dynamic>> getProperty(String id) async {
   return await _db.from('properties').select('*').eq('id', id).single();
 }
 
+/// Archive (soft-delete) a property. The RPC refuses while it still has units.
+Future<void> archiveProperty(String id) async {
+  await _db.rpc('archive_property', params: {'p_property': id});
+}
+
+Future<void> restoreProperty(String id) async {
+  await _db.rpc('restore_property', params: {'p_property': id});
+}
+
+/// Archived properties, newest first — powers the "Show archived" view.
+Future<List<Map<String, dynamic>>> listArchivedProperties(String orgId) async {
+  final data = await _db
+      .from('properties')
+      .select('id, name, type, city, deleted_at')
+      .eq('org_id', orgId)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', ascending: false)
+      .limit(100);
+  return (data as List).cast<Map<String, dynamic>>();
+}
+
 Future<List<Map<String, dynamic>>> listUnits(String propertyId, {String? status}) async {
   final data = await _db.rpc('list_units', params: {
     'p_property': propertyId,
@@ -89,6 +110,15 @@ Future<Map<String, dynamic>> createUnit(String orgId, Map<String, dynamic> input
       .select()
       .single();
   return row;
+}
+
+/// Archive a unit. The RPC refuses while it still has an active lease.
+Future<void> archiveUnit(String id) async {
+  await _db.rpc('archive_unit', params: {'p_unit': id});
+}
+
+Future<void> restoreUnit(String id) async {
+  await _db.rpc('restore_unit', params: {'p_unit': id});
 }
 
 // ------------------------------------------------------------------ Tenants
@@ -146,6 +176,26 @@ Future<Map<String, dynamic>> createTenantWithLease(Map<String, dynamic> input) a
 
 Future<Map<String, dynamic>> getTenant(String id) async {
   return await _db.from('tenants').select('*').eq('id', id).single();
+}
+
+/// Archive a tenant. The RPC refuses while an active lease still points at them.
+Future<void> archiveTenant(String id) async {
+  await _db.rpc('archive_tenant', params: {'p_tenant': id});
+}
+
+Future<void> restoreTenant(String id) async {
+  await _db.rpc('restore_tenant', params: {'p_tenant': id});
+}
+
+Future<List<Map<String, dynamic>>> listArchivedTenants(String orgId) async {
+  final data = await _db
+      .from('tenants')
+      .select('id, full_name, business_name, phone, deleted_at')
+      .eq('org_id', orgId)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', ascending: false)
+      .limit(100);
+  return (data as List).cast<Map<String, dynamic>>();
 }
 
 Future<Map<String, dynamic>> assignTenantToUnit(Map<String, dynamic> input) async {
@@ -302,6 +352,26 @@ Future<void> stockAdjust(String itemId, String type, String qty, {String? reason
     'p_reason': reason,
     'p_unit': null,
   });
+}
+
+/// Archive a stock item. Refused while it is rented out or still has stock.
+Future<void> archiveStockItem(String id) async {
+  await _db.rpc('archive_stock_item', params: {'p_item': id});
+}
+
+Future<void> restoreStockItem(String id) async {
+  await _db.rpc('restore_stock_item', params: {'p_item': id});
+}
+
+Future<List<Map<String, dynamic>>> listArchivedStockItems(String orgId) async {
+  final data = await _db
+      .from('stock_items')
+      .select('id, name, sku, quantity, uom, deleted_at')
+      .eq('org_id', orgId)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', ascending: false)
+      .limit(100);
+  return (data as List).cast<Map<String, dynamic>>();
 }
 
 Future<void> rentStockItem(Map<String, dynamic> input) async {

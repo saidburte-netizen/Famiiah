@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors/user_message.dart';
 import '../../core/money/money.dart';
 import '../../features/api.dart';
+import '../../i18n/strings.dart';
 import '../../state/org_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
@@ -35,37 +36,68 @@ final stockTenantsProvider = FutureProvider.autoDispose<List<Map<String, dynamic
   return listTenantsWithStatus(org.orgId!, 'all');
 });
 
+/// Archived (soft-deleted) stock items, for the restore view.
+final archivedStockProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final org = ref.watch(orgProvider);
+  if (org.orgId == null) return const [];
+  return listArchivedStockItems(org.orgId!);
+});
+
+final showArchivedStockProvider = StateProvider<bool>((_) => false);
+
 class StockScreen extends ConsumerWidget {
   const StockScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(stockFilterProvider);
+    final archived = ref.watch(showArchivedStockProvider);
     final items = filter == 'low' ? ref.watch(lowStockProvider) : ref.watch(stockItemsProvider);
     final tenants = ref.watch(stockTenantsProvider).valueOrNull ?? const <Map<String, dynamic>>[];
 
     return FamPage(
       title: 'Stock',
-      subtitle: 'Items, adjustments and rentals',
+      subtitle: archived ? 'Archived items' : 'Items, adjustments and rentals',
       actions: [
         FamIconButton(
-          icon: Icons.handshake_outlined,
-          tooltip: 'Rentals',
+          icon: archived ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          tooltip: archived ? t('common.hideArchived') : t('common.showArchived'),
+          background: FamColors.background,
           size: 40,
-          onPressed: () => context.push('/app/stock/rentals'),
+          onPressed: () =>
+              ref.read(showArchivedStockProvider.notifier).state = !archived,
         ),
+        const SizedBox(width: 10),
+        if (!archived)
+          FamIconButton(
+            icon: Icons.handshake_outlined,
+            tooltip: 'Rentals',
+            size: 40,
+            onPressed: () => context.push('/app/stock/rentals'),
+          ),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (!archived) ...[
           FamSegmented(
             labels: const ['All items', 'Low stock'],
             selected: filter == 'low' ? 1 : 0,
             onChanged: (i) => ref.read(stockFilterProvider.notifier).state = i == 1 ? 'low' : 'all',
           ),
           const SizedBox(height: 14),
+          ],
           Expanded(
-            child: items.when(
+            child: archived
+                ? _ArchivedStockList(
+                    onRestore: (row) async {
+                      await restoreStockItem(row['id'] as String);
+                      ref.invalidate(archivedStockProvider);
+                      ref.invalidate(stockItemsProvider);
+                      ref.invalidate(lowStockProvider);
+                    },
+                  )
+                : items.when(
               loading: () => const FamLoading(),
               error: (e, _) => ErrorState(
                   message: userMessage(e),
@@ -167,6 +199,29 @@ class StockScreen extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
+                                    PopupMenuButton<String>(
+                                      tooltip: t('common.manage'),
+                                      icon: const Icon(Icons.more_vert_rounded,
+                                          size: 20, color: FamColors.textMuted),
+                                      onSelected: (v) {
+                                        if (v == 'archive') {
+                                          _archive(context, ref, item);
+                                        }
+                                      },
+                                      itemBuilder: (_) => [
+                                        PopupMenuItem(
+                                          value: 'archive',
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.archive_outlined,
+                                                  size: 18, color: FamColors.danger),
+                                              const SizedBox(width: 10),
+                                              Text(t('common.archive')),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                                 if (low) ...[
@@ -241,6 +296,128 @@ class StockScreen extends ConsumerWidget {
           ref.invalidate(stockItemsProvider);
           ref.invalidate(lowStockProvider);
         },
+      ),
+    );
+  }
+
+  /// Archive a catalogue item. The server refuses while it is rented out or
+  /// still has stock on hand.
+  Future<void> _archive(BuildContext context, WidgetRef ref, Map<String, dynamic> item) async {
+    final ok = await famConfirm(
+      context,
+      title: t('common.archiveTitle'),
+      message: t('common.archiveBody'),
+      confirmLabel: t('common.archive'),
+      danger: true,
+    );
+    if (!ok) return;
+    try {
+      await archiveStockItem(item['id'] as String);
+      ref.invalidate(stockItemsProvider);
+      ref.invalidate(lowStockProvider);
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
+    }
+  }
+}
+
+/// A read-only list of archived stock items with a Restore action on each.
+class _ArchivedStockList extends ConsumerWidget {
+  final Future<void> Function(Map<String, dynamic> row) onRestore;
+
+  const _ArchivedStockList({required this.onRestore});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(archivedStockProvider);
+    return async.when(
+      loading: () => const FamLoading(),
+      error: (e, _) => ErrorState(
+        message: userMessage(e),
+        onRetry: () => ref.invalidate(archivedStockProvider),
+      ),
+      data: (rows) => RefreshIndicator(
+        onRefresh: () async => ref.invalidate(archivedStockProvider),
+        child: rows.isEmpty
+            ? ListView(children: [
+                const SizedBox(height: 80),
+                EmptyState(
+                  icon: Icons.archive_outlined,
+                  title: t('common.noArchived'),
+                  message: 'Items you archive will appear here so you can restore them.',
+                ),
+              ])
+            : ListView.separated(
+                padding: const EdgeInsets.only(bottom: 12),
+                itemCount: rows.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  final r = rows[i];
+                  final name = '${r['name'] ?? r['id']}';
+                  final sub = '${r['sku'] ?? 'no sku'} · ${r['quantity']} ${r['uom'] ?? ''}';
+                  return FamCard(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.archive_outlined, size: 22, color: FamColors.textMuted),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: FamColors.navy,
+                                ),
+                              ),
+                              Text(
+                                sub,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FamFonts.body,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: FamColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        FamSecondaryButton(
+                          label: t('common.restore'),
+                          height: 42,
+                          dense: true,
+                          filled: true,
+                          onPressed: () async {
+                            final ok = await famConfirm(
+                              context,
+                              title: t('common.restoreTitle'),
+                              message: t('common.restoreBody'),
+                              confirmLabel: t('common.restore'),
+                            );
+                            if (!ok) return;
+                            try {
+                              await onRestore(r);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(userMessage(e))));
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }

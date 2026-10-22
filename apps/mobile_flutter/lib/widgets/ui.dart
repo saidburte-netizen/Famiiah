@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n/strings.dart';
 import '../theme/tokens.dart';
 import 'brand.dart';
 
@@ -388,6 +389,135 @@ class FamInfoRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Asks the user to confirm [title]/[message] before a destructive-ish action.
+/// Returns true only when they tap the confirm button; dismiss = false.
+Future<bool> famConfirm(
+  BuildContext context, {
+  required String title,
+  required String message,
+  String? confirmLabel,
+  bool danger = false,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: FamColors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(FamRadius.card)),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: FamFonts.body,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: FamColors.navy,
+        ),
+      ),
+      content: Text(
+        message,
+        style: const TextStyle(
+          fontFamily: FamFonts.body,
+          fontSize: 14,
+          height: 1.45,
+          fontWeight: FontWeight.w600,
+          color: FamColors.textMuted,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(
+            t('common.cancel'),
+            style: const TextStyle(
+              fontFamily: FamFonts.body,
+              fontWeight: FontWeight.w700,
+              color: FamColors.textMuted,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: Text(
+            confirmLabel ?? t('common.confirm'),
+            style: TextStyle(
+              fontFamily: FamFonts.body,
+              fontWeight: FontWeight.w800,
+              color: danger ? FamColors.danger : FamColors.royal,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}
+
+/// A single destructive row for a manage sheet / detail card: an icon, a label
+/// and an optional subtitle, tinted with the brand danger colour.
+class FamDangerRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final VoidCallback? onPressed;
+
+  const FamDangerRow({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: FamColors.dangerBg,
+      borderRadius: BorderRadius.circular(FamRadius.input),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(FamRadius.input),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: FamColors.danger),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontFamily: FamFonts.body,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: FamColors.danger,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          fontFamily: FamFonts.body,
+                          fontSize: 12,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                          color: FamColors.danger,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

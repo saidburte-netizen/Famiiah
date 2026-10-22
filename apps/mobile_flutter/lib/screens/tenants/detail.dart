@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors/user_message.dart';
 import '../../core/money/money.dart';
 import '../../features/api.dart';
+import '../../i18n/strings.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
@@ -40,7 +41,7 @@ class TenantDetailScreen extends ConsumerWidget {
         loading: () => const FamLoading(),
         error: (e, _) => ErrorState(message: userMessage(e), onRetry: () => ref.invalidate(tenantProvider(id))),
         data: (data) {
-          final t = data.tenant;
+          final tenant = data.tenant;
           final activeLease = data.leases.where((l) => l['status'] == 'active').toList();
           final lease = activeLease.isEmpty ? null : activeLease.first;
           return ListView(
@@ -48,14 +49,14 @@ class TenantDetailScreen extends ConsumerWidget {
               FamCard(
                 child: Row(
                   children: [
-                    FamAvatar(name: '${t['full_name'] ?? '—'}', size: 56),
+                    FamAvatar(name: '${tenant['full_name'] ?? '—'}', size: 56),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${t['full_name'] ?? '—'}',
+                            '${tenant['full_name'] ?? '—'}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -65,9 +66,9 @@ class TenantDetailScreen extends ConsumerWidget {
                               color: FamColors.navy,
                             ),
                           ),
-                          if (t['business_name'] != null)
+                          if (tenant['business_name'] != null)
                             Text(
-                              '${t['business_name']}',
+                              '${tenant['business_name']}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -92,13 +93,13 @@ class TenantDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     FamInfoRow(
                       label: 'Phone',
-                      value: '${t['phone'] ?? 'no phone'}',
+                      value: '${tenant['phone'] ?? 'no phone'}',
                       icon: Icons.phone_outlined,
                     ),
                     const Divider(),
                     FamInfoRow(
                       label: 'Email',
-                      value: '${t['email'] ?? 'no email'}',
+                      value: '${tenant['email'] ?? 'no email'}',
                       icon: Icons.mail_outline_rounded,
                     ),
                   ],
@@ -245,6 +246,22 @@ class TenantDetailScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+              FamCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const FamSectionHeader(title: 'Tenant'),
+                    const SizedBox(height: 10),
+                    FamDangerRow(
+                      icon: Icons.archive_outlined,
+                      label: t('common.archive'),
+                      subtitle: t('common.archiveBody'),
+                      onPressed: () => _archive(context, ref, id),
+                    ),
+                  ],
+                ),
+              ),
             ],
           );
         },
@@ -259,6 +276,26 @@ class TenantDetailScreen extends ConsumerWidget {
       backgroundColor: FamColors.background,
       builder: (_) => _ManageLeaseSheet(lease: lease, onDone: () async => ref.invalidate(tenantProvider(id))),
     );
+  }
+
+  /// Archive a tenant. The server refuses while they still hold an active
+  /// lease, and that refusal is surfaced verbatim.
+  Future<void> _archive(BuildContext context, WidgetRef ref, String id) async {
+    final ok = await famConfirm(
+      context,
+      title: t('common.archiveTitle'),
+      message: t('common.archiveBody'),
+      confirmLabel: t('common.archive'),
+      danger: true,
+    );
+    if (!ok) return;
+    try {
+      await archiveTenant(id);
+      if (context.mounted) context.go('/app/tenants');
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
+    }
   }
 }
 

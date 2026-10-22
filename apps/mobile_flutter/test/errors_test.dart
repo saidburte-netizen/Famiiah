@@ -69,6 +69,28 @@ void main() {
       expect(userMessage(err), 'That unit already has an active lease.');
     });
 
+    test('prefers a guard message over its generic SQLSTATE', () {
+      // The archive guards raise 23503 (a foreign-key code) but carry a
+      // specific message; the user must see the specific copy, not the
+      // generic "conflicts with existing data".
+      final err = Exception(
+          '{"code":"23503","details":null,"hint":null,"message":"unit_has_lease"}');
+      expect(userMessage(err), 'This unit still has an active lease. End the lease first.');
+
+      final prop = Exception(
+          '{"code":"23503","details":null,"hint":null,"message":"property_has_units"}');
+      expect(userMessage(prop), contains('units first'));
+
+      final stock = Exception(
+          '{"code":"23503","details":null,"hint":null,"message":"item_has_stock"}');
+      expect(userMessage(stock), contains('still has stock on hand'));
+    });
+
+    test('a bare SQLSTATE still maps when no specific message is present', () {
+      final err = Exception('{"code":"23503","details":null,"hint":null,"message":null}');
+      expect(userMessage(err), 'That action conflicts with existing data.');
+    });
+
     test('maps a network failure', () {
       final err = Exception('SocketException: Failed host lookup: network is unreachable');
       expect(userMessage(err), contains('No connection'));

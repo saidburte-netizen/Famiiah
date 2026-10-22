@@ -31,6 +31,7 @@ const _authCodes = <String, String>{
 const _sqlstate = <String, String>{
   '42501': 'error.forbidden',
   '23505': 'error.conflict',
+  '23503': 'error.conflict',
   '23514': 'error.invalidInput',
   '22023': 'error.invalidInput',
   'P0002': 'error.notFound',
@@ -43,6 +44,8 @@ const _sharedKeyMap = <String, String>{
   'mfa_required': 'error.mfaRequired',
   'lease_not_found': 'error.leaseNotFound',
   'unit_not_found': 'error.unitNotFound',
+  'property_not_found': 'error.propertyNotFound',
+  'tenant_not_found': 'error.tenantNotFound',
   'unit_not_vacant': 'error.unitNotVacant',
   'invalid_amount': 'error.invalidAmount',
   'payment_not_found': 'error.paymentNotFound',
@@ -55,6 +58,12 @@ const _sharedKeyMap = <String, String>{
   'invalid_token': 'error.invalidToken',
   'already_member': 'error.alreadyMember',
   'rate_limited': 'error.rateLimited',
+  // Archive guards — the record still has live dependants.
+  'property_has_units': 'error.propertyHasUnits',
+  'unit_has_lease': 'error.unitHasLease',
+  'tenant_has_lease': 'error.tenantHasLease',
+  'item_has_rental': 'error.itemHasRental',
+  'item_has_stock': 'error.itemHasStock',
 };
 
 bool _isNetwork(dynamic err) {
@@ -93,6 +102,16 @@ String userMessage(dynamic err) {
   // AuthWeakPasswordException prints `reasons:` but not its `code`, so the
   // parser above never sees `weak_password`.
   if (msg.contains('AuthWeakPasswordException')) return t('error.weakPassword');
+  // The `message` is the RPC's own error key (`unit_has_lease`, …) and is more
+  // specific than the SQLSTATE, so it is checked first: a guard that raises
+  // `23503` must read "this unit still has an active lease", not the generic
+  // "conflicts with existing data" the bare SQLSTATE would give.
+  final mkey = RegExp(r'"message"\s*:\s*"([^\"]+)"').firstMatch(msg);
+  if (mkey != null) {
+    final k = mkey.group(1)!;
+    final mapped = _sharedKeyMap[k];
+    if (mapped != null) return t(mapped);
+  }
   // PostgREST/Supabase errors often have `code: ...`
   final mcode = RegExp(r'"code"\s*:\s*"([^\"]+)"').firstMatch(msg);
   if (mcode != null) {
@@ -101,12 +120,6 @@ String userMessage(dynamic err) {
     if (k != null) return t(k);
     final s = _sqlstate[c];
     if (s != null) return t(s);
-  }
-  final mkey = RegExp(r'"message"\s*:\s*"([^\"]+)"').firstMatch(msg);
-  if (mkey != null) {
-    final k = mkey.group(1)!;
-    final mapped = _sharedKeyMap[k];
-    if (mapped != null) return t(mapped);
   }
 
   // Try known message fragments (shared error keys appear as-is).

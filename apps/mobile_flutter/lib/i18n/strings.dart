@@ -57,6 +57,17 @@ const Messages _en = {
   'common.property': 'Property',
   'common.tenant': 'Tenant',
   'common.unit': 'Unit',
+  'common.archive': 'Archive',
+  'common.restore': 'Restore',
+  'common.archiveTitle': 'Archive this record?',
+  'common.archiveBody':
+      'It will be hidden from your lists and totals. You can restore it later.',
+  'common.restoreTitle': 'Restore this record?',
+  'common.restoreBody': 'It will appear in your lists and totals again.',
+  'common.archived': 'Archived',
+  'common.showArchived': 'Show archived',
+  'common.hideArchived': 'Hide archived',
+  'common.noArchived': 'Nothing archived.',
 
   // ---- errors: result codes raised by RPCs / edge functions ----
   'error.forbidden': 'You do not have permission to do that.',
@@ -75,6 +86,18 @@ const Messages _en = {
   'error.invitationExpired': 'That invitation has expired. Ask for a new one.',
   'error.invalidToken': 'That link is no longer valid.',
   'error.alreadyMember': 'This person is already a member.',
+  'error.propertyNotFound': 'That property no longer exists.',
+  'error.tenantNotFound': 'That tenant no longer exists.',
+  // Archive guards: the record still has live dependants.
+  'error.propertyHasUnits':
+      'Remove or archive this property\'s units first — it still has units in it.',
+  'error.unitHasLease': 'This unit still has an active lease. End the lease first.',
+  'error.tenantHasLease':
+      'This tenant still has an active lease. End the lease first.',
+  'error.itemHasRental':
+      'This item is still rented out. Take the rental back first.',
+  'error.itemHasStock':
+      'This item still has stock on hand. Adjust it down to zero first.',
   'error.unknown': 'Something went wrong. Please try again.',
 
   // ---- auth (Supabase AuthError codes) ----
