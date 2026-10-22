@@ -191,8 +191,8 @@ fam/
 ## CI/CD
 
 - `ci.yml` (push/PR): Node — lint, typecheck, unit tests, admin build; Supabase —
-  `supabase db reset` (applies `0001..0018`), `supabase test db` (pgTAP,
-  `rls`/`rpc`/`security`/`signup`/`handle`), `supabase db lint`.
+  `supabase db reset` (applies `0001..0019`), `supabase test db` (pgTAP,
+  `rls`/`rpc`/`security`/`signup`/`handle`/`user_delete`), `supabase db lint`.
 - `flutter.yml` (push to `apps/mobile_flutter/**` or manual): `flutter analyze`,
   `flutter test`, then a release **APK** and **AAB**.
   - The Supabase URL and anon key are baked in with `--dart-define` from the

@@ -265,6 +265,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   mutation now invalidates the queries it affects (`properties`, `units`,
   `tenants`, `payments`, `rent-overview`, `dashboard`, `stock-low`,
   `stock-rentals`), so lists and totals update immediately.
+- **Deleting a user no longer fails** (migration `0019`). The audit columns
+  `properties.created_by`, `invitations.invited_by`, `payments.received_by` /
+  `voided_by` and `stock_movements.performed_by` referenced `auth.users(id)`
+  with the default `NO ACTION`, so once a user had created a property, sent an
+  invitation, received/voided a payment or recorded a stock movement, the
+  dashboard's **Delete user** (and any `service_role` delete) failed with
+  "Database error deleting user" — a foreign-key refusal, not a missing row.
+  Those five constraints are now `ON DELETE SET NULL`: the account is removed
+  and the authored records survive with their actor cleared, matching how
+  `tenants.user_id` already behaves. Accounts a user owns (`profiles`,
+  `organization_members`, `notifications`) still cascade. A new pgTAP test
+  (`user_delete`) deletes a user who authored all four record types and asserts
+  the delete succeeds and the records remain.
 - Flutter i18n catalogue gained the shared action labels (New, Save, Cancel,
   Manage, Refresh, History, …) and the reset-screen strings; both catalogues
   now define every key the screens reference.
