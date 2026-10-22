@@ -266,10 +266,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `tenants`, `payments`, `rent-overview`, `dashboard`, `stock-low`,
   `stock-rentals`), so lists and totals update immediately.
 - **Deleting a user no longer fails** (migration `0019`). The audit columns
-  `properties.created_by`, `invitations.invited_by`, `payments.received_by` /
+  `organizations.created_by`, `invitations.invited_by`, `payments.received_by` /
   `voided_by` and `stock_movements.performed_by` referenced `auth.users(id)`
-  with the default `NO ACTION`, so once a user had created a property, sent an
-  invitation, received/voided a payment or recorded a stock movement, the
+  with the default `NO ACTION`, so once a user had created an organization, sent
+  an invitation, received/voided a payment or recorded a stock movement, the
   dashboard's **Delete user** (and any `service_role` delete) failed with
   "Database error deleting user" — a foreign-key refusal, not a missing row.
   Those five constraints are now `ON DELETE SET NULL`: the account is removed
