@@ -3,18 +3,17 @@
 -- "Database error deleting user" for any user who had done real work.
 --
 -- The cause is a handful of *audit* columns that point at auth.users(id) with
--- the default NO ACTION: properties.created_by, invitations.invited_by,
+-- the default NO ACTION: organizations.created_by, invitations.invited_by,
 -- payments.received_by, payments.voided_by and stock_movements.performed_by.
 -- auth.users -> public.profiles already cascades, but Postgres then hits one of
 -- these and refuses the delete, because removing the referenced auth row would
 -- orphan the audit trail rather than cascade it away.
 --
 -- The intent of these columns is "who did it", not ownership: the record itself
--- (the property, the payment, the stock movement) must survive the actor's
+-- (the organization, the payment, the stock movement) must survive the actor's
 -- account being removed. `on delete set null` is exactly that, and it is the
 -- same treatment tenants.user_id already gets in 0002. Accounts a user *owns*
--- genuinely (organizations, org_members, profiles, notifications) keep their
--- cascade.
+-- genuinely (profiles, organization_members, notifications) keep their cascade.
 --
 -- Every constraint is located by its catalog entry rather than by a guessed
 -- name, so the migration works no matter what Postgres called them and is safe
@@ -24,7 +23,7 @@ do $$
 declare
   -- (table, column) pairs whose FK to auth.users must become ON DELETE SET NULL
   targets text[][] := array[
-    array['properties', 'created_by'],
+    array['organizations', 'created_by'],
     array['invitations', 'invited_by'],
     array['payments', 'received_by'],
     array['payments', 'voided_by'],

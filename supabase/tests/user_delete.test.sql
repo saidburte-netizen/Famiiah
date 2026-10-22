@@ -1,7 +1,7 @@
 -- supabase/tests/user_delete.test.sql
 -- Deleting an account from the Supabase dashboard must succeed even when that
 -- user authored real records, and those records must survive without their
--- actor. Before migration 0019 the audit columns (properties.created_by,
+-- actor. Before migration 0019 the audit columns (organizations.created_by,
 -- invitations.invited_by, payments.received_by / voided_by,
 -- stock_movements.performed_by) referenced auth.users with NO ACTION, so
 -- Postgres refused the delete with "Database error deleting user".
@@ -14,14 +14,16 @@ insert into auth.users (instance_id, id, aud, role, email, encrypted_password, e
   values ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-0000000000d1','authenticated',
           'authenticated','author@test.fam','x', now(), '{"full_name":"Author"}'::jsonb);
 
+-- An organization created by the user. (The audit column lives here, not on
+-- properties: properties has no created_by.)
 insert into public.organizations (id, name, slug, created_by)
   values ('00000000-0000-0000-0000-0000000000e1','Author Org','author-org',
           '00000000-0000-0000-0000-0000000000d1');
 
--- A property created by the user.
-insert into public.properties (id, org_id, name, type, created_by)
+-- A property in that org, so the delete also exercises org-owned rows.
+insert into public.properties (id, org_id, name, type)
   values ('00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000e1','Tower',
-          'residential','00000000-0000-0000-0000-0000000000d1');
+          'residential');
 
 -- An invitation sent by the user.
 insert into public.invitations (id, org_id, email, token_hash, invited_by)
@@ -62,9 +64,9 @@ select is(
 
 -- The authored records survive, with their actor nulled out.
 select is(
-  (select created_by from public.properties where id = '00000000-0000-0000-0000-0000000000e2'),
+  (select created_by from public.organizations where id = '00000000-0000-0000-0000-0000000000e1'),
   null,
-  'a property survives with created_by cleared');
+  'an organization survives with created_by cleared');
 
 select is(
   (select invited_by from public.invitations where id = '00000000-0000-0000-0000-0000000000e3'),
