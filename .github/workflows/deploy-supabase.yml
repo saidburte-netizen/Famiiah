@@ -79,31 +79,61 @@ jobs:
           set -euo pipefail
           supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
 
-          echo "::group::Pending migrations (dry run)"
-          supabase db push --linked --dry-run | tee /tmp/pending.txt || true
+          # Which versions exist locally (files are NNNN_name.sql).
+          mapfile -t local_versions < <(ls supabase/migrations \
+            | grep -oE '^[0-9]{4}' | sort -u)
+          echo "Local migrations: ${local_versions[*]}"
+
+          # Which versions the remote history table already records. This is
+          # the authoritative source: `db push` skips anything listed here.
+          remote_versions=""
+          echo "::group::Remote migration history"
+          if supabase migration list --linked 2>&1 | tee /tmp/history.txt; then
+            remote_versions=$(awk -F'│' '
+              NF >= 2 {
+                r = $2
+                gsub(/[[:space:]]/, "", r)
+                if (r ~ /^[0-9]{4}$/) print r
+              }' /tmp/history.txt | sort -u | tr '\n' ' ')
+            echo "Remote history records: ${remote_versions:-<none>}"
+          else
+            echo "::warning::Could not read the remote migration history; treating it as empty."
+          fi
           echo "::endgroup::"
 
-          # Local files are named NNNN_name.sql, so pending output lists
-          # versions like `0001`, `0020`. Only 0001-0019 are baselined; newer
-          # ones are genuinely new and left to `db push`.
+          # Baseline only 0001-0019: those were applied by hand through the
+          # dashboard SQL Editor before CD existed, so their objects already
+          # exist and re-running them fails. 0020+ is genuinely new and must
+          # actually run.
           baseline_versions=""
-          if [ "$BASELINE" = "always" ]; then
-            baseline_versions="0001 0002 0003 0004 0005 0006 0007 0008 0009 0010 0011 0012 0013 0014 0015 0016 0017 0018 0019"
-          elif [ "$BASELINE" = "auto" ]; then
-            baseline_versions=$(grep -oE '\b0[0-1][0-9]{2}_|\b0[0-1][0-9]{2}\b' /tmp/pending.txt 2>/dev/null \
-              | sed 's/_$//' | awk '$1 <= "0019"' | sort -u | tr '\n' ' ' || true)
-          fi
+          case "$BASELINE" in
+            always)
+              for v in "${local_versions[@]}"; do
+                [ "$v" \> "0019" ] && continue
+                baseline_versions="$baseline_versions $v"
+              done
+              ;;
+            auto)
+              for v in "${local_versions[@]}"; do
+                [ "$v" \> "0019" ] && continue
+                case " $remote_versions " in
+                  *" $v "*) ;;                       # already recorded remotely
+                  *) baseline_versions="$baseline_versions $v" ;;
+                esac
+              done
+              ;;
+          esac
 
           if [ -n "${baseline_versions// /}" ]; then
             echo "::notice::Baselining already-applied migrations: $baseline_versions"
             # shellcheck disable=SC2086
-            supabase migration repair --linked --status applied $baseline_versions --yes
+            supabase --yes migration repair --linked --status applied $baseline_versions
           else
             echo "No baseline needed (mode=$BASELINE)."
           fi
 
           echo "::group::Applying migrations"
-          supabase db push --linked --yes
+          supabase --yes db push --linked
           echo "::endgroup::"
 
   functions:
