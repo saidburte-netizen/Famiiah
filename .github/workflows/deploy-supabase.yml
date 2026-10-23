@@ -180,30 +180,27 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           PROJECT_REF: ${{ steps.project.outputs.ref }}
-          # Runtime values the functions read. Optional ones are only pushed
-          # when the matching repo secret exists.
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_URL_VAL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY_VAL: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY_VAL: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           EMAIL_PROVIDER_KEY: ${{ secrets.EMAIL_PROVIDER_KEY }}
           CHAPA_WEBHOOK_SECRET: ${{ secrets.CHAPA_WEBHOOK_SECRET }}
           EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
         run: |
           set -euo pipefail
-          args=()
-          add() { if [ -n "${2:-}" ]; then args+=("$1=$2"); fi; }
-          add SUPABASE_URL "$SUPABASE_URL"
-          add SUPABASE_PUBLISHABLE_KEY "$SUPABASE_ANON_KEY"
-          add SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
-          add EMAIL_PROVIDER_KEY "$EMAIL_PROVIDER_KEY"
-          add CHAPA_WEBHOOK_SECRET "$CHAPA_WEBHOOK_SECRET"
-          add EXPO_ACCESS_TOKEN "$EXPO_ACCESS_TOKEN"
-          add ALLOWED_ORIGINS "$ALLOWED_ORIGINS"
+          secrets=()
+          [ -n "${SUPABASE_URL_VAL:-}" ] && secrets+=("FAM_SUPABASE_URL=${SUPABASE_URL_VAL}")
+          [ -n "${SUPABASE_ANON_KEY_VAL:-}" ] && secrets+=("FAM_SUPABASE_PUBLISHABLE_KEY=${SUPABASE_ANON_KEY_VAL}")
+          [ -n "${SUPABASE_SERVICE_ROLE_KEY_VAL:-}" ] && secrets+=("FAM_SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY_VAL}")
+          [ -n "${EMAIL_PROVIDER_KEY:-}" ] && secrets+=("EMAIL_PROVIDER_KEY=${EMAIL_PROVIDER_KEY}")
+          [ -n "${CHAPA_WEBHOOK_SECRET:-}" ] && secrets+=("CHAPA_WEBHOOK_SECRET=${CHAPA_WEBHOOK_SECRET}")
+          [ -n "${EXPO_ACCESS_TOKEN:-}" ] && secrets+=("EXPO_ACCESS_TOKEN=${EXPO_ACCESS_TOKEN}")
+          [ -n "${ALLOWED_ORIGINS:-}" ] && secrets+=("ALLOWED_ORIGINS=${ALLOWED_ORIGINS}")
 
-          if [ "${#args[@]}" -eq 0 ]; then
+          if [ "${#secrets[@]}" -eq 0 ]; then
             echo "::warning::No function secrets provided; functions deployed without runtime secrets."
             exit 0
           fi
-          echo "Setting ${#args[@]} function secret(s)..."
-          supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}"
+          echo "Setting ${#secrets[@]} function secret(s)..."
+          supabase --experimental secrets set --project-ref "$PROJECT_REF" "${secrets[@]}"
