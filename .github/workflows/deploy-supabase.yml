@@ -180,9 +180,8 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           PROJECT_REF: ${{ steps.project.outputs.ref }}
-          SUPABASE_URL_VAL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY_VAL: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY_VAL: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY are
+          # auto-injected by Supabase at runtime; do not set them via CLI.
           EMAIL_PROVIDER_KEY: ${{ secrets.EMAIL_PROVIDER_KEY }}
           CHAPA_WEBHOOK_SECRET: ${{ secrets.CHAPA_WEBHOOK_SECRET }}
           EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
@@ -190,17 +189,14 @@ jobs:
         run: |
           set -euo pipefail
           secrets=()
-          [ -n "${SUPABASE_URL_VAL:-}" ] && secrets+=("FAM_SUPABASE_URL=${SUPABASE_URL_VAL}")
-          [ -n "${SUPABASE_ANON_KEY_VAL:-}" ] && secrets+=("FAM_SUPABASE_PUBLISHABLE_KEY=${SUPABASE_ANON_KEY_VAL}")
-          [ -n "${SUPABASE_SERVICE_ROLE_KEY_VAL:-}" ] && secrets+=("FAM_SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY_VAL}")
           [ -n "${EMAIL_PROVIDER_KEY:-}" ] && secrets+=("EMAIL_PROVIDER_KEY=${EMAIL_PROVIDER_KEY}")
           [ -n "${CHAPA_WEBHOOK_SECRET:-}" ] && secrets+=("CHAPA_WEBHOOK_SECRET=${CHAPA_WEBHOOK_SECRET}")
           [ -n "${EXPO_ACCESS_TOKEN:-}" ] && secrets+=("EXPO_ACCESS_TOKEN=${EXPO_ACCESS_TOKEN}")
           [ -n "${ALLOWED_ORIGINS:-}" ] && secrets+=("ALLOWED_ORIGINS=${ALLOWED_ORIGINS}")
 
           if [ "${#secrets[@]}" -eq 0 ]; then
-            echo "::warning::No function secrets provided; functions deployed without runtime secrets."
+            echo "::notice::No custom function secrets to set (SUPABASE_* are auto-injected)."
             exit 0
           fi
-          echo "Setting ${#secrets[@]} function secret(s)..."
-          supabase --experimental secrets set --project-ref "$PROJECT_REF" "${secrets[@]}"
+          echo "Setting ${#secrets[@]} custom function secret(s)..."
+          supabase secrets set --project-ref "$PROJECT_REF" "${secrets[@]}"
