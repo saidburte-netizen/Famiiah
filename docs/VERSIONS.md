@@ -21,14 +21,14 @@ resolved versions here at build time.
 | App | Version | Source |
 |---|---|---|
 | Expo mobile | 1.0.0 | `apps/mobile/app.json` (`expo.version`) |
-| Flutter mobile | 1.2.0+12 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
+| Flutter mobile | 1.3.0+13 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
 | Android application id | `com.fami.myapp` | `.github/workflows/flutter.yml`, `tool/setup_android.sh` |
 
 ## Backend schema
 
 | Item | Version |
 |---|---|
-| Migrations | `0001`–`0020` |
+| Migrations | `0001`–`0021` |
 | API/RPC contract | `v1` |
 | Database tag | `db-<timestamp>` |
 
@@ -60,9 +60,9 @@ resolved versions here at build time.
 | flutter_riverpod | ^2.6.1 | state |
 | go_router | ^14.6.2 | routing |
 | supabase_flutter | ^2.8.4 | resolves to the newest 2.x |
-| google_fonts | ^6.2.1 | Manrope / Playfair, fetched at runtime with a fallback |
 | package_info_plus | ^10.2.2 | version gate |
 | intl | ^0.19.0 | money / dates |
+| fonts (bundled) | Manrope 400–800, Playfair Display 600/700 | `assets/fonts/`, declared in `pubspec.yaml`; no runtime fetch |
 
 ## Tooling
 

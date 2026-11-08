@@ -320,23 +320,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                for (var i = 0; i < 2; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
-                  Expanded(
-                    child: Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: FamColors.border,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
+                Expanded(
+                  child: Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: FamColors.border,
+                      borderRadius: BorderRadius.circular(3),
                     ),
                   ),
-                ],
+                ),
               ],
             ),
             const SizedBox(height: 8),
             const Text(
-              'Your details',
+              'Step 1 of 2 — your details',
               style: TextStyle(
                 fontFamily: FamFonts.body,
                 fontSize: 12,

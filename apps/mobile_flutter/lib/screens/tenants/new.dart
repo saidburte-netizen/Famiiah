@@ -10,6 +10,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
+import 'list.dart' show tenantsProvider;
 
 final vacantUnitsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final org = ref.watch(orgProvider);
@@ -64,8 +66,20 @@ class _NewTenantScreenState extends ConsumerState<NewTenantScreen> {
       setState(() => _error = 'No active organization.');
       return;
     }
-    final selected = _unitId != null ? units.firstWhere((u) => u['id'] == _unitId, orElse: () => const {}) : null;
-    final unit = (selected != null && selected.isNotEmpty) ? selected : (units.isEmpty ? null : units.first);
+    // A unit passed in the URL (from a property's unit card) must be the one
+    // let. Falling back to the first vacant unit would quietly put the tenant
+    // in a different unit, so refuse instead.
+    Map<String, dynamic>? unit;
+    if (_unitId != null) {
+      final match = units.where((u) => u['id'] == _unitId).toList();
+      if (match.isEmpty) {
+        setState(() => _error = 'That unit is no longer vacant. Pick another unit.');
+        return;
+      }
+      unit = match.first;
+    } else if (units.isNotEmpty) {
+      unit = units.first;
+    }
     if (unit == null) {
       setState(() => _error = 'Pick a vacant unit.');
       return;
@@ -92,7 +106,13 @@ class _NewTenantScreenState extends ConsumerState<NewTenantScreen> {
           'email': _email.text.trim().isEmpty ? null : _email.text.trim(),
         },
       });
-      if (mounted) context.go('/app/tenants');
+      if (!mounted) return;
+      // The list underneath is still mounted: refresh it (and the unit picker
+      // and dashboard) so the new tenant shows immediately.
+      ref.invalidate(tenantsProvider);
+      ref.invalidate(vacantUnitsProvider);
+      ref.invalidate(dashboardProvider);
+      context.go('/app/tenants');
     } catch (err) {
       if (mounted) setState(() => _error = userMessage(err));
     } finally {
@@ -105,6 +125,10 @@ class _NewTenantScreenState extends ConsumerState<NewTenantScreen> {
     final units = ref.watch(vacantUnitsProvider);
     final rows = units.valueOrNull ?? const <Map<String, dynamic>>[];
     final selectedId = _unitId ?? (rows.isNotEmpty ? rows.first['id'] as String? : null);
+    // The unit may have been taken between opening this screen and loading the
+    // list: say so instead of leaving the form looking empty.
+    final requestedMissing =
+        _unitId != null && rows.isNotEmpty && !rows.any((u) => u['id'] == _unitId);
 
     return FamPage(
       title: 'New tenant',
@@ -113,6 +137,10 @@ class _NewTenantScreenState extends ConsumerState<NewTenantScreen> {
         children: [
           if (_error != null) ...[
             FamNotice.error(_error!),
+            const SizedBox(height: 14),
+          ],
+          if (requestedMissing) ...[
+            FamNotice.error('That unit is no longer vacant. Choose another unit below.'),
             const SizedBox(height: 14),
           ],
           const FamSectionHeader(title: 'Unit'),

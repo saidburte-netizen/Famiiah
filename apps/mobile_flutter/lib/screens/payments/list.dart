@@ -10,6 +10,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
+import '../rent/list.dart' show rentProvider;
 
 final paymentsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final org = ref.watch(orgProvider);
@@ -177,6 +179,8 @@ class PaymentsScreen extends ConsumerWidget {
     try {
       await voidPayment(id, 'voided by user');
       ref.invalidate(paymentsProvider);
+      ref.invalidate(rentProvider);
+      ref.invalidate(dashboardProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));

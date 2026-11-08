@@ -21,10 +21,14 @@ class GateDecision {
 Future<GateDecision> checkVersionGate(String platform, String currentVersion) async {
   try {
     final client = getSupabase();
-    final data = await client.rpc(
-      'check_app_version',
-      params: {'p_platform': platform, 'p_version': currentVersion},
-    );
+    final data = await client
+        .rpc(
+          'check_app_version',
+          params: {'p_platform': platform, 'p_version': currentVersion},
+        )
+        // Fails open like any other launch error instead of blocking startup on
+        // a stalled connection.
+        .timeout(const Duration(seconds: 8));
     if (data == null) return GateDecision.ok();
     final status = data['status'] as String?;
     if (status == 'force_update') {

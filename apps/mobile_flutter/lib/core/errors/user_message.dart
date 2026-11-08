@@ -50,6 +50,8 @@ const _sharedKeyMap = <String, String>{
   'invalid_amount': 'error.invalidAmount',
   'payment_not_found': 'error.paymentNotFound',
   'cannot_demote_last_owner': 'error.cannotDemoteLastOwner',
+  'cannot_suspend_last_owner': 'error.cannotSuspendLastOwner',
+  'invalid_input': 'error.invalidInput',
   'item_not_found': 'error.itemNotFound',
   'insufficient_stock': 'error.insufficientStock',
   'negative_balance': 'error.negativeBalance',

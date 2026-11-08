@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../widgets/page.dart';
+import '../home/dashboard.dart' show dashboardProvider;
 import '../properties/list.dart';
 import 'form.dart';
 
@@ -15,7 +16,10 @@ class NewUnitScreen extends ConsumerWidget {
     return FamPage(
       title: 'New unit',
       child: UnitForm(
-        onCreated: () async => ref.invalidate(propertiesProvider),
+        onCreated: () async {
+          ref.invalidate(propertiesProvider);
+          ref.invalidate(dashboardProvider);
+        },
       ),
     );
   }

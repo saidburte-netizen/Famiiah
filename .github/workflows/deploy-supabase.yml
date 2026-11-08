@@ -2,7 +2,10 @@ name: Deploy Supabase
 
 # One-button backend deploy: database migrations + Edge Functions.
 #
-# Trigger it from the Actions tab: Actions -> "Deploy Supabase" -> Run workflow.
+# It runs automatically on every push to `main` that touches `supabase/**`
+# (merging a release branch applies its migrations and redeploys functions),
+# and can still be run by hand from the Actions tab:
+#   Actions -> "Deploy Supabase" -> Run workflow
 # It needs only the secrets that are already configured:
 #   SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD, SUPABASE_URL
 # The project ref is derived from SUPABASE_URL, so no SUPABASE_PROJECT_ID
@@ -15,6 +18,11 @@ name: Deploy Supabase
 # migrations as applied first, so only genuinely new ones run (e.g. 0020).
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/deploy-supabase.yml'
   workflow_dispatch:
     inputs:
       target:
@@ -42,6 +50,7 @@ jobs:
   db:
     name: Deploy database
     if: >-
+      github.event_name == 'push' ||
       inputs.target == 'database and functions' ||
       inputs.target == 'database only'
     runs-on: ubuntu-latest
@@ -77,6 +86,9 @@ jobs:
           PROJECT_REF: ${{ steps.project.outputs.ref }}
         run: |
           set -euo pipefail
+          # Manual runs pass `baseline`; a push has no inputs, so default to the
+          # same safe "auto" behaviour.
+          BASELINE="${BASELINE:-auto}"
           supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
 
           # Which versions exist locally (files are NNNN_name.sql).
@@ -141,7 +153,8 @@ jobs:
     needs: [db]
     if: >-
       always() && (needs.db.result == 'success' || needs.db.result == 'skipped') &&
-      (inputs.target == 'database and functions' || inputs.target == 'functions only')
+      (github.event_name == 'push' ||
+       inputs.target == 'database and functions' || inputs.target == 'functions only')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

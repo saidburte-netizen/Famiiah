@@ -9,6 +9,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
+import 'list.dart' show lowStockProvider, stockItemsProvider;
 
 final stockRentalsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final org = ref.watch(orgProvider);
@@ -152,6 +154,11 @@ class StockRentalsScreen extends ConsumerWidget {
     try {
       await returnStockItem(id);
       ref.invalidate(stockRentalsProvider);
+      // Returning a rental puts stock back on the shelf: refresh the catalogue,
+      // the low-stock view and the dashboard totals.
+      ref.invalidate(stockItemsProvider);
+      ref.invalidate(lowStockProvider);
+      ref.invalidate(dashboardProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));

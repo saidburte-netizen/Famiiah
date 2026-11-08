@@ -48,7 +48,10 @@ enable_signup = true
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = true
+# Free-stack policy: sign-up returns a session immediately (email + password,
+# no confirmation mail, no OTP). The hosted project is configured the same way;
+# keeping local/CI in sync means a sign-up test behaves like production.
+enable_confirmations = false
 max_frequency = "1m"
 
 [auth.sms]
@@ -69,9 +72,8 @@ enabled = true
 enabled = false
 
 [functions.send-reminders]
-# Cron-only, and every call carries the service-role JWT (see
-# `invoke_edge_function`). Requiring a valid JWT stops anonymous callers from
-# queueing/dispatching pushes.
+# Cron-only. The function also compares the bearer token with the service-role
+# key, so a valid *user* JWT is not enough to run it.
 verify_jwt = true
 
 [functions.invite-member]

@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-11-08
+
+Production upload of the Flutter client (`com.fami.myapp`, `1.3.0+13`): the
+archive surface, brand rework and the production-hardening pass below are all
+included in this build.
+
 ### Added
 
 - **Phase 0 — Foundation**: pnpm + Turborepo monorepo, `.env.example`, CI workflow.
@@ -418,8 +424,8 @@ functions are deployed. The client maps the 404 to the friendly
   XML and a `#0A2260` background. `android/` itself stays uncommitted.
 - Design elements with no implementation behind them were **omitted or reworded**
   rather than added as dead controls — no Face ID/fingerprint, no role tabs on
-  login, no phone field, and the sign-up progress bar shows one filled segment
-  labelled "Your details" instead of a fake "Step 1 of 3".
+  login, no phone field, and the sign-up progress reflects the real two-step flow
+  (account details → workspace) instead of a fake "Step 1 of 3".
 - Flutter release bumped `1.1.8+10` → `1.1.9+11` (brand rework).
 
 ### Security
@@ -433,18 +439,61 @@ functions are deployed. The client maps the 404 to the friendly
   client roles.
 - `assign_tenant_to_unit` requires the tenant to belong to the unit's org.
 - Avatar writes scoped to the caller's own storage folder.
-- `admin_set_member_status` cannot be used by a manager to suspend an owner.
+- `admin_set_member_status` cannot be used by a manager to suspend an owner, and
+  the last active owner cannot be suspended (migration `0021`).
 - `register_device_token` cannot reassign an existing token to another user.
 - `profiles` INSERT column grants stop a client from self-setting
   `is_platform_admin`.
-- `send-reminders` requires a valid JWT (`verify_jwt = true`).
+- `send-reminders` accepts only the cron service-role key (in addition to
+  `verify_jwt = true`), never an ordinary user JWT.
 - New pgTAP regression suite `supabase/tests/security.test.sql`.
+
+### Fixed (production hardening — 1.3.0+13)
+
+- **Wrong-lease payments prevented.** `payments/new` used to fall back to the
+  first active lease when the `leaseId` in the URL no longer resolved, so a tap
+  from Rent or a tenant could record money against another tenancy. It now
+  refuses with "That lease is no longer active" and says so before submit.
+- **Wrong-unit tenancy prevented.** The same fallback existed in `tenants/new`
+  for a unit passed from a property screen; a unit that is no longer vacant is
+  now rejected instead of silently letting the tenant into a different unit.
+- **Lists refresh after every mutation.** Recording a payment, creating a
+  property or tenant, voiding a payment, returning a stock rental, archiving a
+  property/tenant and renewing/terminating a lease now invalidate the providers
+  the screens underneath are still watching (`payments`, `rent`, `tenants`,
+  `tenant`, `properties`, `stock`, low-stock, dashboard), so back-navigation no
+  longer shows stale rows or totals.
+- **An invite deep link without a token** no longer sits on a spinner forever:
+  the error state is set inside `setState` (it runs from a post-frame callback).
+- **The router error page** no longer renders `state.error.toString()` — internal
+  route/exception text is replaced by friendly copy and a "Go to home" action.
+- **Admin invitations work without an email provider.** Managers (not just
+  owners) can invite — matching the RPC's owner/manager check, with the `owner`
+  role hidden unless the caller is an owner — and the one-time `fam://invite`
+  link returned by `invite-member` is shown with a **Copy link** action instead
+  of being discarded. The address is validated before the request. The Edge
+  Function also no longer fails the whole invitation when email delivery throws;
+  the link is still returned.
+- **Member management cannot lock the workspace out** (migration `0021`): a
+  manager can no longer change an owner's status, and the last active owner
+  cannot be suspended (mirroring the existing last-owner demote guard). New
+  pgTAP assertions cover both.
+- **`send-reminders` is cron-only**: it now requires the exact service-role key,
+  not merely a valid user JWT, so a signed-in tenant cannot trigger reminder
+  fan-out for every organization.
+- **Local auth config matches production**: email confirmations are off in
+  `supabase/config.toml`, so a local sign-up returns a session immediately like
+  the hosted free stack.
 
 ### Notes
 
 - Mobile and admin app scaffolds follow in later phases.
 - `online_payments` and `maintenance_requests` are behind feature flags (off).
-- Password-reset links (`fam://reset-password`, sent by `resetPasswordForEmail`)
-  open both clients, but neither has a screen to set the new password yet, so the
-  link falls through to sign-in. Completing the recovery flow (and adding the
-  matching route to both clients) is follow-up work.
+- Password-reset links (`fam://reset-password`) open the Flutter reset screen,
+  which exchanges the recovery tokens for a session and calls `updateUser`
+  (`/auth/reset-password`); expired or reused links show a fresh-link action.
+- Push delivery from `send-reminders` still needs an FCM-backed device token
+  source (the Flutter registration hook is a deliberate no-op until one is
+  configured) and `EXPO_ACCESS_TOKEN` for the Expo client.
+- The online-payment webhook fails closed (acks 200, records nothing) until
+  `CHAPA_WEBHOOK_SECRET` is configured.

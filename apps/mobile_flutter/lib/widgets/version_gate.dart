@@ -28,8 +28,15 @@ class _VersionGateState extends ConsumerState<VersionGate> {
   }
 
   Future<void> _run() async {
-    final version = await getAppVersion();
-    final decision = await checkVersionGate(_platformName(), version);
+    // Never leave the app on this spinner: a plugin/platform failure reading
+    // the version must fail open like a network error does.
+    GateDecision decision;
+    try {
+      final version = await getAppVersion();
+      decision = await checkVersionGate(_platformName(), version);
+    } catch (_) {
+      decision = GateDecision.ok();
+    }
     if (mounted) setState(() => _decision = decision);
   }
 

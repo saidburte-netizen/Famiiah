@@ -31,7 +31,7 @@ Future<List<Map<String, dynamic>>> listPropertiesWithStats(
     'p_org': orgId,
     'p_type': type,
     'p_search': search,
-    'p_limit': 50,
+    'p_limit': 500,
     'p_offset': 0,
   });
   return _rows(data);
@@ -87,7 +87,7 @@ Future<List<Map<String, dynamic>>> listUnits(String propertyId, {String? status}
     'p_property': propertyId,
     'p_status': status,
     'p_search': null,
-    'p_limit': 100,
+    'p_limit': 500,
     'p_offset': 0,
   });
   return _rows(data);
@@ -131,7 +131,7 @@ Future<List<Map<String, dynamic>>> listVacantUnits(String orgId) async {
       .eq('status', 'vacant')
       .isFilter('deleted_at', null)
       .order('code')
-      .limit(200);
+      .limit(1000);
   return (data as List).cast<Map<String, dynamic>>().map((r) {
     final props = r['properties'] as Map<String, dynamic>?;
     return <String, dynamic>{
@@ -153,7 +153,7 @@ Future<List<Map<String, dynamic>>> listTenantsWithStatus(
     'p_org': orgId,
     'p_filter': filter,
     'p_search': search,
-    'p_limit': 50,
+    'p_limit': 500,
     'p_offset': 0,
   });
   return _rows(data);
@@ -230,14 +230,14 @@ Future<void> renewLease(String leaseId, String newEnd, {String? newRent}) async 
   });
 }
 
-Future<List<Map<String, dynamic>>> listLeases(String orgId, {String? status}) async {
+Future<List<Map<String, dynamic>>> listLeases(String orgId, {String? status, int limit = 100}) async {
   var query = _db
       .from('leases')
       .select(
           'id, unit_id, tenant_id, start_date, end_date, monthly_rent, deposit_amount, status, ended_reason, units(code), tenants(full_name)')
       .eq('org_id', orgId);
   if (status != null) query = query.eq('status', status);
-  final data = await query.order('start_date', ascending: false).limit(100);
+  final data = await query.order('start_date', ascending: false).limit(limit);
   return (data as List).cast<Map<String, dynamic>>().map((l) {
     final unit = l['units'] as Map<String, dynamic>?;
     final tenant = l['tenants'] as Map<String, dynamic>?;
@@ -312,7 +312,7 @@ Future<List<Map<String, dynamic>>> listPayments(String orgId) async {
       .select('id, receipt_no, amount, unallocated_amount, method, paid_at, voided_at, reference')
       .eq('org_id', orgId)
       .order('paid_at', ascending: false)
-      .limit(50);
+      .limit(500);
   return (data as List).cast<Map<String, dynamic>>();
 }
 
@@ -325,7 +325,7 @@ Future<List<Map<String, dynamic>>> listStockItems(String orgId) async {
       .eq('org_id', orgId)
       .isFilter('deleted_at', null)
       .order('name')
-      .limit(100);
+      .limit(500);
   return (data as List).cast<Map<String, dynamic>>();
 }
 
@@ -340,7 +340,7 @@ Future<List<Map<String, dynamic>>> listStockRentals(String orgId) async {
       .select('id, item_id, tenant_id, quantity, daily_rate, start_date, due_date, returned_at, status, stock_items(name), tenants(full_name)')
       .eq('org_id', orgId)
       .order('created_at', ascending: false)
-      .limit(100);
+      .limit(500);
   return (data as List).cast<Map<String, dynamic>>();
 }
 
@@ -396,7 +396,7 @@ Future<List<Map<String, dynamic>>> listNotifications(String orgId) async {
       .select('id, title, body, channel, status, created_at, read_at')
       .eq('org_id', orgId)
       .order('created_at', ascending: false)
-      .limit(50);
+      .limit(200);
   return (data as List).cast<Map<String, dynamic>>();
 }
 
