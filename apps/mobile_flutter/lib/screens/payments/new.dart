@@ -10,13 +10,19 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
+import '../rent/list.dart' show rentProvider;
+import '../tenants/detail.dart' show tenantProvider;
+import 'list.dart' show paymentsProvider;
 
 const _methods = ['cash', 'bank_transfer', 'telebirr', 'chapa', 'cheque', 'other'];
 
 final activeLeasesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final org = ref.watch(orgProvider);
   if (org.orgId == null) return const [];
-  return listLeases(org.orgId!, status: 'active');
+  // Load the whole active set (up to the API cap) so a lease passed in the URL
+  // is always found, even when the org has more than a screenful of leases.
+  return listLeases(org.orgId!, status: 'active', limit: 1000);
 });
 
 class NewPaymentScreen extends ConsumerStatefulWidget {
@@ -52,10 +58,20 @@ class _NewPaymentScreenState extends ConsumerState<NewPaymentScreen> {
 
   Future<void> _submit(List<Map<String, dynamic>> leases) async {
     setState(() => _error = null);
-    final selected = _leaseId != null
-        ? leases.firstWhere((l) => l['id'] == _leaseId, orElse: () => const {})
-        : const <String, dynamic>{};
-    final lease = selected.isNotEmpty ? selected : (leases.isEmpty ? null : leases.first);
+    // A lease passed in the URL (from the Rent screen or a tenant) must be the
+    // one paid. Falling back to the first lease would silently record the money
+    // against somebody else's tenancy, so refuse instead.
+    Map<String, dynamic>? lease;
+    if (_leaseId != null) {
+      final match = leases.where((l) => l['id'] == _leaseId).toList();
+      if (match.isEmpty) {
+        setState(() => _error = 'That lease is no longer active. Pick another lease.');
+        return;
+      }
+      lease = match.first;
+    } else if (leases.isNotEmpty) {
+      lease = leases.first;
+    }
     if (lease == null) {
       setState(() => _error = 'Pick a lease.');
       return;
@@ -74,7 +90,14 @@ class _NewPaymentScreenState extends ConsumerState<NewPaymentScreen> {
         'notes': _notes.text.trim().isEmpty ? null : _notes.text.trim(),
         'idempotencyKey': 'pay-${lease['id']}-${DateTime.now().millisecondsSinceEpoch}',
       });
-      if (mounted) context.pop();
+      if (!mounted) return;
+      // The list, rent and tenant screens underneath are still mounted, so
+      // their cached rows must be refreshed explicitly before popping back.
+      ref.invalidate(paymentsProvider);
+      ref.invalidate(rentProvider);
+      ref.invalidate(dashboardProvider);
+      ref.invalidate(tenantProvider);
+      context.pop();
     } catch (err) {
       if (mounted) setState(() => _error = userMessage(err));
     } finally {
@@ -88,6 +111,11 @@ class _NewPaymentScreenState extends ConsumerState<NewPaymentScreen> {
     final rows = leases.valueOrNull ?? const <Map<String, dynamic>>[];
     final selectedId = _leaseId ?? (rows.isNotEmpty ? rows.first['id'] as String? : null);
     final selected = rows.where((r) => r['id'] == selectedId).toList();
+    // The lease may have ended between opening this screen and loading the
+    // list: say so instead of leaving the form looking empty.
+    final requestedMissing = _leaseId != null &&
+        rows.isNotEmpty &&
+        !rows.any((r) => r['id'] == _leaseId);
 
     return FamPage(
       title: 'Record payment',
@@ -96,6 +124,10 @@ class _NewPaymentScreenState extends ConsumerState<NewPaymentScreen> {
         children: [
           if (_error != null) ...[
             FamNotice.error(_error!),
+            const SizedBox(height: 14),
+          ],
+          if (requestedMissing) ...[
+            FamNotice.error('That lease is no longer active. Choose another lease below.'),
             const SizedBox(height: 14),
           ],
           const FamSectionHeader(title: 'Lease'),

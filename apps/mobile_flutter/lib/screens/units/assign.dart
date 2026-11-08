@@ -9,7 +9,11 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
 import '../properties/detail.dart';
+import '../properties/list.dart' show propertiesProvider;
+import '../tenants/list.dart' show tenantsProvider;
+import '../tenants/new.dart' show vacantUnitsProvider;
 
 /// Tenants that can still take a unit: anyone without an active lease.
 /// `list_tenants_with_status` returns `unit_code == null` in that case, and the
@@ -79,6 +83,11 @@ class _AssignTenantScreenState extends ConsumerState<AssignTenantScreen> {
       });
       final propertyId = widget.propertyId;
       if (propertyId != null) ref.invalidate(propertyProvider(propertyId));
+      // The tenant is now housed and the unit is no longer vacant.
+      ref.invalidate(tenantsProvider);
+      ref.invalidate(vacantUnitsProvider);
+      ref.invalidate(propertiesProvider);
+      ref.invalidate(dashboardProvider);
       if (mounted) context.pop();
     } catch (err) {
       if (mounted) setState(() => _error = userMessage(err));

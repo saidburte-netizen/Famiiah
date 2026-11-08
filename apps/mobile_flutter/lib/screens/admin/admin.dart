@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -46,12 +47,13 @@ class AdminScreen extends ConsumerWidget {
             title: 'Admin',
             subtitle: 'Team and workspace controls',
             actions: [
-              if (isOwner)
-                FamIconButton(
-                  icon: Icons.person_add_alt_1_rounded,
-                  tooltip: 'Invite teammate',
-                  onPressed: () => _showInvite(context, ref),
-                ),
+              // The `invite_member` RPC lets owners *and* managers invite;
+              // only an owner may hand out the owner role.
+              FamIconButton(
+                icon: Icons.person_add_alt_1_rounded,
+                tooltip: 'Invite teammate',
+                onPressed: () => _showInvite(context, ref, canGrantOwner: isOwner),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -171,14 +173,18 @@ class AdminScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showInvite(BuildContext context, WidgetRef ref) async {
+  Future<void> _showInvite(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool canGrantOwner,
+  }) async {
     final orgId = ref.read(orgProvider).orgId;
     if (orgId == null) return;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: FamColors.background,
-      builder: (_) => _InviteSheet(orgId: orgId),
+      builder: (_) => _InviteSheet(orgId: orgId, canGrantOwner: canGrantOwner),
     );
   }
 
@@ -253,7 +259,8 @@ class _ChoiceRow extends StatelessWidget {
 
 class _InviteSheet extends StatefulWidget {
   final String orgId;
-  const _InviteSheet({required this.orgId});
+  final bool canGrantOwner;
+  const _InviteSheet({required this.orgId, required this.canGrantOwner});
 
   @override
   State<_InviteSheet> createState() => _InviteSheetState();
@@ -274,23 +281,97 @@ class _InviteSheetState extends State<_InviteSheet> {
   }
 
   Future<void> _save() async {
+    final email = _email.text.trim();
+    final phone = _phone.text.trim();
+    if (email.isEmpty && phone.isEmpty) {
+      setState(() => _error = 'Enter the email address to invite.');
+      return;
+    }
+    if (email.isNotEmpty && !email.contains('@')) {
+      setState(() => _error = 'That email address looks incomplete.');
+      return;
+    }
     setState(() {
       _error = null;
       _busy = true;
     });
     try {
-      await inviteMember({
+      final result = await inviteMember({
         'orgId': widget.orgId,
-        'email': _email.text.trim(),
-        'phone': _phone.text.trim().isEmpty ? null : _phone.text.trim(),
+        'email': email.isEmpty ? null : email,
+        'phone': phone.isEmpty ? null : phone,
         'role': _role,
       });
+      if (!mounted) return;
+      // The raw token is never stored client-side and is only returned once.
+      // Without an email provider configured it is the *only* way the invitee
+      // can join, so show it for sharing instead of silently dropping it.
+      final link = (result['link'] as String?)?.trim();
+      if (link != null && link.isNotEmpty) {
+        await _showLink(link);
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (err) {
       if (mounted) setState(() => _error = userMessage(err));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _showLink(String link) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: FamColors.white,
+        title: const Text(
+          'Invitation ready',
+          style: TextStyle(
+            fontFamily: FamFonts.body,
+            fontWeight: FontWeight.w800,
+            color: FamColors.navy,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Send this link to your teammate. It is shown only once and expires in 7 days.',
+              style: TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: FamColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(
+              link,
+              style: const TextStyle(
+                fontFamily: FamFonts.body,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: FamColors.royal,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: link));
+              if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+            },
+            child: const Text('Copy link'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -345,7 +426,9 @@ class _InviteSheetState extends State<_InviteSheet> {
             const SizedBox(height: 18),
             _ChoiceRow(
               label: 'Role',
-              options: _roles,
+              options: widget.canGrantOwner
+                  ? _roles
+                  : _roles.where((r) => r != 'owner').toList(),
               value: _role,
               onChanged: (v) => setState(() => _role = v),
             ),

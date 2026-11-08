@@ -9,6 +9,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
+import 'list.dart' show propertiesProvider;
 
 const _types = ['residential', 'commercial', 'mixed_use'];
 
@@ -63,7 +65,12 @@ class _NewPropertyScreenState extends ConsumerState<NewPropertyScreen> {
         'floors': _floors.text.trim().isEmpty ? null : int.tryParse(_floors.text.trim()),
         'notes': _notes.text.trim().isEmpty ? null : _notes.text.trim(),
       });
-      if (mounted) context.pop();
+      if (!mounted) return;
+      // The properties list underneath keeps its cached rows, so refresh it
+      // before popping back.
+      ref.invalidate(propertiesProvider);
+      ref.invalidate(dashboardProvider);
+      context.pop();
     } catch (err) {
       if (mounted) setState(() => _error = userMessage(err));
     } finally {

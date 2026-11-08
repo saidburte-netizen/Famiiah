@@ -11,6 +11,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
 
 const _adjustTypes = ['in', 'out', 'adjustment'];
 
@@ -279,6 +280,7 @@ class StockScreen extends ConsumerWidget {
       builder: (_) => _AdjustSheet(item: item, onDone: () async {
         ref.invalidate(stockItemsProvider);
         ref.invalidate(lowStockProvider);
+        ref.invalidate(dashboardProvider);
       }),
     );
   }
@@ -295,6 +297,7 @@ class StockScreen extends ConsumerWidget {
         onDone: () async {
           ref.invalidate(stockItemsProvider);
           ref.invalidate(lowStockProvider);
+          ref.invalidate(dashboardProvider);
         },
       ),
     );
@@ -315,6 +318,7 @@ class StockScreen extends ConsumerWidget {
       await archiveStockItem(item['id'] as String);
       ref.invalidate(stockItemsProvider);
       ref.invalidate(lowStockProvider);
+      ref.invalidate(dashboardProvider);
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));

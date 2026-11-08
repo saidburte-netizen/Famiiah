@@ -37,8 +37,26 @@ interface PushMessage {
   sound?: "default";
 }
 
+/**
+ * Cron-only: accept the exact service-role key, nothing else. `verify_jwt`
+ * alone only proves the caller has *a* valid JWT, which every signed-in user
+ * does — and this job reads and writes across every organization.
+ */
+function isServiceRole(req: Request): boolean {
+  const auth = req.headers.get("Authorization") ?? "";
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  return key.length > 0 && token === key;
+}
+
 Deno.serve(async (req) => {
   const request_id = newRequestId(req);
+  if (!isServiceRole(req)) {
+    return new Response(JSON.stringify({ error: "forbidden" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   const started = Date.now();
   const supabase = serviceClient();
 

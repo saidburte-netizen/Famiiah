@@ -4,7 +4,7 @@
 -- must stay closed.
 -- Run with: supabase test db
 begin;
-select plan(8);
+select plan(11);
 
 -- ---- fixtures (created as postgres, RLS bypassed) ----
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -77,6 +77,17 @@ select throws_ok(
   'a manager cannot invite an owner'
 );
 
+-- ---- 0021: member-status hardening ----
+select throws_ok(
+  $$ select admin_set_member_status('00000000-0000-0000-0000-0000000000ee','00000000-0000-0000-0000-0000000000e1','suspended') $$,
+  '42501', null,
+  'a manager cannot suspend an owner'
+);
+select lives_ok(
+  $$ select admin_set_member_status('00000000-0000-0000-0000-0000000000ee','00000000-0000-0000-0000-0000000000e2','suspended') $$,
+  'a manager can still suspend staff'
+);
+
 reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated","aal":"aal1"}';
@@ -89,6 +100,11 @@ select throws_ok(
   $$ select generate_monthly_charges(null) $$,
   '42501', null,
   'cron-only charge generation is not callable by clients'
+);
+select throws_ok(
+  $$ select admin_set_member_status('00000000-0000-0000-0000-0000000000ee','00000000-0000-0000-0000-0000000000e1','suspended') $$,
+  '23505', null,
+  'the last active owner cannot be suspended'
 );
 
 select * from finish();

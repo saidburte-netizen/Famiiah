@@ -77,6 +77,8 @@ const Messages _en = {
   'error.insufficientStock': 'Not enough stock available.',
   'error.negativeBalance': 'Stock cannot go below zero.',
   'error.cannotDemoteLastOwner': 'You cannot demote the last owner.',
+  'error.cannotSuspendLastOwner':
+      'The workspace must keep an active owner. Make someone else an owner first.',
   'error.rateLimited': 'Too many requests. Please wait and try again.',
   'error.leaseNotFound': 'That lease no longer exists.',
   'error.unitNotFound': 'That unit no longer exists.',

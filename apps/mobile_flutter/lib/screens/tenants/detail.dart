@@ -10,6 +10,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
+import 'list.dart' show tenantsProvider;
 
 class _TenantData {
   final Map<String, dynamic> tenant;
@@ -274,7 +276,14 @@ class TenantDetailScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: FamColors.background,
-      builder: (_) => _ManageLeaseSheet(lease: lease, onDone: () async => ref.invalidate(tenantProvider(id))),
+      builder: (_) => _ManageLeaseSheet(
+        lease: lease,
+        onDone: () async {
+          ref.invalidate(tenantProvider(id));
+          ref.invalidate(tenantsProvider);
+          ref.invalidate(dashboardProvider);
+        },
+      ),
     );
   }
 
@@ -291,7 +300,12 @@ class TenantDetailScreen extends ConsumerWidget {
     if (!ok) return;
     try {
       await archiveTenant(id);
-      if (context.mounted) context.go('/app/tenants');
+      if (!context.mounted) return;
+      // The tenant list is still mounted underneath; refresh it so the
+      // archived tenant disappears immediately.
+      ref.invalidate(tenantsProvider);
+      ref.invalidate(dashboardProvider);
+      context.go('/app/tenants');
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));

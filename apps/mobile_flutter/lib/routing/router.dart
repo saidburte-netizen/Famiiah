@@ -29,6 +29,9 @@ import '../screens/tenants/new.dart';
 import '../screens/units/assign.dart';
 import '../screens/units/new.dart';
 import '../state/auth_notifier.dart';
+import '../theme/tokens.dart';
+import '../widgets/brand.dart';
+import '../widgets/ui.dart';
 import 'deep_links.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -126,9 +129,53 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/app/notifications', builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: '/app/settings', builder: (_, __) => const SettingsScreen()),
     ],
+    // Never surface the raw routing exception: it names internal locations and
+    // means nothing to the person holding the phone.
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Not found')),
-      body: Center(child: Text(state.error?.toString() ?? 'Page not found')),
+      backgroundColor: FamColors.background,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(Icons.explore_off_outlined, size: 46, color: FamColors.textMuted),
+                const SizedBox(height: 14),
+                const Text(
+                  'Page not found',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: FamColors.navy,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "That link doesn't open anything in Fam. Head back home and continue where you left off.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: FamFonts.body,
+                    fontSize: 14,
+                    height: 1.5,
+                    fontWeight: FontWeight.w600,
+                    color: FamColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                FamPrimaryButton(
+                  label: 'Go to home',
+                  icon: Icons.home_rounded,
+                  onPressed: () => context.go('/app/home'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     ),
   );
 

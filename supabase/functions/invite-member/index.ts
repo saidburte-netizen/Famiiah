@@ -61,7 +61,17 @@ Deno.serve(async (req) => {
     // send the email (provider integration behind EMAIL_PROVIDER_KEY)
     const link = `fam://invite?token=${rawToken}`;
     if (Deno.env.get("EMAIL_PROVIDER_KEY") && body.email) {
-      await sendEmail(body.email, link);
+      // Delivery must never lose an invitation that was already recorded: the
+      // link is returned to the caller either way so it can be shared manually.
+      try {
+        await sendEmail(body.email, link);
+      } catch {
+        log("warn", "invite email failed", {
+          function: "invite-member",
+          request_id,
+          outcome: "email_failed",
+        });
+      }
     }
 
     log("info", "invitation created", {

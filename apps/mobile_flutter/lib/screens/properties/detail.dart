@@ -10,7 +10,9 @@ import '../../theme/tokens.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/page.dart';
 import '../../widgets/ui.dart';
+import '../home/dashboard.dart' show dashboardProvider;
 import '../units/form.dart';
+import 'list.dart' show propertiesProvider;
 
 class _PropertyData {
   final Map<String, dynamic> property;
@@ -315,7 +317,11 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       builder: (_) => UnitForm(
         propertyId: propertyId,
         orgId: orgId,
-        onCreated: () async => ref.invalidate(propertyProvider(propertyId)),
+        onCreated: () async {
+          ref.invalidate(propertyProvider(propertyId));
+          ref.invalidate(propertiesProvider);
+          ref.invalidate(dashboardProvider);
+        },
       ),
     );
   }
@@ -333,7 +339,11 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     if (!ok) return;
     try {
       await archiveProperty(id);
-      if (context.mounted) context.go('/app/properties');
+      if (!context.mounted) return;
+      // The list underneath is still mounted; without this it would keep
+      // showing the property that was just archived.
+      ref.invalidate(propertiesProvider);
+      context.go('/app/properties');
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
@@ -353,6 +363,9 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     try {
       await archiveUnit(unitId);
       ref.invalidate(propertyProvider(widget.id));
+      // The unit count on the property card and the dashboard changed too.
+      ref.invalidate(propertiesProvider);
+      ref.invalidate(dashboardProvider);
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));

@@ -41,9 +41,15 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
   Future<void> _run() async {
     final token = widget.token;
     if (token == null || token.isEmpty) {
-      // No token in the deep link: show the error state immediately.
-      _error = 'No invitation token was provided.';
-      _state = _InviteState.error;
+      // No token in the deep link: show the error state immediately. This runs
+      // from a post-frame callback, so it must rebuild explicitly — otherwise
+      // the screen stays on the "checking" spinner forever.
+      if (mounted) {
+        setState(() {
+          _error = 'No invitation token was provided.';
+          _state = _InviteState.error;
+        });
+      }
       return;
     }
     final session = getSupabase().auth.currentSession;

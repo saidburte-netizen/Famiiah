@@ -29,12 +29,17 @@ class _CreateOrganizationScreenState extends ConsumerState<CreateOrganizationScr
   }
 
   Future<void> _create() async {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Enter your organization name.');
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      await createOrganization(_name.text.trim());
+      await createOrganization(name);
       // The org provider cached "no membership"; refresh it before routing so
       // the dashboard comes up already populated.
       await ref.read(orgProvider.notifier).refresh();
