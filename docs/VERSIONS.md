@@ -11,7 +11,7 @@ resolved versions here at build time.
 | pnpm | 12.x (workspace) |
 | PostgreSQL | 15.x (Supabase local + hosted) |
 | Deno (Edge Functions) | Supabase-managed |
-| Flutter | `stable` channel (latest at build, resolved by CI) |
+| Flutter | `3.50.0` (pinned in `.github/workflows/flutter.yml`) |
 | Dart SDK | `^3.5.0` (`apps/mobile_flutter/pubspec.yaml`) |
 | Expo SDK | latest stable at build |
 | Next.js | latest stable at build |
@@ -21,7 +21,7 @@ resolved versions here at build time.
 | App | Version | Source |
 |---|---|---|
 | Expo mobile | 1.0.0 | `apps/mobile/app.json` (`expo.version`) |
-| Flutter mobile | 1.3.0+13 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
+| Flutter mobile | 1.3.1+14 | `apps/mobile_flutter/pubspec.yaml` (`version`) |
 | Android application id | `com.fami.myapp` | `.github/workflows/flutter.yml`, `tool/setup_android.sh` |
 
 ## Backend schema

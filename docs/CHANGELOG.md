@@ -5,6 +5,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-11-12
+
+Flutter client `1.3.1+14`. No app behaviour changed; this release makes the
+production Android build reproducible and restores the backend.
+
+### Fixed
+
+- **Release APK/AAB build**: Flutter stable moved `3.47.9` → `3.50.0` between
+  two runs of the same commit. 3.50.0's Android lint calls Java 21 APIs
+  (`List.removeLast`), so `:url_launcher_android:lintVitalAnalyzeRelease`
+  crashed on the JDK 17 runner and the APK was never produced. CI now runs
+  Gradle on Temurin 21 (the app still targets Java 17) and pins Flutter
+  `3.50.0`, so production artifacts cannot drift again.
+- **Backend**: the hosted Supabase project had been paused (its hostname
+  returned NXDOMAIN); it was restored. Migration `0021` still needs the deploy
+  run to be applied.
+
 ## [1.3.0] — 2026-11-08
 
 Production upload of the Flutter client (`com.fami.myapp`, `1.3.0+13`): the
