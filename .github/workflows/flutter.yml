@@ -20,7 +20,11 @@ env:
   # Play Store application id for the Flutter client.
   APPLICATION_ID: com.fami.myapp
   APP_NAME: Fam
-  FLUTTER_CHANNEL: stable
+  # Pinned on purpose. The unpinned stable channel moved 3.47.9 -> 3.50.0
+  # between two runs of the same commit, and 3.50.0's newer Android lint
+  # crashed the release build on the JDK 17 runner. Bump the SDK and the
+  # JDK together, deliberately, in a dedicated change.
+  FLUTTER_VERSION: 3.50.0
 
 jobs:
   analyze-test:
@@ -33,7 +37,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
           cache: true
       - run: flutter pub get
       # Only real errors should fail the build; lint infos/warnings are reported
@@ -69,10 +74,13 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          # Flutter 3.50's Android lint uses Java 21 APIs (List.removeLast),
+          # so the Gradle JVM must be 21 even though the app still targets 17.
+          java-version: '21'
       - uses: subosito/flutter-action@v2
         with:
-          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
           cache: true
       - name: Cache Gradle
         uses: actions/cache@v4
